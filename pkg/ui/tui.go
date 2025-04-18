@@ -55,6 +55,7 @@ type UI struct {
 	securePieView    *tview.TextView
 	ifaceStatsView   *tview.Table
 	theme            Theme
+	styleName        string
 }
 
 // panel represents a UI section that can be toggled and positioned in the grid
@@ -75,6 +76,7 @@ func NewUI(networkMonitor *netcap.NetworkMonitor) *UI {
 		sortBy:         "bytes",
 		sortAscending:  false,
 		theme:          Themes["Dark+"],
+		styleName:      "Standard",
 		geoCache:       make(map[string]string),
 	}
 
@@ -244,8 +246,9 @@ func (ui *UI) setupKeyBindings() {
 			return nil
 		}
 
-		// Panel toggle keys 1–9
+		// Panel toggle keys 0–9 (0 = interfaces)
 		switch event.Rune() {
+		case '0': ui.togglePanel("interfaces")
 		case '1': ui.togglePanel("stats")
 		case '2': ui.togglePanel("traffic")
 		case '3': ui.togglePanel("protocol")
@@ -282,6 +285,16 @@ func (ui *UI) setupKeyBindings() {
 // rebuildLayout re-constructs the main page grid based on panel settings
 func (ui *UI) rebuildLayout() {
     grid := tview.NewGrid().SetBorders(true)
+
+    // determine if interfaces panel is visible
+    ifaceVisible := false
+    for _, p := range ui.panels {
+        if p.id == "interfaces" && p.visible {
+            ifaceVisible = true
+            break
+        }
+    }
+
     // dynamic tiling: identify visible non-interface rows
     rowsSet := map[int]bool{}
     for _, p := range ui.panels {
@@ -318,20 +331,33 @@ func (ui *UI) rebuildLayout() {
     // define grid sizes
     rows := make([]int, totalRows)
     grid.SetRows(rows...)
-    cols := make([]int, maxCols+1)
-    cols[0] = 20
-    for i := 1; i < len(cols); i++ {
-        cols[i] = 0
+    dataOffset := 1
+    if !ifaceVisible {
+        dataOffset = 0
+    }
+    cols := make([]int, maxCols+dataOffset)
+    if ifaceVisible {
+        cols[0] = 20
+        for i := 1; i < len(cols); i++ {
+            cols[i] = 0
+        }
+    } else {
+        for i := 0; i < len(cols); i++ {
+            cols[i] = 0
+        }
     }
     grid.SetColumns(cols...)
+
     // place panels
     for _, p := range ui.panels {
         if !p.visible {
             continue
         }
         if p.id == "interfaces" {
-            // span all rows in first col
-            grid.AddItem(p.primitive, 0, 0, totalRows, 1, 0, 0, true)
+            if ifaceVisible {
+                // span all rows in first col
+                grid.AddItem(p.primitive, 0, 0, totalRows, 1, 0, 0, true)
+            }
             continue
         }
         // map original row to new index
@@ -343,8 +369,8 @@ func (ui *UI) rebuildLayout() {
             }
         }
         if p.colSpan > 1 {
-            // full-width panels
-            grid.AddItem(p.primitive, newRow, 1, p.rowSpan, maxCols, 0, 0, true)
+            // full-width panels except interfaces
+            grid.AddItem(p.primitive, newRow, dataOffset, p.rowSpan, maxCols, 0, 0, true)
         } else {
             // tile single-col panels
             idx := 0
@@ -357,7 +383,7 @@ func (ui *UI) rebuildLayout() {
                 }
                 idx++
             }
-            grid.AddItem(p.primitive, newRow, 1+idx, p.rowSpan, 1, 0, 0, true)
+            grid.AddItem(p.primitive, newRow, dataOffset+idx, p.rowSpan, 1, 0, 0, true)
         }
     }
     ui.pages.RemovePage("main")
@@ -969,7 +995,19 @@ func (ui *UI) showConnectionDetails(c *netcap.Connection) {
                 sb.WriteString(fmt.Sprintf("[%s]%04x  [%s]", colorTag(ui.theme.SecondaryColor), i, resetTag))
                 for j := 0; j < 16; j++ {
                     if i+j < len(data) {
-                        sb.WriteString(fmt.Sprintf("[%s]%02x [%s]", colorTag(ui.theme.PrimaryColor), data[i+j], resetTag))
+                        b := data[i+j]
+                        var col tcell.Color
+                        switch {
+                        case b < 64:
+                            col = tcell.ColorDarkGray
+                        case b < 128:
+                            col = tcell.ColorGray
+                        case b < 192:
+                            col = tcell.ColorLightGray
+                        default:
+                            col = ui.theme.PrimaryColor
+                        }
+                        sb.WriteString(fmt.Sprintf("[%s]%02x[%s] ", colorTag(col), b, resetTag))
                     } else {
                         sb.WriteString("   ")
                     }
@@ -1077,6 +1115,7 @@ i: interface stats
 h: packet-size histogram
 d: HTTP/DNS summary
 g: geo mapping
+0: toggle interfaces pane
 ?: toggle help
 Esc: return to main`
     ui.helpView.SetText(helpText)
@@ -1128,6 +1167,25 @@ func (ui *UI) SetTheme(name string) *UI {
     return ui
 }
 
+// SetStyle applies a named UI style (Standard or btop).
+func (ui *UI) SetStyle(name string) *UI {
+    def, ok := Styles[name]
+    if ok {
+        ui.styleName = name
+    } else {
+        def = Styles["Standard"]
+        ui.styleName = "Standard"
+    }
+    // Override border runes for the selected style
+    tview.Borders.TopLeft = def.BorderTL
+    tview.Borders.TopRight = def.BorderTR
+    tview.Borders.BottomLeft = def.BorderBL
+    tview.Borders.BottomRight = def.BorderBR
+    tview.Borders.Horizontal = def.BorderH
+    tview.Borders.Vertical = def.BorderV
+    return ui
+}
+
 // Run starts the UI application
 func (ui *UI) Run() error {
     ui.bpfString = ui.networkMonitor.GetFilterExpression()
@@ -1162,7 +1220,19 @@ func (ui *UI) showRawPacketPage(idx int) {
         sb.WriteString(fmt.Sprintf("[%s]%04x  [%s]", colorTag(ui.theme.SecondaryColor), i, resetTag))
         for j := 0; j < 16; j++ {
             if i+j < len(data) {
-                sb.WriteString(fmt.Sprintf("[%s]%02x [%s]", colorTag(ui.theme.PrimaryColor), data[i+j], resetTag))
+                b := data[i+j]
+                var col tcell.Color
+                switch {
+                case b < 64:
+                    col = tcell.ColorDarkGray
+                case b < 128:
+                    col = tcell.ColorGray
+                case b < 192:
+                    col = tcell.ColorLightGray
+                default:
+                    col = ui.theme.PrimaryColor
+                }
+                sb.WriteString(fmt.Sprintf("[%s]%02x[%s] ", colorTag(col), b, resetTag))
             } else {
                 sb.WriteString("   ")
             }

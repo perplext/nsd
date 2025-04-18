@@ -202,6 +202,11 @@ func shadeBlock(ratio float64) rune {
 	}
 }
 
+// ShadeBlock returns a shading rune for a ratio [0..1], wrapping internal shadeBlock.
+func ShadeBlock(ratio float64) rune {
+	return shadeBlock(ratio)
+}
+
 // Draw draws the graph
 func (g *Graph) Draw(screen tcell.Screen) {
 	// Draw the box
@@ -308,17 +313,46 @@ func (g *Graph) Draw(screen tcell.Screen) {
 		scaledValue := int(math.Floor((value / g.maxValue) * float64(graphHeight-1)))
 		scaledValue = min(scaledValue, graphHeight-1)
 		
-		// Shaded bar: draw every row with gradient based on fill ratio
-		fillRatio := float64(scaledValue) / float64(graphHeight-1)
+		// Shaded bar: draw primary and secondary shading
+		primaryScaled := scaledValue
+		secondaryScaled := 0
+		if secondaryDataLen > 0 {
+			var secValue float64
+			if secondaryDataLen == 1 {
+				secValue = g.secondaryData[0].Value
+			} else {
+				f2 := float64(i) / float64(colsAvailable-1) * float64(secondaryDataLen-1)
+				idx2 := int(math.Round(f2))
+				if idx2 < 0 {
+					idx2 = 0
+				}
+				if idx2 >= secondaryDataLen {
+					idx2 = secondaryDataLen - 1
+				}
+				secValue = g.secondaryData[idx2].Value
+			}
+			secondaryScaled = int(math.Floor((secValue / g.maxValue) * float64(graphHeight-1)))
+			secondaryScaled = min(secondaryScaled, graphHeight-1)
+		}
+		maxScaled := primaryScaled
+		if secondaryScaled > maxScaled {
+			maxScaled = secondaryScaled
+		}
 		for j := 0; j < graphHeight; j++ {
 			row := graphY + graphHeight - 1 - j
-			rowRatio := float64(j) / float64(graphHeight-1)
-			if rowRatio > fillRatio {
+			if j > maxScaled {
 				screen.SetContent(x+i+1, row, ' ', nil, tcell.StyleDefault)
-			} else {
-				ch := shadeBlock(rowRatio)
-				screen.SetContent(x+i+1, row, ch, nil, tcell.StyleDefault.Foreground(g.color))
+				continue
 			}
+			rowRatio := float64(j) / float64(graphHeight-1)
+			ch := shadeBlock(rowRatio)
+			var style tcell.Style
+			if j <= primaryScaled {
+				style = tcell.StyleDefault.Foreground(g.color)
+			} else {
+				style = tcell.StyleDefault.Foreground(g.secondaryColor)
+			}
+			screen.SetContent(x+i+1, row, ch, nil, style)
 		}
 	}
 	

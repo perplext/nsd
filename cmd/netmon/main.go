@@ -15,8 +15,10 @@ func main() {
 	// Parse command line flags
 	var interfaceName string
 	var themeName string
+	var styleName string
 	flag.StringVar(&interfaceName, "i", "", "Network interface to monitor")
-	flag.StringVar(&themeName, "theme", "Dark+", "Color theme to use (Dark+, Light+, Monokai, Solarized Dark, Dracula)")
+	flag.StringVar(&themeName, "theme", "Dark+", "Color theme to use (Dark+, Light+, Monokai, Solarized Dark, Dracula, Tokyo Night, Tokyo Night Storm)")
+	flag.StringVar(&styleName, "style", "Standard", "UI style to use (Standard, btop)")
 	flag.Parse()
 
 	// Check for root/admin privileges
@@ -39,7 +41,7 @@ func main() {
 	}
 
 	// Create and run the UI
-	userInterface := ui.NewUI(networkMonitor).SetTheme(themeName)
+	userInterface := ui.NewUI(networkMonitor).SetTheme(themeName).SetStyle(styleName)
 
 	// Handle termination signals
 	sigChan := make(chan os.Signal, 1)
