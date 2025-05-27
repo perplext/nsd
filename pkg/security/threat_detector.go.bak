@@ -1,0 +1,645 @@
+package security
+
+import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"log"
+	"net"
+	"net/http"
+	"regexp"
+	"sort"
+	"strings"
+	"sync"
+	"time"
+
+	"github.com/google/gopacket"
+	"github.com/google/gopacket/layers"
+	"github.com/user/netmon/pkg/netcap"
+)
+
+// ThreatDetector provides real-time security analysis
+type ThreatDetector struct {
+	// Configuration
+	config            DetectorConfig
+	
+	// Threat Intelligence
+	maliciousIPs      map[string]ThreatInfo
+	maliciousDomains  map[string]ThreatInfo
+	maliciousHashes   map[string]ThreatInfo
+	
+	// Detection Engines
+	anomalyDetector   *AnomalyDetector
+	scanDetector      *PortScanDetector
+	bruteForceDetector *BruteForceDetector
+	dnsDetector       *DNSTunnelDetector
+	
+	// State tracking
+	connections       map[string]*ConnectionState
+	alerts            chan SecurityAlert
+	mutex             sync.RWMutex
+	
+	// Statistics
+	stats             ThreatStats
+}
+
+// DetectorConfig holds configuration settings
+type DetectorConfig struct {
+	EnablePortScanDetection    bool          `json:"enable_port_scan_detection"`
+	EnableBruteForceDetection  bool          `json:"enable_brute_force_detection"`
+	EnableAnomalyDetection     bool          `json:"enable_anomaly_detection"`
+	EnableDNSTunnelDetection   bool          `json:"enable_dns_tunnel_detection"`
+	EnableThreatIntelligence   bool          `json:"enable_threat_intelligence"`
+	ThreatIntelFeeds          []string      `json:"threat_intel_feeds"`
+	UpdateInterval            time.Duration `json:"update_interval"`
+	AlertThreshold            AlertSeverity `json:"alert_threshold"`
+	MaxAlerts                 int           `json:"max_alerts"`
+	RetentionPeriod           time.Duration `json:"retention_period"`
+}
+
+// SecurityAlert represents a security threat
+type SecurityAlert struct {
+	ID              string                 `json:"id"`
+	Type            AlertType              `json:"type"`
+	Severity        AlertSeverity          `json:"severity"`
+	Timestamp       time.Time              `json:"timestamp"`
+	SourceIP        net.IP                 `json:"source_ip"`
+	DestinationIP   net.IP                 `json:"destination_ip"`
+	SourcePort      uint16                 `json:"source_port,omitempty"`
+	DestinationPort uint16                 `json:"destination_port,omitempty"`
+	Protocol        string                 `json:"protocol"`
+	Description     string                 `json:"description"`
+	Evidence        []string               `json:"evidence"`
+	Indicators      map[string]interface{} `json:"indicators"`
+	ThreatInfo      *ThreatInfo            `json:"threat_info,omitempty"`
+	Recommendation  string                 `json:"recommendation"`
+	MITREID         string                 `json:"mitre_id,omitempty"`
+}
+
+// AlertType categorizes different types of threats
+type AlertType string
+
+const (
+	AlertTypePortScan        AlertType = "port_scan"
+	AlertTypeBruteForce      AlertType = "brute_force"
+	AlertTypeAnomalousTraffic AlertType = "anomalous_traffic"
+	AlertTypeMaliciousIP     AlertType = "malicious_ip"
+	AlertTypeDNSTunnel       AlertType = "dns_tunnel"
+	AlertTypeDDoS            AlertType = "ddos"
+	AlertTypeDataExfiltration AlertType = "data_exfiltration"
+	AlertTypeMalware         AlertType = "malware"
+	AlertTypeIntrusion       AlertType = "intrusion"
+)
+
+// AlertSeverity indicates the severity of an alert
+type AlertSeverity int
+
+const (
+	SeverityInfo AlertSeverity = iota
+	SeverityLow
+	SeverityMedium
+	SeverityHigh
+	SeverityCritical
+)
+
+// ThreatInfo contains threat intelligence data
+type ThreatInfo struct {
+	Indicator     string    `json:"indicator"`
+	Type          string    `json:"type"`
+	ThreatType    string    `json:"threat_type"`
+	Confidence    int       `json:"confidence"`
+	Source        string    `json:"source"`
+	Description   string    `json:"description"`
+	FirstSeen     time.Time `json:"first_seen"`
+	LastSeen      time.Time `json:"last_seen"`
+	Tags          []string  `json:"tags"`
+}
+
+// ConnectionState tracks connection behavior
+type ConnectionState struct {
+	FirstSeen      time.Time
+	LastSeen       time.Time
+	PacketCount    int64
+	ByteCount      int64
+	Flags          []string
+	Behavior       []string
+	Risk           int
+}
+
+// ThreatStats tracks detection statistics
+type ThreatStats struct {
+	TotalAlerts        int64                    `json:"total_alerts"`
+	AlertsByType       map[AlertType]int64      `json:"alerts_by_type"`
+	AlertsBySeverity   map[AlertSeverity]int64  `json:"alerts_by_severity"`
+	LastUpdate         time.Time                `json:"last_update"`
+	ThreatIntelEntries int64                    `json:"threat_intel_entries"`
+	ActiveThreats      int64                    `json:"active_threats"`
+}
+
+// NewThreatDetector creates a new threat detector
+func NewThreatDetector(config DetectorConfig) *ThreatDetector {
+	td := &ThreatDetector{
+		config:            config,
+		maliciousIPs:      make(map[string]ThreatInfo),
+		maliciousDomains:  make(map[string]ThreatInfo),
+		maliciousHashes:   make(map[string]ThreatInfo),
+		connections:       make(map[string]*ConnectionState),
+		alerts:            make(chan SecurityAlert, config.MaxAlerts),
+		stats: ThreatStats{
+			AlertsByType:     make(map[AlertType]int64),
+			AlertsBySeverity: make(map[AlertSeverity]int64),
+		},
+	}
+
+	// Initialize detection engines
+	if config.EnablePortScanDetection {
+		td.scanDetector = NewPortScanDetector()
+	}
+	if config.EnableBruteForceDetection {
+		td.bruteForceDetector = NewBruteForceDetector()
+	}
+	if config.EnableAnomalyDetection {
+		td.anomalyDetector = NewAnomalyDetector()
+	}
+	if config.EnableDNSTunnelDetection {
+		td.dnsDetector = NewDNSTunnelDetector()
+	}
+
+	// Start threat intelligence updates
+	if config.EnableThreatIntelligence {
+		go td.updateThreatIntelligence()
+	}
+
+	// Start cleanup routine
+	go td.cleanupRoutine()
+
+	return td
+}
+
+// ProcessPacket analyzes a packet for threats
+func (td *ThreatDetector) ProcessPacket(packet gopacket.Packet) []SecurityAlert {
+	var alerts []SecurityAlert
+
+	// Extract basic packet info
+	info := td.extractPacketInfo(packet)
+	if info == nil {
+		return alerts
+	}
+
+	// Update connection state
+	td.updateConnectionState(info)
+
+	// Check threat intelligence
+	if td.config.EnableThreatIntelligence {
+		if alert := td.checkThreatIntelligence(info); alert != nil {
+			alerts = append(alerts, *alert)
+		}
+	}
+
+	// Port scan detection
+	if td.config.EnablePortScanDetection && td.scanDetector != nil {
+		if alert := td.scanDetector.AnalyzePacket(info); alert != nil {
+			alerts = append(alerts, *alert)
+		}
+	}
+
+	// Brute force detection
+	if td.config.EnableBruteForceDetection && td.bruteForceDetector != nil {
+		if alert := td.bruteForceDetector.AnalyzePacket(info); alert != nil {
+			alerts = append(alerts, *alert)
+		}
+	}
+
+	// DNS tunnel detection
+	if td.config.EnableDNSTunnelDetection && td.dnsDetector != nil {
+		if alert := td.dnsDetector.AnalyzePacket(info); alert != nil {
+			alerts = append(alerts, *alert)
+		}
+	}
+
+	// Anomaly detection
+	if td.config.EnableAnomalyDetection && td.anomalyDetector != nil {
+		if alert := td.anomalyDetector.AnalyzePacket(info); alert != nil {
+			alerts = append(alerts, *alert)
+		}
+	}
+
+	// Send alerts
+	for _, alert := range alerts {
+		if alert.Severity >= td.config.AlertThreshold {
+			td.sendAlert(alert)
+		}
+	}
+
+	return alerts
+}
+
+// ThreatPacketInfo contains extracted packet information
+type ThreatPacketInfo struct {
+	Timestamp    time.Time
+	SourceIP     net.IP
+	DestIP       net.IP
+	SourcePort   uint16
+	DestPort     uint16
+	Protocol     string
+	Size         int
+	Flags        []string
+	Payload      []byte
+	Direction    string
+}
+
+func (td *ThreatDetector) extractPacketInfo(packet gopacket.Packet) *ThreatPacketInfo {
+	info := &ThreatPacketInfo{
+		Timestamp: packet.Metadata().Timestamp,
+		Size:      len(packet.Data()),
+	}
+
+	// Network layer
+	if netLayer := packet.NetworkLayer(); netLayer != nil {
+		if ip4, ok := netLayer.(*layers.IPv4); ok {
+			info.SourceIP = ip4.SrcIP
+			info.DestIP = ip4.DstIP
+			info.Protocol = ip4.Protocol.String()
+		}
+	}
+
+	// Transport layer
+	if tcpLayer := packet.Layer(layers.LayerTypeTCP); tcpLayer != nil {
+		tcp := tcpLayer.(*layers.TCP)
+		info.SourcePort = uint16(tcp.SrcPort)
+		info.DestPort = uint16(tcp.DstPort)
+		info.Protocol = "TCP"
+		
+		// Extract TCP flags
+		if tcp.SYN {
+			info.Flags = append(info.Flags, "SYN")
+		}
+		if tcp.ACK {
+			info.Flags = append(info.Flags, "ACK")
+		}
+		if tcp.FIN {
+			info.Flags = append(info.Flags, "FIN")
+		}
+		if tcp.RST {
+			info.Flags = append(info.Flags, "RST")
+		}
+		
+		info.Payload = tcp.Payload
+	} else if udpLayer := packet.Layer(layers.LayerTypeUDP); udpLayer != nil {
+		udp := udpLayer.(*layers.UDP)
+		info.SourcePort = uint16(udp.SrcPort)
+		info.DestPort = uint16(udp.DstPort)
+		info.Protocol = "UDP"
+		info.Payload = udp.Payload
+	}
+
+	return info
+}
+
+func (td *ThreatDetector) updateConnectionState(info *ThreatPacketInfo) {
+	key := fmt.Sprintf("%s:%d->%s:%d", info.SourceIP, info.SourcePort, info.DestIP, info.DestPort)
+	
+	td.mutex.Lock()
+	defer td.mutex.Unlock()
+	
+	state, exists := td.connections[key]
+	if !exists {
+		state = &ConnectionState{
+			FirstSeen: info.Timestamp,
+			Flags:     make([]string, 0),
+			Behavior:  make([]string, 0),
+		}
+		td.connections[key] = state
+	}
+	
+	state.LastSeen = info.Timestamp
+	state.PacketCount++
+	state.ByteCount += int64(info.Size)
+	state.Flags = append(state.Flags, info.Flags...)
+}
+
+func (td *ThreatDetector) checkThreatIntelligence(info *PacketInfo) *SecurityAlert {
+	td.mutex.RLock()
+	defer td.mutex.RUnlock()
+	
+	// Check source IP
+	if threat, exists := td.maliciousIPs[info.SourceIP.String()]; exists {
+		return &SecurityAlert{
+			ID:            td.generateAlertID(),
+			Type:          AlertTypeMaliciousIP,
+			Severity:      td.calculateSeverity(threat.Confidence),
+			Timestamp:     info.Timestamp,
+			SourceIP:      info.SourceIP,
+			DestinationIP: info.DestIP,
+			SourcePort:    info.SourcePort,
+			DestinationPort: info.DestPort,
+			Protocol:      info.Protocol,
+			Description:   fmt.Sprintf("Communication with known malicious IP: %s", info.SourceIP),
+			ThreatInfo:    &threat,
+			Recommendation: "Block traffic from this IP address",
+		}
+	}
+	
+	// Check destination IP
+	if threat, exists := td.maliciousIPs[info.DestIP.String()]; exists {
+		return &SecurityAlert{
+			ID:            td.generateAlertID(),
+			Type:          AlertTypeMaliciousIP,
+			Severity:      td.calculateSeverity(threat.Confidence),
+			Timestamp:     info.Timestamp,
+			SourceIP:      info.SourceIP,
+			DestinationIP: info.DestIP,
+			SourcePort:    info.SourcePort,
+			DestinationPort: info.DestPort,
+			Protocol:      info.Protocol,
+			Description:   fmt.Sprintf("Communication with known malicious IP: %s", info.DestIP),
+			ThreatInfo:    &threat,
+			Recommendation: "Block traffic to this IP address",
+		}
+	}
+	
+	return nil
+}
+
+func (td *ThreatDetector) sendAlert(alert SecurityAlert) {
+	// Update statistics
+	td.mutex.Lock()
+	td.stats.TotalAlerts++
+	td.stats.AlertsByType[alert.Type]++
+	td.stats.AlertsBySeverity[alert.Severity]++
+	td.stats.LastUpdate = time.Now()
+	td.mutex.Unlock()
+	
+	// Send to channel (non-blocking)
+	select {
+	case td.alerts <- alert:
+	default:
+		log.Printf("Alert channel full, dropping alert: %s", alert.ID)
+	}
+}
+
+func (td *ThreatDetector) updateThreatIntelligence() {
+	ticker := time.NewTicker(td.config.UpdateInterval)
+	defer ticker.Stop()
+	
+	// Initial update
+	td.loadThreatIntelligence()
+	
+	for range ticker.C {
+		td.loadThreatIntelligence()
+	}
+}
+
+func (td *ThreatDetector) loadThreatIntelligence() {
+	for _, feed := range td.config.ThreatIntelFeeds {
+		go td.loadThreatFeed(feed)
+	}
+}
+
+func (td *ThreatDetector) loadThreatFeed(feedURL string) {
+	resp, err := http.Get(feedURL)
+	if err != nil {
+		log.Printf("Failed to fetch threat feed %s: %v", feedURL, err)
+		return
+	}
+	defer resp.Body.Close()
+	
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Printf("Failed to read threat feed %s: %v", feedURL, err)
+		return
+	}
+	
+	// Parse feed (simplified - would need format-specific parsers)
+	td.parseThreatFeed(data, feedURL)
+}
+
+func (td *ThreatDetector) parseThreatFeed(data []byte, source string) {
+	// Simplified parser - assumes JSON format
+	var threats []ThreatInfo
+	if err := json.Unmarshal(data, &threats); err != nil {
+		// Try line-separated format
+		lines := strings.Split(string(data), "\n")
+		for _, line := range lines {
+			line = strings.TrimSpace(line)
+			if line == "" || strings.HasPrefix(line, "#") {
+				continue
+			}
+			
+			// Simple IP validation
+			if ip := net.ParseIP(line); ip != nil {
+				threat := ThreatInfo{
+					Indicator:   line,
+					Type:        "IP",
+					ThreatType:  "Malicious",
+					Confidence:  70,
+					Source:      source,
+					Description: "IP from threat feed",
+					LastSeen:    time.Now(),
+				}
+				threats = append(threats, threat)
+			}
+		}
+	}
+	
+	// Update threat intelligence
+	td.mutex.Lock()
+	for _, threat := range threats {
+		switch threat.Type {
+		case "IP":
+			td.maliciousIPs[threat.Indicator] = threat
+		case "Domain":
+			td.maliciousDomains[threat.Indicator] = threat
+		case "Hash":
+			td.maliciousHashes[threat.Indicator] = threat
+		}
+	}
+	td.stats.ThreatIntelEntries = int64(len(td.maliciousIPs) + len(td.maliciousDomains) + len(td.maliciousHashes))
+	td.mutex.Unlock()
+	
+	log.Printf("Updated threat intelligence from %s: %d indicators", source, len(threats))
+}
+
+func (td *ThreatDetector) cleanupRoutine() {
+	ticker := time.NewTicker(time.Hour)
+	defer ticker.Stop()
+	
+	for range ticker.C {
+		td.cleanup()
+	}
+}
+
+func (td *ThreatDetector) cleanup() {
+	cutoff := time.Now().Add(-td.config.RetentionPeriod)
+	
+	td.mutex.Lock()
+	defer td.mutex.Unlock()
+	
+	// Clean up old connections
+	for key, state := range td.connections {
+		if state.LastSeen.Before(cutoff) {
+			delete(td.connections, key)
+		}
+	}
+}
+
+// GetAlerts returns the alerts channel
+func (td *ThreatDetector) GetAlerts() <-chan SecurityAlert {
+	return td.alerts
+}
+
+// GetStats returns detection statistics
+func (td *ThreatDetector) GetStats() ThreatStats {
+	td.mutex.RLock()
+	defer td.mutex.RUnlock()
+	return td.stats
+}
+
+// GetActiveThreats returns currently active threats
+func (td *ThreatDetector) GetActiveThreats() []SecurityAlert {
+	// Implementation would track and return active threats
+	return []SecurityAlert{}
+}
+
+// Helper functions
+
+func (td *ThreatDetector) generateAlertID() string {
+	return fmt.Sprintf("alert_%d", time.Now().UnixNano())
+}
+
+func (td *ThreatDetector) calculateSeverity(confidence int) AlertSeverity {
+	switch {
+	case confidence >= 90:
+		return SeverityCritical
+	case confidence >= 75:
+		return SeverityHigh
+	case confidence >= 50:
+		return SeverityMedium
+	case confidence >= 25:
+		return SeverityLow
+	default:
+		return SeverityInfo
+	}
+}
+
+// Placeholder detection engines - these would be fully implemented
+
+type PortScanDetector struct {
+	scanAttempts map[string][]time.Time
+	mutex        sync.RWMutex
+}
+
+func NewPortScanDetector() *PortScanDetector {
+	return &PortScanDetector{
+		scanAttempts: make(map[string][]time.Time),
+	}
+}
+
+func (psd *PortScanDetector) AnalyzePacket(info *PacketInfo) *SecurityAlert {
+	// Detect port scanning behavior
+	if len(info.Flags) > 0 && contains(info.Flags, "SYN") && !contains(info.Flags, "ACK") {
+		psd.mutex.Lock()
+		defer psd.mutex.Unlock()
+		
+		key := info.SourceIP.String()
+		psd.scanAttempts[key] = append(psd.scanAttempts[key], info.Timestamp)
+		
+		// Check for scan pattern (simplified)
+		recent := time.Now().Add(-time.Minute)
+		count := 0
+		for _, t := range psd.scanAttempts[key] {
+			if t.After(recent) {
+				count++
+			}
+		}
+		
+		if count > 10 { // Threshold for port scan
+			return &SecurityAlert{
+				Type:        AlertTypePortScan,
+				Severity:    SeverityMedium,
+				Timestamp:   info.Timestamp,
+				SourceIP:    info.SourceIP,
+				Description: fmt.Sprintf("Port scan detected from %s", info.SourceIP),
+				Recommendation: "Investigate source and consider blocking",
+			}
+		}
+	}
+	
+	return nil
+}
+
+type BruteForceDetector struct {
+	loginAttempts map[string][]time.Time
+	mutex         sync.RWMutex
+}
+
+func NewBruteForceDetector() *BruteForceDetector {
+	return &BruteForceDetector{
+		loginAttempts: make(map[string][]time.Time),
+	}
+}
+
+func (bfd *BruteForceDetector) AnalyzePacket(info *PacketInfo) *SecurityAlert {
+	// Detect brute force attempts on common services
+	if info.DestPort == 22 || info.DestPort == 23 || info.DestPort == 3389 {
+		// Implementation would analyze authentication patterns
+	}
+	return nil
+}
+
+type AnomalyDetector struct {
+	baselines map[string]TrafficBaseline
+	mutex     sync.RWMutex
+}
+
+type TrafficBaseline struct {
+	AveragePacketSize int64
+	AverageRate       float64
+	TypicalPorts      map[uint16]int
+}
+
+func NewAnomalyDetector() *AnomalyDetector {
+	return &AnomalyDetector{
+		baselines: make(map[string]TrafficBaseline),
+	}
+}
+
+func (ad *AnomalyDetector) AnalyzePacket(info *PacketInfo) *SecurityAlert {
+	// Detect anomalous traffic patterns
+	return nil
+}
+
+type DNSTunnelDetector struct {
+	dnsQueries map[string][]ThreatDNSQuery
+	mutex      sync.RWMutex
+}
+
+type ThreatDNSQuery struct {
+	Domain    string
+	Type      string
+	Size      int
+	Timestamp time.Time
+}
+
+func NewDNSTunnelDetector() *DNSTunnelDetector {
+	return &DNSTunnelDetector{
+		dnsQueries: make(map[string][]DNSQuery),
+	}
+}
+
+func (dtd *DNSTunnelDetector) AnalyzePacket(info *PacketInfo) *SecurityAlert {
+	// Detect DNS tunneling patterns
+	if info.DestPort == 53 {
+		// Analyze DNS query patterns for tunneling indicators
+	}
+	return nil
+}
+
+func contains(slice []string, item string) bool {
+	for _, s := range slice {
+		if s == item {
+			return true
+		}
+	}
+	return false
+}

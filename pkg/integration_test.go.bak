@@ -1,0 +1,371 @@
+package netmon_test
+
+import (
+	"testing"
+	"time"
+
+	"github.com/google/gopacket"
+	"github.com/google/gopacket/layers"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/user/netmon/pkg/netcap"
+	"github.com/user/netmon/pkg/protocols"
+	"github.com/user/netmon/pkg/security"
+	"github.com/user/netmon/pkg/ui"
+)
+
+// Integration test for full packet processing pipeline
+func TestFullPacketProcessingPipeline(t *testing.T) {
+	// Initialize components
+	monitor := &netcap.NetworkMonitor{}
+	protocolManager := protocols.NewProtocolManager(100)
+	
+	config := security.UnifiedConfig{
+		EnabledEngines: []string{"snort", "suricata", "yara"},
+		TimeWindow:     5 * time.Minute,
+	}
+	detectionEngine := security.NewUnifiedDetectionEngine(config)
+	
+	// Create test packet
+	packet := createTestHTTPPacket()
+	
+	// Process through protocol analyzer
+	protocolManager.ProcessPacket(packet)
+	
+	// Process through detection engine
+	alerts := detectionEngine.ProcessPacket(packet)
+	
+	// Verify results
+	assert.NotNil(t, alerts)
+	
+	// Check for protocol events
+	select {
+	case event := <-protocolManager.GetEvents():
+		assert.NotNil(t, event)
+	case <-time.After(100 * time.Millisecond):
+		// No event is also valid for some packets
+	}
+}
+
+// Test visualization integration
+func TestVisualizationIntegration(t *testing.T) {
+	// Create monitor with test data
+	monitor := createTestMonitor()
+	
+	// Test multiple visualizations
+	visualizations := []ui.Visualization{
+		ui.NewNetworkGraphVisualization(),
+		ui.NewTrafficFlowVisualization(),
+		ui.NewProtocolDistributionVisualization(),
+		ui.NewSecurityDashboardVisualization(),
+	}
+	
+	for _, viz := range visualizations {
+		t.Run(viz.GetName(), func(t *testing.T) {
+			// Create view
+			view := viz.CreateView()
+			assert.NotNil(t, view)
+			
+			// Update with monitor data
+			assert.NotPanics(t, func() {
+				viz.Update(monitor)
+			})
+		})
+	}
+}
+
+// Test protocol and detection integration
+func TestProtocolDetectionIntegration(t *testing.T) {
+	// Initialize systems
+	protocolManager := protocols.NewProtocolManager(100)
+	networkAttackDetector := security.NewNetworkAttackDetector()
+	
+	// Test various attack scenarios
+	scenarios := []struct {
+		name        string
+		packet      gopacket.Packet
+		expectAlert bool
+	}{
+		{
+			name:        "Normal HTTP",
+			packet:      createTestHTTPPacket(),
+			expectAlert: false,
+		},
+		{
+			name:        "SQL Injection",
+			packet:      createSQLInjectionPacket(),
+			expectAlert: true,
+		},
+		{
+			name:        "ARP Spoofing",
+			packet:      createARPSpoofPacket(),
+			expectAlert: true,
+		},
+		{
+			name:        "DNS Tunneling",
+			packet:      createDNSTunnelingPacket(),
+			expectAlert: true,
+		},
+	}
+	
+	for _, scenario := range scenarios {
+		t.Run(scenario.name, func(t *testing.T) {
+			// Process through protocol analyzer
+			protocolManager.ProcessPacket(scenario.packet)
+			
+			// Process through attack detector
+			alerts := networkAttackDetector.ProcessPacket(scenario.packet)
+			
+			if scenario.expectAlert {
+				assert.Greater(t, len(alerts), 0, "Expected alert for %s", scenario.name)
+			} else {
+				assert.Len(t, alerts, 0, "Unexpected alert for %s", scenario.name)
+			}
+		})
+	}
+}
+
+// Test end-to-end flow with multiple packets
+func TestEndToEndFlow(t *testing.T) {
+	// Initialize all components
+	monitor := &netcap.NetworkMonitor{}
+	protocolManager := protocols.NewProtocolManager(1000)
+	
+	config := security.UnifiedConfig{
+		EnabledEngines: []string{"snort", "suricata", "zeek", "yara", "sigma"},
+		TimeWindow:     5 * time.Minute,
+	}
+	detectionEngine := security.NewUnifiedDetectionEngine(config)
+	
+	// Simulate packet stream
+	packets := generatePacketStream()
+	
+	// Process all packets
+	for _, packet := range packets {
+		// Protocol analysis
+		protocolManager.ProcessPacket(packet)
+		
+		// Security detection
+		detectionEngine.ProcessPacket(packet)
+	}
+	
+	// Verify results
+	stats := detectionEngine.GetStats()
+	assert.Greater(t, stats.TotalPackets, uint64(0))
+	
+	// Check for correlations
+	correlations := detectionEngine.GetCorrelations()
+	assert.NotNil(t, correlations)
+}
+
+// Test performance under load
+func TestPerformanceUnderLoad(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping performance test in short mode")
+	}
+	
+	// Initialize components
+	protocolManager := protocols.NewProtocolManager(10000)
+	config := security.UnifiedConfig{
+		EnabledEngines: []string{"snort", "yara"},
+		TimeWindow:     1 * time.Minute,
+	}
+	detectionEngine := security.NewUnifiedDetectionEngine(config)
+	
+	// Generate large packet stream
+	packets := generateLargePacketStream(1000)
+	
+	// Measure processing time
+	start := time.Now()
+	
+	for _, packet := range packets {
+		protocolManager.ProcessPacket(packet)
+		detectionEngine.ProcessPacket(packet)
+	}
+	
+	duration := time.Since(start)
+	packetsPerSecond := float64(len(packets)) / duration.Seconds()
+	
+	t.Logf("Processed %d packets in %v (%.2f packets/sec)", 
+		len(packets), duration, packetsPerSecond)
+	
+	// Ensure reasonable performance
+	assert.Greater(t, packetsPerSecond, float64(100), 
+		"Performance too low: %.2f packets/sec", packetsPerSecond)
+}
+
+// Helper functions
+
+func createTestMonitor() *netcap.NetworkMonitor {
+	monitor := &netcap.NetworkMonitor{}
+	// Add test connections and data
+	return monitor
+}
+
+func createTestHTTPPacket() gopacket.Packet {
+	return createPacket("192.168.1.100", "93.184.216.34", 54321, 80,
+		[]byte("GET /index.html HTTP/1.1\r\nHost: example.com\r\n\r\n"))
+}
+
+func createSQLInjectionPacket() gopacket.Packet {
+	return createPacket("192.168.1.100", "192.168.1.10", 54321, 80,
+		[]byte("GET /users?id=1' OR '1'='1 HTTP/1.1\r\n\r\n"))
+}
+
+func createARPSpoofPacket() gopacket.Packet {
+	eth := &layers.Ethernet{
+		SrcMAC:       []byte{0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff},
+		DstMAC:       []byte{0xff, 0xff, 0xff, 0xff, 0xff, 0xff},
+		EthernetType: layers.EthernetTypeARP,
+	}
+	
+	arp := &layers.ARP{
+		AddrType:          layers.LinkTypeEthernet,
+		Protocol:          layers.EthernetTypeIPv4,
+		HwAddressSize:     6,
+		ProtAddressSize:   4,
+		Operation:         layers.ARPRequest,
+		SourceHwAddress:   []byte{0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff},
+		SourceProtAddress: []byte{192, 168, 1, 100},
+		DstHwAddress:      []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
+		DstProtAddress:    []byte{192, 168, 1, 100}, // Gratuitous ARP
+	}
+	
+	buf := gopacket.NewSerializeBuffer()
+	gopacket.SerializeLayers(buf, gopacket.SerializeOptions{}, eth, arp)
+	return gopacket.NewPacket(buf.Bytes(), layers.LayerTypeEthernet, gopacket.Default)
+}
+
+func createDNSTunnelingPacket() gopacket.Packet {
+	longDomain := "verylongsubdomainthatmightbeusedfordingtunnelingdataexfiltration.suspicious.com"
+	
+	eth := &layers.Ethernet{
+		SrcMAC:       []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x01},
+		DstMAC:       []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x02},
+		EthernetType: layers.EthernetTypeIPv4,
+	}
+	
+	ip := &layers.IPv4{
+		Version:  4,
+		IHL:      5,
+		TTL:      64,
+		Protocol: layers.IPProtocolUDP,
+		SrcIP:    []byte{192, 168, 1, 100},
+		DstIP:    []byte{8, 8, 8, 8},
+	}
+	
+	udp := &layers.UDP{
+		SrcPort: 54321,
+		DstPort: 53,
+	}
+	
+	dns := &layers.DNS{
+		ID:     12345,
+		QR:     false,
+		OpCode: layers.DNSOpCodeQuery,
+		Questions: []layers.DNSQuestion{
+			{
+				Name:  []byte(longDomain),
+				Type:  layers.DNSTypeTXT,
+				Class: layers.DNSClassIN,
+			},
+		},
+	}
+	
+	udp.SetNetworkLayerForChecksum(ip)
+	
+	buf := gopacket.NewSerializeBuffer()
+	opts := gopacket.SerializeOptions{
+		FixLengths:       true,
+		ComputeChecksums: true,
+	}
+	
+	gopacket.SerializeLayers(buf, opts, eth, ip, udp, dns)
+	return gopacket.NewPacket(buf.Bytes(), layers.LayerTypeEthernet, gopacket.Default)
+}
+
+func createPacket(srcIP, dstIP string, srcPort, dstPort uint16, payload []byte) gopacket.Packet {
+	eth := &layers.Ethernet{
+		SrcMAC:       []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x01},
+		DstMAC:       []byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x02},
+		EthernetType: layers.EthernetTypeIPv4,
+	}
+	
+	ip := &layers.IPv4{
+		Version:  4,
+		IHL:      5,
+		TTL:      64,
+		Protocol: layers.IPProtocolTCP,
+		SrcIP:    []byte(srcIP),
+		DstIP:    []byte(dstIP),
+	}
+	
+	tcp := &layers.TCP{
+		SrcPort: layers.TCPPort(srcPort),
+		DstPort: layers.TCPPort(dstPort),
+		Seq:     12345,
+		Window:  14600,
+		SYN:     true,
+	}
+	
+	tcp.SetNetworkLayerForChecksum(ip)
+	
+	buf := gopacket.NewSerializeBuffer()
+	opts := gopacket.SerializeOptions{
+		FixLengths:       true,
+		ComputeChecksums: true,
+	}
+	
+	if len(payload) > 0 {
+		gopacket.SerializeLayers(buf, opts, eth, ip, tcp, gopacket.Payload(payload))
+	} else {
+		gopacket.SerializeLayers(buf, opts, eth, ip, tcp)
+	}
+	
+	return gopacket.NewPacket(buf.Bytes(), layers.LayerTypeEthernet, gopacket.Default)
+}
+
+func generatePacketStream() []gopacket.Packet {
+	packets := []gopacket.Packet{
+		// Normal traffic
+		createTestHTTPPacket(),
+		createPacket("192.168.1.100", "8.8.8.8", 54321, 53, []byte("DNS query")),
+		createPacket("192.168.1.100", "192.168.1.1", 54321, 22, []byte("SSH-2.0-OpenSSH_7.4\r\n")),
+		
+		// Suspicious traffic
+		createSQLInjectionPacket(),
+		createDNSTunnelingPacket(),
+		
+		// More normal traffic
+		createPacket("192.168.1.101", "93.184.216.34", 54322, 443, []byte("TLS handshake")),
+		createPacket("192.168.1.102", "192.168.1.10", 54323, 21, []byte("USER anonymous\r\n")),
+	}
+	
+	return packets
+}
+
+func generateLargePacketStream(count int) []gopacket.Packet {
+	packets := make([]gopacket.Packet, count)
+	
+	for i := 0; i < count; i++ {
+		// Mix of different packet types
+		switch i % 5 {
+		case 0:
+			packets[i] = createTestHTTPPacket()
+		case 1:
+			packets[i] = createPacket("192.168.1.100", "8.8.8.8", uint16(50000+i), 53, 
+				[]byte("DNS query"))
+		case 2:
+			packets[i] = createPacket("192.168.1.100", "192.168.1.1", uint16(50000+i), 22, 
+				[]byte("SSH traffic"))
+		case 3:
+			packets[i] = createPacket("192.168.1.100", "93.184.216.34", uint16(50000+i), 443,
+				[]byte("HTTPS traffic"))
+		case 4:
+			packets[i] = createPacket("192.168.1.100", "192.168.1.10", uint16(50000+i), 21,
+				[]byte("FTP traffic"))
+		}
+	}
+	
+	return packets
+}

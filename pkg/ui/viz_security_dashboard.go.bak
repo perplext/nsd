@@ -1,0 +1,457 @@
+package ui
+
+import (
+	"fmt"
+	"sort"
+	"strings"
+	"time"
+
+	"github.com/rivo/tview"
+	"github.com/user/netmon/pkg/netcap"
+	"github.com/user/netmon/pkg/security"
+)
+
+// SecurityDashboardVisualization shows real-time security alerts and threat analysis
+type SecurityDashboardVisualization struct {
+	BaseVisualization
+	threatDetector *security.ThreatDetector
+	alerts         []security.SecurityAlert
+	maxAlerts      int
+}
+
+// NewSecurityDashboardVisualization creates a new security dashboard
+func NewSecurityDashboardVisualization() Visualization {
+	s := &SecurityDashboardVisualization{
+		maxAlerts: 100,
+		alerts:    make([]security.SecurityAlert, 0),
+	}
+	s.textView = tview.NewTextView().
+		SetDynamicColors(true).
+		SetWrap(false)
+	s.textView.SetBorder(true).
+		SetTitle("Security Operations Center")
+	
+	// Initialize threat detector with default config
+	config := security.DetectorConfig{
+		EnablePortScanDetection:   true,
+		EnableBruteForceDetection: true,
+		EnableAnomalyDetection:    true,
+		EnableDNSTunnelDetection:  true,
+		EnableThreatIntelligence:  true,
+		ThreatIntelFeeds: []string{
+			"https://raw.githubusercontent.com/stamparm/ipsum/master/ipsum.txt",
+		},
+		UpdateInterval:  time.Hour,
+		AlertThreshold:  security.SeverityLow,
+		MaxAlerts:      1000,
+		RetentionPeriod: 24 * time.Hour,
+	}
+	s.threatDetector = security.NewThreatDetector(config)
+	
+	// Start alert processing
+	go s.processAlerts()
+	
+	return s
+}
+
+// GetID returns the unique identifier
+func (s *SecurityDashboardVisualization) GetID() string {
+	return "security_dashboard"
+}
+
+// GetName returns the display name
+func (s *SecurityDashboardVisualization) GetName() string {
+	return "Security Dashboard"
+}
+
+// GetDescription returns a description
+func (s *SecurityDashboardVisualization) GetDescription() string {
+	return "Real-time security threat monitoring and analysis"
+}
+
+// CreateView creates the view
+func (s *SecurityDashboardVisualization) CreateView() tview.Primitive {
+	return s.textView
+}
+
+// Update updates the visualization
+func (s *SecurityDashboardVisualization) Update(monitor *netcap.NetworkMonitor) {
+	s.monitor = monitor
+	
+	// Get packet buffer and analyze for threats
+	packets := monitor.GetPacketBuffer()
+	for _, pkt := range packets {
+		// Convert to gopacket.Packet equivalent (simplified)
+		// In real implementation, would reconstruct the packet
+		// s.threatDetector.ProcessPacket(packet)
+	}
+	
+	// Update display
+	s.updateDisplay()
+}
+
+func (s *SecurityDashboardVisualization) processAlerts() {
+	for alert := range s.threatDetector.GetAlerts() {
+		s.addAlert(alert)
+	}
+}
+
+func (s *SecurityDashboardVisualization) addAlert(alert security.SecurityAlert) {
+	s.alerts = append(s.alerts, alert)
+	
+	// Keep only recent alerts
+	if len(s.alerts) > s.maxAlerts {
+		s.alerts = s.alerts[len(s.alerts)-s.maxAlerts:]
+	}
+	
+	// Sort by timestamp (newest first)
+	sort.Slice(s.alerts, func(i, j int) bool {
+		return s.alerts[i].Timestamp.After(s.alerts[j].Timestamp)
+	})
+}
+
+func (s *SecurityDashboardVisualization) updateDisplay() {
+	var output strings.Builder
+	
+	// Header
+	output.WriteString(fmt.Sprintf("[%s]🛡️  Security Operations Center[white]\n\n", 
+		s.getSeverityColor(security.SeverityHigh)))
+	
+	// Statistics
+	stats := s.threatDetector.GetStats()
+	output.WriteString(s.renderStats(stats))
+	
+	// Threat Level Assessment
+	output.WriteString("\n[white]═══ Threat Level Assessment ═══\n")
+	threatLevel := s.calculateOverallThreatLevel()
+	output.WriteString(s.renderThreatLevel(threatLevel))
+	
+	// Recent Alerts
+	output.WriteString("\n[white]═══ Recent Security Alerts ═══\n")
+	output.WriteString(s.renderRecentAlerts())
+	
+	// Top Threats
+	output.WriteString("\n[white]═══ Top Threat Sources ═══\n")
+	output.WriteString(s.renderTopThreats())
+	
+	// Alert Trends
+	output.WriteString("\n[white]═══ Alert Trends (Last Hour) ═══\n")
+	output.WriteString(s.renderAlertTrends())
+	
+	s.textView.SetText(output.String())
+}
+
+func (s *SecurityDashboardVisualization) renderStats(stats security.ThreatStats) string {
+	var output strings.Builder
+	
+	output.WriteString("[white]📊 Statistics:\n")
+	output.WriteString(fmt.Sprintf("  Total Alerts: [yellow]%d[white]\n", stats.TotalAlerts))
+	output.WriteString(fmt.Sprintf("  Threat Intel Entries: [cyan]%d[white]\n", stats.ThreatIntelEntries))
+	output.WriteString(fmt.Sprintf("  Active Threats: [red]%d[white]\n", stats.ActiveThreats))
+	output.WriteString(fmt.Sprintf("  Last Update: [green]%s[white]\n", 
+		stats.LastUpdate.Format("15:04:05")))
+	
+	// Alert breakdown by severity
+	output.WriteString("\n[white]Alerts by Severity:\n")
+	for severity, count := range stats.AlertsBySeverity {
+		color := s.getSeverityColor(severity)
+		name := s.getSeverityName(severity)
+		output.WriteString(fmt.Sprintf("  %s%-8s[white]: %d\n", color, name, count))
+	}
+	
+	// Alert breakdown by type
+	output.WriteString("\n[white]Alerts by Type:\n")
+	for alertType, count := range stats.AlertsByType {
+		icon := s.getAlertTypeIcon(alertType)
+		output.WriteString(fmt.Sprintf("  %s %-15s: %d\n", icon, string(alertType), count))
+	}
+	
+	return output.String()
+}
+
+func (s *SecurityDashboardVisualization) renderThreatLevel(level int) string {
+	var output strings.Builder
+	var color, status, recommendation string
+	
+	switch {
+	case level >= 80:
+		color = "[red]"
+		status = "CRITICAL"
+		recommendation = "Immediate action required - Network under active attack"
+	case level >= 60:
+		color = "[orange]"
+		status = "HIGH"
+		recommendation = "Heightened security posture - Monitor closely"
+	case level >= 40:
+		color = "[yellow]"
+		status = "MEDIUM"
+		recommendation = "Increased vigilance - Review recent alerts"
+	case level >= 20:
+		color = "[green]"
+		status = "LOW"
+		recommendation = "Normal operations - Routine monitoring"
+	default:
+		color = "[blue]"
+		status = "MINIMAL"
+		recommendation = "No immediate threats detected"
+	}
+	
+	// Threat level bar
+	barLength := 30
+	fillLength := (level * barLength) / 100
+	bar := strings.Repeat("█", fillLength) + strings.Repeat("▒", barLength-fillLength)
+	
+	output.WriteString(fmt.Sprintf("Current Threat Level: %s%s (%d%%)[white]\n", color, status, level))
+	output.WriteString(fmt.Sprintf("Threat Meter: %s%s[white]\n", color, bar))
+	output.WriteString(fmt.Sprintf("Recommendation: %s\n", recommendation))
+	
+	return output.String()
+}
+
+func (s *SecurityDashboardVisualization) renderRecentAlerts() string {
+	var output strings.Builder
+	
+	if len(s.alerts) == 0 {
+		output.WriteString("[green]✅ No recent alerts - All systems secure[white]\n")
+		return output.String()
+	}
+	
+	// Show last 10 alerts
+	maxDisplay := 10
+	if len(s.alerts) < maxDisplay {
+		maxDisplay = len(s.alerts)
+	}
+	
+	for i := 0; i < maxDisplay; i++ {
+		alert := s.alerts[i]
+		severity := s.getSeverityColor(alert.Severity)
+		timeStr := alert.Timestamp.Format("15:04:05")
+		icon := s.getAlertTypeIcon(alert.Type)
+		
+		output.WriteString(fmt.Sprintf("%s[%s] %s %s %s[white]\n",
+			severity, timeStr, icon, s.getSeverityName(alert.Severity), alert.Description))
+		
+		if alert.SourceIP != nil {
+			output.WriteString(fmt.Sprintf("     └─ Source: %s", alert.SourceIP))
+			if alert.SourcePort != 0 {
+				output.WriteString(fmt.Sprintf(":%d", alert.SourcePort))
+			}
+			output.WriteString("\n")
+		}
+	}
+	
+	if len(s.alerts) > maxDisplay {
+		output.WriteString(fmt.Sprintf("[gray]... and %d more alerts[white]\n", len(s.alerts)-maxDisplay))
+	}
+	
+	return output.String()
+}
+
+func (s *SecurityDashboardVisualization) renderTopThreats() string {
+	var output strings.Builder
+	
+	// Count threats by source IP
+	threatCounts := make(map[string]int)
+	threatTypes := make(map[string]map[security.AlertType]int)
+	
+	for _, alert := range s.alerts {
+		if alert.SourceIP != nil {
+			ip := alert.SourceIP.String()
+			threatCounts[ip]++
+			
+			if threatTypes[ip] == nil {
+				threatTypes[ip] = make(map[security.AlertType]int)
+			}
+			threatTypes[ip][alert.Type]++
+		}
+	}
+	
+	// Sort by threat count
+	type threatSource struct {
+		IP    string
+		Count int
+	}
+	
+	var threats []threatSource
+	for ip, count := range threatCounts {
+		threats = append(threats, threatSource{IP: ip, Count: count})
+	}
+	
+	sort.Slice(threats, func(i, j int) bool {
+		return threats[i].Count > threats[j].Count
+	})
+	
+	// Display top 5 threats
+	maxDisplay := 5
+	if len(threats) < maxDisplay {
+		maxDisplay = len(threats)
+	}
+	
+	if maxDisplay == 0 {
+		output.WriteString("[green]No threat sources identified[white]\n")
+		return output.String()
+	}
+	
+	for i := 0; i < maxDisplay; i++ {
+		threat := threats[i]
+		output.WriteString(fmt.Sprintf("%d. [red]%s[white] - %d alerts\n", 
+			i+1, threat.IP, threat.Count))
+		
+		// Show alert types for this IP
+		types := threatTypes[threat.IP]
+		var typeList []string
+		for alertType, count := range types {
+			typeList = append(typeList, fmt.Sprintf("%s(%d)", string(alertType), count))
+		}
+		output.WriteString(fmt.Sprintf("   Types: %s\n", strings.Join(typeList, ", ")))
+	}
+	
+	return output.String()
+}
+
+func (s *SecurityDashboardVisualization) renderAlertTrends() string {
+	var output strings.Builder
+	
+	// Create hourly buckets for the last hour
+	now := time.Now()
+	buckets := make([]int, 12) // 5-minute buckets for last hour
+	bucketLabels := make([]string, 12)
+	
+	for i := 0; i < 12; i++ {
+		t := now.Add(time.Duration(-11+i) * 5 * time.Minute)
+		bucketLabels[i] = t.Format("15:04")
+	}
+	
+	// Count alerts in each bucket
+	for _, alert := range s.alerts {
+		if alert.Timestamp.After(now.Add(-time.Hour)) {
+			minutes := int(now.Sub(alert.Timestamp).Minutes())
+			bucket := (60 - minutes) / 5
+			if bucket >= 0 && bucket < 12 {
+				buckets[bucket]++
+			}
+		}
+	}
+	
+	// Find max for scaling
+	maxCount := 0
+	for _, count := range buckets {
+		if count > maxCount {
+			maxCount = count
+		}
+	}
+	
+	if maxCount == 0 {
+		output.WriteString("[green]No alerts in the last hour[white]\n")
+		return output.String()
+	}
+	
+	// Create mini bar chart
+	for i, count := range buckets {
+		barHeight := (count * 10) / maxCount
+		if count > 0 && barHeight == 0 {
+			barHeight = 1
+		}
+		
+		bar := strings.Repeat("▌", barHeight)
+		output.WriteString(fmt.Sprintf("%-5s [red]%s[white] %d\n", 
+			bucketLabels[i], bar, count))
+	}
+	
+	return output.String()
+}
+
+func (s *SecurityDashboardVisualization) calculateOverallThreatLevel() int {
+	if len(s.alerts) == 0 {
+		return 0
+	}
+	
+	// Calculate threat level based on recent alerts
+	recentAlerts := 0
+	highSeverityAlerts := 0
+	now := time.Now()
+	
+	for _, alert := range s.alerts {
+		if alert.Timestamp.After(now.Add(-time.Hour)) {
+			recentAlerts++
+			if alert.Severity >= security.SeverityHigh {
+				highSeverityAlerts++
+			}
+		}
+	}
+	
+	// Simple scoring algorithm
+	score := (recentAlerts * 2) + (highSeverityAlerts * 10)
+	if score > 100 {
+		score = 100
+	}
+	
+	return score
+}
+
+// Helper functions for formatting
+
+func (s *SecurityDashboardVisualization) getSeverityColor(severity security.AlertSeverity) string {
+	switch severity {
+	case security.SeverityCritical:
+		return "[red]"
+	case security.SeverityHigh:
+		return "[orange]"
+	case security.SeverityMedium:
+		return "[yellow]"
+	case security.SeverityLow:
+		return "[blue]"
+	default:
+		return "[gray]"
+	}
+}
+
+func (s *SecurityDashboardVisualization) getSeverityName(severity security.AlertSeverity) string {
+	switch severity {
+	case security.SeverityCritical:
+		return "CRITICAL"
+	case security.SeverityHigh:
+		return "HIGH"
+	case security.SeverityMedium:
+		return "MEDIUM"
+	case security.SeverityLow:
+		return "LOW"
+	default:
+		return "INFO"
+	}
+}
+
+func (s *SecurityDashboardVisualization) getAlertTypeIcon(alertType security.AlertType) string {
+	switch alertType {
+	case security.AlertTypePortScan:
+		return "🔍"
+	case security.AlertTypeBruteForce:
+		return "🔨"
+	case security.AlertTypeAnomalousTraffic:
+		return "📊"
+	case security.AlertTypeMaliciousIP:
+		return "☠️"
+	case security.AlertTypeDNSTunnel:
+		return "🕳️"
+	case security.AlertTypeDDoS:
+		return "💥"
+	case security.AlertTypeDataExfiltration:
+		return "📤"
+	case security.AlertTypeMalware:
+		return "🦠"
+	case security.AlertTypeIntrusion:
+		return "🚨"
+	default:
+		return "⚠️"
+	}
+}
+
+// GetMinSize returns minimum size requirements
+func (s *SecurityDashboardVisualization) GetMinSize() (width, height int) {
+	return 80, 40
+}
+
+// SupportsFullscreen indicates this visualization works well in fullscreen
+func (s *SecurityDashboardVisualization) SupportsFullscreen() bool {
+	return true
+}

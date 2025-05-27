@@ -1,0 +1,58 @@
+{
+  "interface": "eth0",
+  "bpf_filter": "",
+  "theme": "Dark+",
+  "style": "Standard",
+  "gradient_enabled": true,
+  "drop_privileges": true,
+  "unprivileged_user": "nsd",
+  "log_level": "info",
+  "log_file": "/var/log/nsd/nsd.log",
+  "stats_interval": 5,
+  "packet_buffer_size": 1000,
+  "connection_timeout": 300,
+  "export_dir": "/var/lib/nsd/exports",
+  "plugin_dir": "/usr/lib/nsd/plugins",
+  "plugins": [],
+  "auto_export": {
+    "enabled": false,
+    "format": "json",
+    "interval": 3600,
+    "directory": "/var/lib/nsd/auto-exports"
+  },
+  "rate_limiting": {
+    "enabled": true,
+    "max_packets_per_sec": 100000,
+    "max_bytes_per_sec": 1073741824,
+    "max_connections": 10000,
+    "adaptive": true
+  },
+  "resource_limits": {
+    "max_memory_mb": 2048,
+    "max_cpu_percent": 80.0,
+    "max_goroutines": 1000,
+    "check_interval": 10
+  },
+  "security": {
+    "enable_promiscuous": false,
+    "allowed_interfaces": [],
+    "enable_audit_log": true,
+    "audit_log_path": "/var/log/nsd/audit.log",
+    "max_export_size": 104857600,
+    "allowed_export_types": ["json", "csv", "svg", "png"]
+  },
+  "ui": {
+    "refresh_rate": 30,
+    "show_timestamps": true,
+    "show_protocol_colors": true,
+    "connection_limit": 1000,
+    "startup_visualization": "",
+    "startup_dashboard": "",
+    "fullscreen": false
+  },
+  "metrics": {
+    "enabled": false,
+    "listen_address": ":9100",
+    "path": "/metrics"
+  }
+}

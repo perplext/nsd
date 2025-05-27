@@ -1,0 +1,751 @@
+package ui
+
+import (
+	"fmt"
+	"sort"
+	"strings"
+	"time"
+
+	"github.com/rivo/tview"
+	"github.com/user/netmon/pkg/netcap"
+	"github.com/user/netmon/pkg/protocols"
+)
+
+// ProtocolDashboardVisualization shows comprehensive protocol analysis
+type ProtocolDashboardVisualization struct {
+	BaseVisualization
+	protocolManager *protocols.ProtocolManager
+	recentEvents    []protocols.ProtocolEvent
+	maxEvents       int
+}
+
+// NewProtocolDashboardVisualization creates a new protocol dashboard
+func NewProtocolDashboardVisualization() Visualization {
+	p := &ProtocolDashboardVisualization{
+		maxEvents:    500,
+		recentEvents: make([]protocols.ProtocolEvent, 0),
+	}
+	p.textView = tview.NewTextView().
+		SetDynamicColors(true).
+		SetWrap(false)
+	p.textView.SetBorder(true).
+		SetTitle("Protocol Analysis Dashboard")
+	
+	// Initialize protocol manager
+	p.protocolManager = protocols.NewProtocolManager(1000)
+	
+	// Start event processing
+	go p.processEvents()
+	
+	return p
+}
+
+// GetID returns the unique identifier
+func (p *ProtocolDashboardVisualization) GetID() string {
+	return "protocol_dashboard"
+}
+
+// GetName returns the display name
+func (p *ProtocolDashboardVisualization) GetName() string {
+	return "Protocol Dashboard"
+}
+
+// GetDescription returns a description
+func (p *ProtocolDashboardVisualization) GetDescription() string {
+	return "Comprehensive analysis of FTP, SSH, POP3, IMAP, SMTP, IRC, TFTP, SCP, and SFTP protocols"
+}
+
+// CreateView creates the view
+func (p *ProtocolDashboardVisualization) CreateView() tview.Primitive {
+	return p.textView
+}
+
+// Update updates the visualization
+func (p *ProtocolDashboardVisualization) Update(monitor *netcap.NetworkMonitor) {
+	p.monitor = monitor
+	
+	// Get packet buffer and process through protocol manager
+	packets := monitor.GetPacketBuffer()
+	for _, pkt := range packets {
+		// Convert to gopacket.Packet equivalent (simplified)
+		// In real implementation, would reconstruct the packet
+		// p.protocolManager.ProcessPacket(packet)
+	}
+	
+	// Update display
+	p.updateDisplay()
+}
+
+func (p *ProtocolDashboardVisualization) processEvents() {
+	for event := range p.protocolManager.GetEvents() {
+		p.addEvent(event)
+	}
+}
+
+func (p *ProtocolDashboardVisualization) addEvent(event protocols.ProtocolEvent) {
+	p.recentEvents = append(p.recentEvents, event)
+	
+	// Keep only recent events
+	if len(p.recentEvents) > p.maxEvents {
+		p.recentEvents = p.recentEvents[len(p.recentEvents)-p.maxEvents:]
+	}
+	
+	// Sort by timestamp (newest first)
+	sort.Slice(p.recentEvents, func(i, j int) bool {
+		return p.recentEvents[i].Timestamp.After(p.recentEvents[j].Timestamp)
+	})
+}
+
+func (p *ProtocolDashboardVisualization) updateDisplay() {
+	var output strings.Builder
+	
+	// Header
+	output.WriteString(fmt.Sprintf("[%s]🌐 Protocol Analysis Dashboard[white]\n\n", 
+		p.getProtocolColor("HEADER")))
+	
+	// Protocol Statistics Overview
+	output.WriteString(p.renderProtocolOverview())
+	
+	// Active Sessions by Protocol
+	output.WriteString("\n[white]═══ Active Sessions ═══\n")
+	output.WriteString(p.renderActiveSessions())
+	
+	// Recent Protocol Events
+	output.WriteString("\n[white]═══ Recent Protocol Events ═══\n")
+	output.WriteString(p.renderRecentEvents())
+	
+	// Protocol-Specific Insights
+	output.WriteString("\n[white]═══ Protocol Insights ═══\n")
+	output.WriteString(p.renderProtocolInsights())
+	
+	// Security Analysis
+	output.WriteString("\n[white]═══ Security Analysis ═══\n")
+	output.WriteString(p.renderSecurityAnalysis())
+	
+	p.textView.SetText(output.String())
+}
+
+func (p *ProtocolDashboardVisualization) renderProtocolOverview() string {
+	var output strings.Builder
+	
+	analyzers := p.protocolManager.GetAnalyzers()
+	
+	output.WriteString("[white]📊 Protocol Statistics:\n")
+	
+	for protocolName, analyzer := range analyzers {
+		color := p.getProtocolColor(protocolName)
+		icon := p.getProtocolIcon(protocolName)
+		
+		// Get protocol-specific stats
+		var stats map[string]interface{}
+		switch protocolName {
+		case "FTP":
+			if ftpAnalyzer, ok := analyzer.(*protocols.FTPAnalyzer); ok {
+				stats = ftpAnalyzer.GetSessionStats()
+			}
+		case "SSH":
+			if sshAnalyzer, ok := analyzer.(*protocols.SSHAnalyzer); ok {
+				stats = sshAnalyzer.GetSessionStats()
+			}
+		case "POP3":
+			if pop3Analyzer, ok := analyzer.(*protocols.POP3Analyzer); ok {
+				stats = pop3Analyzer.GetSessionStats()
+			}
+		case "IMAP":
+			if imapAnalyzer, ok := analyzer.(*protocols.IMAPAnalyzer); ok {
+				stats = imapAnalyzer.GetSessionStats()
+			}
+		case "SMTP":
+			if smtpAnalyzer, ok := analyzer.(*protocols.SMTPAnalyzer); ok {
+				sessions := smtpAnalyzer.GetSessions()
+				stats = map[string]interface{}{
+					"active_sessions": len(sessions),
+					"total_emails": p.countSMTPEmails(sessions),
+				}
+			}
+		case "IRC":
+			if ircAnalyzer, ok := analyzer.(*protocols.IRCAnalyzer); ok {
+				sessions := ircAnalyzer.GetSessions()
+				stats = map[string]interface{}{
+					"active_sessions": len(sessions),
+					"dcc_transfers": p.countDCCTransfers(sessions),
+				}
+			}
+		case "TFTP":
+			if tftpAnalyzer, ok := analyzer.(*protocols.TFTPAnalyzer); ok {
+				sessions := tftpAnalyzer.GetSessions()
+				stats = map[string]interface{}{
+					"active_sessions": len(sessions),
+					"file_transfers": p.countTFTPTransfers(sessions),
+				}
+			}
+		case "SCP":
+			if scpAnalyzer, ok := analyzer.(*protocols.SCPAnalyzer); ok {
+				sessions := scpAnalyzer.GetSessions()
+				stats = map[string]interface{}{
+					"active_sessions": len(sessions),
+					"file_transfers": p.countSCPTransfers(sessions),
+				}
+			}
+		case "SFTP":
+			if sftpAnalyzer, ok := analyzer.(*protocols.SFTPAnalyzer); ok {
+				sessions := sftpAnalyzer.GetSessions()
+				stats = map[string]interface{}{
+					"active_sessions": len(sessions),
+					"operations": p.countSFTPOperations(sessions),
+				}
+			}
+		}
+		
+		if stats != nil {
+			activeSessions := 0
+			if val, ok := stats["active_sessions"].(int); ok {
+				activeSessions = val
+			}
+			
+			output.WriteString(fmt.Sprintf("%s%s %-4s[white]: %d active sessions\n", 
+				color, icon, protocolName, activeSessions))
+			
+			// Show key metrics for each protocol
+			p.renderProtocolMetrics(&output, protocolName, stats, color)
+		}
+	}
+	
+	return output.String()
+}
+
+func (p *ProtocolDashboardVisualization) renderProtocolMetrics(output *strings.Builder, protocol string, stats map[string]interface{}, color string) {
+	switch protocol {
+	case "FTP":
+		if uploads, ok := stats["uploads"].(int); ok {
+			output.WriteString(fmt.Sprintf("     %sUploads: %d[white]\n", color, uploads))
+		}
+		if downloads, ok := stats["downloads"].(int); ok {
+			output.WriteString(fmt.Sprintf("     %sDownloads: %d[white]\n", color, downloads))
+		}
+		if totalBytes, ok := stats["total_bytes"].(int64); ok {
+			output.WriteString(fmt.Sprintf("     %sTotal Data: %s[white]\n", color, p.formatBytes(totalBytes)))
+		}
+		
+	case "SSH":
+		if authSessions, ok := stats["authenticated_sessions"].(int); ok {
+			output.WriteString(fmt.Sprintf("     %sAuthenticated: %d[white]\n", color, authSessions))
+		}
+		if encSessions, ok := stats["encrypted_sessions"].(int); ok {
+			output.WriteString(fmt.Sprintf("     %sEncrypted: %d[white]\n", color, encSessions))
+		}
+		if failedAuth, ok := stats["failed_auth_attempts"].(int); ok {
+			output.WriteString(fmt.Sprintf("     %sFailed Auth: %d[white]\n", color, failedAuth))
+		}
+		
+	case "POP3":
+		if emails, ok := stats["retrieved_emails"].(int); ok {
+			output.WriteString(fmt.Sprintf("     %sEmails Retrieved: %d[white]\n", color, emails))
+		}
+		if attachments, ok := stats["total_attachments"].(int); ok {
+			output.WriteString(fmt.Sprintf("     %sAttachments: %d[white]\n", color, attachments))
+		}
+		
+	case "IMAP":
+		if mailboxes, ok := stats["total_mailboxes"].(int); ok {
+			output.WriteString(fmt.Sprintf("     %sMailboxes: %d[white]\n", color, mailboxes))
+		}
+		if messages, ok := stats["total_messages"].(int); ok {
+			output.WriteString(fmt.Sprintf("     %sMessages: %d[white]\n", color, messages))
+		}
+		if tlsSessions, ok := stats["tls_sessions"].(int); ok {
+			output.WriteString(fmt.Sprintf("     %sTLS Sessions: %d[white]\n", color, tlsSessions))
+		}
+		
+	case "SMTP":
+		if emails, ok := stats["total_emails"].(int); ok {
+			output.WriteString(fmt.Sprintf("     %sEmails Sent: %d[white]\n", color, emails))
+		}
+		
+	case "IRC":
+		if transfers, ok := stats["dcc_transfers"].(int); ok {
+			output.WriteString(fmt.Sprintf("     %sDCC Transfers: %d[white]\n", color, transfers))
+		}
+		
+	case "TFTP":
+		if transfers, ok := stats["file_transfers"].(int); ok {
+			output.WriteString(fmt.Sprintf("     %sFile Transfers: %d[white]\n", color, transfers))
+		}
+		
+	case "SCP":
+		if transfers, ok := stats["file_transfers"].(int); ok {
+			output.WriteString(fmt.Sprintf("     %sFile Transfers: %d[white]\n", color, transfers))
+		}
+		
+	case "SFTP":
+		if operations, ok := stats["operations"].(int); ok {
+			output.WriteString(fmt.Sprintf("     %sOperations: %d[white]\n", color, operations))
+		}
+	}
+}
+
+func (p *ProtocolDashboardVisualization) renderActiveSessions() string {
+	var output strings.Builder
+	
+	analyzers := p.protocolManager.GetAnalyzers()
+	totalSessions := 0
+	
+	for protocolName, analyzer := range analyzers {
+		color := p.getProtocolColor(protocolName)
+		icon := p.getProtocolIcon(protocolName)
+		
+		sessionCount := 0
+		
+		// Get active sessions count
+		switch protocolName {
+		case "FTP":
+			if ftpAnalyzer, ok := analyzer.(*protocols.FTPAnalyzer); ok {
+				sessionCount = len(ftpAnalyzer.GetActiveSessions())
+			}
+		case "SSH":
+			if sshAnalyzer, ok := analyzer.(*protocols.SSHAnalyzer); ok {
+				sessionCount = len(sshAnalyzer.GetActiveSessions())
+			}
+		case "POP3":
+			if pop3Analyzer, ok := analyzer.(*protocols.POP3Analyzer); ok {
+				sessionCount = len(pop3Analyzer.GetActiveSessions())
+			}
+		case "IMAP":
+			if imapAnalyzer, ok := analyzer.(*protocols.IMAPAnalyzer); ok {
+				sessionCount = len(imapAnalyzer.GetActiveSessions())
+			}
+		case "SMTP":
+			if smtpAnalyzer, ok := analyzer.(*protocols.SMTPAnalyzer); ok {
+				sessionCount = len(smtpAnalyzer.GetSessions())
+			}
+		case "IRC":
+			if ircAnalyzer, ok := analyzer.(*protocols.IRCAnalyzer); ok {
+				sessionCount = len(ircAnalyzer.GetSessions())
+			}
+		case "TFTP":
+			if tftpAnalyzer, ok := analyzer.(*protocols.TFTPAnalyzer); ok {
+				sessionCount = len(tftpAnalyzer.GetSessions())
+			}
+		case "SCP":
+			if scpAnalyzer, ok := analyzer.(*protocols.SCPAnalyzer); ok {
+				sessionCount = len(scpAnalyzer.GetSessions())
+			}
+		case "SFTP":
+			if sftpAnalyzer, ok := analyzer.(*protocols.SFTPAnalyzer); ok {
+				sessionCount = len(sftpAnalyzer.GetSessions())
+			}
+		}
+		
+		totalSessions += sessionCount
+		
+		// Create activity bar
+		maxBar := 20
+		bar := ""
+		if sessionCount > 0 {
+			barLength := sessionCount
+			if barLength > maxBar {
+				barLength = maxBar
+			}
+			bar = strings.Repeat("█", barLength)
+		}
+		
+		output.WriteString(fmt.Sprintf("%s%s %-4s[white] %s%s[white] %d\n", 
+			color, icon, protocolName, color, bar, sessionCount))
+	}
+	
+	output.WriteString(fmt.Sprintf("\n[white]Total Active Sessions: [yellow]%d[white]\n", totalSessions))
+	
+	return output.String()
+}
+
+func (p *ProtocolDashboardVisualization) renderRecentEvents() string {
+	var output strings.Builder
+	
+	if len(p.recentEvents) == 0 {
+		output.WriteString("[gray]No recent protocol events[white]\n")
+		return output.String()
+	}
+	
+	// Show last 15 events
+	maxDisplay := 15
+	if len(p.recentEvents) < maxDisplay {
+		maxDisplay = len(p.recentEvents)
+	}
+	
+	for i := 0; i < maxDisplay; i++ {
+		event := p.recentEvents[i]
+		color := p.getProtocolColor(event.Protocol)
+		icon := p.getProtocolIcon(event.Protocol)
+		eventIcon := p.getEventTypeIcon(event.EventType)
+		timeStr := event.Timestamp.Format("15:04:05")
+		
+		// Format event description
+		description := p.formatEventDescription(event)
+		
+		output.WriteString(fmt.Sprintf("[gray][%s][white] %s%s[white] %s%s %s\n",
+			timeStr, color, icon, eventIcon, strings.ToUpper(string(event.EventType)), description))
+		
+		// Show additional context for important events
+		if event.Username != "" {
+			output.WriteString(fmt.Sprintf("     └─ User: %s", event.Username))
+			if event.SourceIP != nil {
+				output.WriteString(fmt.Sprintf(" from %s", event.SourceIP))
+			}
+			output.WriteString("\n")
+		} else if event.Filename != "" {
+			output.WriteString(fmt.Sprintf("     └─ File: %s", event.Filename))
+			if event.FileSize > 0 {
+				output.WriteString(fmt.Sprintf(" (%s)", p.formatBytes(event.FileSize)))
+			}
+			output.WriteString("\n")
+		}
+	}
+	
+	if len(p.recentEvents) > maxDisplay {
+		output.WriteString(fmt.Sprintf("[gray]... and %d more events[white]\n", len(p.recentEvents)-maxDisplay))
+	}
+	
+	return output.String()
+}
+
+func (p *ProtocolDashboardVisualization) renderProtocolInsights() string {
+	var output strings.Builder
+	
+	// Analyze event patterns
+	eventCounts := make(map[string]int)
+	protocolCounts := make(map[string]int)
+	userCounts := make(map[string]int)
+	
+	for _, event := range p.recentEvents {
+		eventCounts[string(event.EventType)]++
+		protocolCounts[event.Protocol]++
+		if event.Username != "" {
+			userCounts[event.Username]++
+		}
+	}
+	
+	// Most active protocol
+	var mostActiveProtocol string
+	maxProtocolCount := 0
+	for protocol, count := range protocolCounts {
+		if count > maxProtocolCount {
+			maxProtocolCount = count
+			mostActiveProtocol = protocol
+		}
+	}
+	
+	if mostActiveProtocol != "" {
+		color := p.getProtocolColor(mostActiveProtocol)
+		icon := p.getProtocolIcon(mostActiveProtocol)
+		output.WriteString(fmt.Sprintf("🏆 Most Active: %s%s %s[white] (%d events)\n", 
+			color, icon, mostActiveProtocol, maxProtocolCount))
+	}
+	
+	// Most active user
+	var mostActiveUser string
+	maxUserCount := 0
+	for user, count := range userCounts {
+		if count > maxUserCount {
+			maxUserCount = count
+			mostActiveUser = user
+		}
+	}
+	
+	if mostActiveUser != "" {
+		output.WriteString(fmt.Sprintf("👤 Most Active User: [cyan]%s[white] (%d events)\n", 
+			mostActiveUser, maxUserCount))
+	}
+	
+	// Event type breakdown
+	output.WriteString("\n[white]Event Type Distribution:\n")
+	for eventType, count := range eventCounts {
+		icon := p.getEventTypeIcon(protocols.EventType(eventType))
+		percentage := float64(count) / float64(len(p.recentEvents)) * 100
+		output.WriteString(fmt.Sprintf("  %s %-15s: %3d (%.1f%%)\n", 
+			icon, eventType, count, percentage))
+	}
+	
+	return output.String()
+}
+
+func (p *ProtocolDashboardVisualization) renderSecurityAnalysis() string {
+	var output strings.Builder
+	
+	// Count authentication failures
+	authFailures := 0
+	suspiciousIPs := make(map[string]int)
+	fileTransfers := 0
+	emailAccess := 0
+	
+	for _, event := range p.recentEvents {
+		if event.EventType == protocols.EventTypeAuthentication {
+			if data, ok := event.Data["login_failed"]; ok && data.(bool) {
+				authFailures++
+				if event.SourceIP != nil {
+					suspiciousIPs[event.SourceIP.String()]++
+				}
+			}
+		}
+		
+		if event.EventType == protocols.EventTypeFileTransfer {
+			fileTransfers++
+		}
+		
+		if event.EventType == protocols.EventTypeEmail {
+			emailAccess++
+		}
+	}
+	
+	// Security score calculation
+	securityScore := 100
+	if authFailures > 5 {
+		securityScore -= 20
+	}
+	if len(suspiciousIPs) > 2 {
+		securityScore -= 15
+	}
+	if fileTransfers > 10 {
+		securityScore -= 10
+	}
+	
+	// Security status
+	var status, statusColor string
+	switch {
+	case securityScore >= 90:
+		status = "SECURE"
+		statusColor = "[green]"
+	case securityScore >= 70:
+		status = "MODERATE"
+		statusColor = "[yellow]"
+	case securityScore >= 50:
+		status = "CONCERNING"
+		statusColor = "[orange]"
+	default:
+		status = "HIGH RISK"
+		statusColor = "[red]"
+	}
+	
+	output.WriteString(fmt.Sprintf("🛡️  Security Status: %s%s (%d%%)[white]\n", 
+		statusColor, status, securityScore))
+	
+	// Security metrics
+	output.WriteString(fmt.Sprintf("❌ Authentication Failures: %d\n", authFailures))
+	output.WriteString(fmt.Sprintf("📁 File Transfers: %d\n", fileTransfers))
+	output.WriteString(fmt.Sprintf("📧 Email Access Events: %d\n", emailAccess))
+	
+	// Suspicious IPs
+	if len(suspiciousIPs) > 0 {
+		output.WriteString("\n[red]⚠️  Suspicious IPs:[white]\n")
+		for ip, count := range suspiciousIPs {
+			if count >= 3 {
+				output.WriteString(fmt.Sprintf("   %s (%d failed attempts)\n", ip, count))
+			}
+		}
+	}
+	
+	return output.String()
+}
+
+func (p *ProtocolDashboardVisualization) formatEventDescription(event protocols.ProtocolEvent) string {
+	switch event.EventType {
+	case protocols.EventTypeConnection:
+		return "Connection established"
+	case protocols.EventTypeAuthentication:
+		if event.Username != "" {
+			if data, ok := event.Data["login_successful"]; ok && data.(bool) {
+				return fmt.Sprintf("Login successful: %s", event.Username)
+			} else if data, ok := event.Data["login_failed"]; ok && data.(bool) {
+				return fmt.Sprintf("Login failed: %s", event.Username)
+			}
+			return fmt.Sprintf("Authentication: %s", event.Username)
+		}
+		return "Authentication attempt"
+	case protocols.EventTypeCommand:
+		if event.Command != "" {
+			parts := strings.Fields(event.Command)
+			if len(parts) > 0 {
+				return fmt.Sprintf("Command: %s", parts[0])
+			}
+		}
+		return "Command executed"
+	case protocols.EventTypeFileTransfer:
+		if event.Filename != "" {
+			direction := "transfer"
+			if event.Direction == protocols.DirectionUpload {
+				direction = "upload"
+			} else if event.Direction == protocols.DirectionDownload {
+				direction = "download"
+			}
+			return fmt.Sprintf("File %s: %s", direction, event.Filename)
+		}
+		return "File transfer"
+	case protocols.EventTypeEmail:
+		return "Email access"
+	case protocols.EventTypeError:
+		return "Error occurred"
+	case protocols.EventTypeDisconnection:
+		return "Disconnected"
+	default:
+		return string(event.EventType)
+	}
+}
+
+// Helper functions for formatting and icons
+
+func (p *ProtocolDashboardVisualization) getProtocolColor(protocol string) string {
+	switch protocol {
+	case "FTP":
+		return "[blue]"
+	case "SSH":
+		return "[green]"
+	case "POP3":
+		return "[yellow]"
+	case "IMAP":
+		return "[cyan]"
+	case "SMTP":
+		return "[orange]"
+	case "IRC":
+		return "[purple]"
+	case "TFTP":
+		return "[lightblue]"
+	case "SCP":
+		return "[darkgreen]"
+	case "SFTP":
+		return "[teal]"
+	case "HEADER":
+		return "[magenta]"
+	default:
+		return "[white]"
+	}
+}
+
+func (p *ProtocolDashboardVisualization) getProtocolIcon(protocol string) string {
+	switch protocol {
+	case "FTP":
+		return "📁"
+	case "SSH":
+		return "🔐"
+	case "POP3":
+		return "📮"
+	case "IMAP":
+		return "📬"
+	case "SMTP":
+		return "📤"
+	case "IRC":
+		return "💬"
+	case "TFTP":
+		return "🗂️"
+	case "SCP":
+		return "🔒"
+	case "SFTP":
+		return "🗄️"
+	default:
+		return "🌐"
+	}
+}
+
+func (p *ProtocolDashboardVisualization) getEventTypeIcon(eventType protocols.EventType) string {
+	switch eventType {
+	case protocols.EventTypeConnection:
+		return "🔗"
+	case protocols.EventTypeAuthentication:
+		return "🔑"
+	case protocols.EventTypeCommand:
+		return "⚡"
+	case protocols.EventTypeFileTransfer:
+		return "📤"
+	case protocols.EventTypeEmail:
+		return "✉️"
+	case protocols.EventTypeError:
+		return "❌"
+	case protocols.EventTypeDisconnection:
+		return "🔌"
+	default:
+		return "📊"
+	}
+}
+
+func (p *ProtocolDashboardVisualization) formatBytes(bytes int64) string {
+	const unit = 1024
+	if bytes < unit {
+		return fmt.Sprintf("%d B", bytes)
+	}
+	div, exp := int64(unit), 0
+	for n := bytes / unit; n >= unit; n /= unit {
+		div *= unit
+		exp++
+	}
+	return fmt.Sprintf("%.1f %cB", float64(bytes)/float64(div), "KMGTPE"[exp])
+}
+
+// GetMinSize returns minimum size requirements
+func (p *ProtocolDashboardVisualization) GetMinSize() (width, height int) {
+	return 100, 45
+}
+
+// SupportsFullscreen indicates this visualization works well in fullscreen
+func (p *ProtocolDashboardVisualization) SupportsFullscreen() bool {
+	return true
+}
+
+// Helper functions for counting protocol-specific metrics
+
+func (p *ProtocolDashboardVisualization) countSMTPEmails(sessions map[string]interface{}) int {
+	totalEmails := 0
+	for _, session := range sessions {
+		if sessionData, ok := session.(map[string]interface{}); ok {
+			if emails, ok := sessionData["emails_sent"].(int); ok {
+				totalEmails += emails
+			}
+		}
+	}
+	return totalEmails
+}
+
+func (p *ProtocolDashboardVisualization) countDCCTransfers(sessions map[string]interface{}) int {
+	totalTransfers := 0
+	for _, session := range sessions {
+		if sessionData, ok := session.(map[string]interface{}); ok {
+			if transfers, ok := sessionData["dcc_transfers"].(int); ok {
+				totalTransfers += transfers
+			}
+		}
+	}
+	return totalTransfers
+}
+
+func (p *ProtocolDashboardVisualization) countTFTPTransfers(sessions map[string]interface{}) int {
+	totalTransfers := 0
+	for _, session := range sessions {
+		if sessionData, ok := session.(map[string]interface{}); ok {
+			if complete, ok := sessionData["complete"].(bool); ok && complete {
+				totalTransfers++
+			}
+		}
+	}
+	return totalTransfers
+}
+
+func (p *ProtocolDashboardVisualization) countSCPTransfers(sessions map[string]interface{}) int {
+	totalTransfers := 0
+	for _, session := range sessions {
+		if sessionData, ok := session.(map[string]interface{}); ok {
+			if filesCount, ok := sessionData["files_count"].(int); ok {
+				totalTransfers += filesCount
+			}
+		}
+	}
+	return totalTransfers
+}
+
+func (p *ProtocolDashboardVisualization) countSFTPOperations(sessions map[string]interface{}) int {
+	totalOperations := 0
+	for _, session := range sessions {
+		if sessionData, ok := session.(map[string]interface{}); ok {
+			if operationsCount, ok := sessionData["operations_count"].(int); ok {
+				totalOperations += operationsCount
+			}
+		}
+	}
+	return totalOperations
+}

@@ -1,0 +1,778 @@
+package security
+
+import (
+	"encoding/json"
+	"fmt"
+	"strings"
+	"sync"
+	"time"
+
+	"github.com/google/gopacket"
+)
+
+// UnifiedDetectionEngine manages all detection engines in a single framework
+type UnifiedDetectionEngine struct {
+	snortEngine    *SnortEngine
+	suricataEngine *SuricataEngine
+	zeekEngine     *ZeekEngine
+	yaraEngine     *YARAEngine
+	sigmaEngine    *SigmaEngine
+	networkAttackDetector *NetworkAttackDetector
+	
+	engines        map[string]DetectionEngine
+	config         UnifiedConfig
+	alerts         []UnifiedAlert
+	stats          UnifiedStats
+	correlator     *AlertCorrelator
+	mu             sync.RWMutex
+}
+
+// DetectionEngine interface for all engines
+type DetectionEngine interface {
+	ProcessPacket(packet gopacket.Packet) interface{}
+	GetStats() interface{}
+	ClearAlerts()
+}
+
+// UnifiedConfig holds configuration for the unified engine
+type UnifiedConfig struct {
+	EnabledEngines   []string
+	CorrelationRules []CorrelationRule
+	OutputFormat     string // "json", "cef", "leef", "syslog"
+	AlertThreshold   int
+	TimeWindow       time.Duration
+}
+
+// UnifiedAlert represents a normalized alert from any engine
+type UnifiedAlert struct {
+	ID           string                 `json:"id"`
+	Timestamp    time.Time              `json:"timestamp"`
+	Engine       string                 `json:"engine"`
+	Severity     string                 `json:"severity"`
+	Category     string                 `json:"category"`
+	RuleName     string                 `json:"rule_name"`
+	Description  string                 `json:"description"`
+	SourceIP     string                 `json:"src_ip"`
+	DestIP       string                 `json:"dst_ip"`
+	SourcePort   int                    `json:"src_port"`
+	DestPort     int                    `json:"dst_port"`
+	Protocol     string                 `json:"protocol"`
+	Tags         []string               `json:"tags"`
+	References   []string               `json:"references"`
+	RawAlert     interface{}            `json:"raw_alert"`
+	Correlated   bool                   `json:"correlated"`
+	CorrelationID string                `json:"correlation_id,omitempty"`
+}
+
+// UnifiedStats aggregates statistics from all engines
+type UnifiedStats struct {
+	TotalPackets      uint64
+	TotalAlerts       uint64
+	AlertsByEngine    map[string]uint64
+	AlertsBySeverity  map[string]uint64
+	AlertsByCategory  map[string]uint64
+	CorrelatedAlerts  uint64
+	FalsePositives    uint64
+}
+
+// AlertCorrelator correlates alerts across engines
+type AlertCorrelator struct {
+	rules         []CorrelationRule
+	alertWindow   map[string][]UnifiedAlert
+	correlations  []Correlation
+	windowSize    time.Duration
+}
+
+// CorrelationRule defines how to correlate alerts
+type CorrelationRule struct {
+	ID          string
+	Name        string
+	Description string
+	Conditions  []CorrelationCondition
+	TimeWindow  time.Duration
+	Action      string // "merge", "escalate", "suppress"
+	NewSeverity string
+}
+
+// CorrelationCondition defines matching criteria
+type CorrelationCondition struct {
+	Field    string // "engine", "category", "src_ip", "dst_ip", etc.
+	Operator string // "equals", "contains", "regex"
+	Value    interface{}
+}
+
+// Correlation represents correlated alerts
+type Correlation struct {
+	ID          string
+	Timestamp   time.Time
+	RuleID      string
+	Alerts      []string // Alert IDs
+	Summary     string
+	Severity    string
+	Confidence  float64
+}
+
+func NewUnifiedDetectionEngine(config UnifiedConfig) *UnifiedDetectionEngine {
+	ude := &UnifiedDetectionEngine{
+		engines: make(map[string]DetectionEngine),
+		config:  config,
+		alerts:  make([]UnifiedAlert, 0),
+		stats: UnifiedStats{
+			AlertsByEngine:   make(map[string]uint64),
+			AlertsBySeverity: make(map[string]uint64),
+			AlertsByCategory: make(map[string]uint64),
+		},
+		correlator: NewAlertCorrelator(config.TimeWindow),
+	}
+	
+	// Initialize enabled engines
+	for _, engineName := range config.EnabledEngines {
+		switch engineName {
+		case "snort":
+			ude.snortEngine = NewSnortEngine()
+			ude.engines["snort"] = ude.snortEngine
+		case "suricata":
+			ude.suricataEngine = NewSuricataEngine(true)
+			ude.engines["suricata"] = ude.suricataEngine
+		case "zeek":
+			ude.zeekEngine = NewZeekEngine()
+			ude.engines["zeek"] = ude.zeekEngine
+		case "yara":
+			ude.yaraEngine = NewYARAEngine()
+			ude.engines["yara"] = ude.yaraEngine
+		case "sigma":
+			ude.sigmaEngine = NewSigmaEngine()
+			ude.engines["sigma"] = ude.sigmaEngine
+		}
+	}
+	
+	// Always initialize network attack detector
+	ude.networkAttackDetector = NewNetworkAttackDetector()
+	
+	// Load default correlation rules
+	ude.loadDefaultCorrelationRules()
+	
+	return ude
+}
+
+func (ude *UnifiedDetectionEngine) loadDefaultCorrelationRules() {
+	defaultRules := []CorrelationRule{
+		{
+			ID:          "multi_engine_malware",
+			Name:        "Multi-Engine Malware Detection",
+			Description: "Correlates malware detections across multiple engines",
+			Conditions: []CorrelationCondition{
+				{Field: "category", Operator: "contains", Value: "malware"},
+				{Field: "engine_count", Operator: "gte", Value: 2},
+			},
+			TimeWindow:  5 * time.Minute,
+			Action:      "escalate",
+			NewSeverity: "critical",
+		},
+		{
+			ID:          "coordinated_scan",
+			Name:        "Coordinated Port Scan",
+			Description: "Detects coordinated scanning from multiple sources",
+			Conditions: []CorrelationCondition{
+				{Field: "category", Operator: "equals", Value: "recon"},
+				{Field: "dst_ip", Operator: "same", Value: true},
+				{Field: "src_ip_count", Operator: "gte", Value: 3},
+			},
+			TimeWindow:  10 * time.Minute,
+			Action:      "merge",
+			NewSeverity: "high",
+		},
+		{
+			ID:          "brute_force_success",
+			Name:        "Successful Brute Force",
+			Description: "Correlates brute force attempts with successful authentication",
+			Conditions: []CorrelationCondition{
+				{Field: "category", Operator: "equals", Value: "brute_force"},
+				{Field: "category", Operator: "equals", Value: "authentication"},
+				{Field: "src_ip", Operator: "same", Value: true},
+			},
+			TimeWindow:  15 * time.Minute,
+			Action:      "escalate",
+			NewSeverity: "critical",
+		},
+		{
+			ID:          "data_exfil_chain",
+			Name:        "Data Exfiltration Chain",
+			Description: "Detects complete attack chain leading to data exfiltration",
+			Conditions: []CorrelationCondition{
+				{Field: "tags", Operator: "contains", Value: "initial_access"},
+				{Field: "tags", Operator: "contains", Value: "privilege_escalation"},
+				{Field: "tags", Operator: "contains", Value: "exfiltration"},
+			},
+			TimeWindow:  1 * time.Hour,
+			Action:      "escalate",
+			NewSeverity: "critical",
+		},
+		{
+			ID:          "c2_beacon",
+			Name:        "C2 Beacon Activity",
+			Description: "Correlates multiple C2 communication indicators",
+			Conditions: []CorrelationCondition{
+				{Field: "category", Operator: "contains", Value: "c2"},
+				{Field: "periodic", Operator: "equals", Value: true},
+			},
+			TimeWindow:  30 * time.Minute,
+			Action:      "merge",
+			NewSeverity: "high",
+		},
+	}
+	
+	ude.correlator.rules = defaultRules
+}
+
+func NewAlertCorrelator(windowSize time.Duration) *AlertCorrelator {
+	return &AlertCorrelator{
+		rules:        make([]CorrelationRule, 0),
+		alertWindow:  make(map[string][]UnifiedAlert),
+		correlations: make([]Correlation, 0),
+		windowSize:   windowSize,
+	}
+}
+
+func (ude *UnifiedDetectionEngine) ProcessPacket(packet gopacket.Packet) []UnifiedAlert {
+	ude.stats.TotalPackets++
+	
+	var alerts []UnifiedAlert
+	
+	// Process packet through each enabled engine
+	for engineName, _ := range ude.engines {
+		switch engineName {
+		case "snort":
+			if snortAlerts := ude.snortEngine.ProcessPacket(packet); len(snortAlerts) > 0 {
+				for _, alert := range snortAlerts {
+					unified := ude.normalizeSnortAlert(alert)
+					alerts = append(alerts, unified)
+				}
+			}
+			
+		case "suricata":
+			if suricataAlerts := ude.suricataEngine.ProcessPacket(packet); len(suricataAlerts) > 0 {
+				for _, alert := range suricataAlerts {
+					unified := ude.normalizeSuricataAlert(alert)
+					alerts = append(alerts, unified)
+				}
+			}
+			
+		case "zeek":
+			if zeekEvents := ude.zeekEngine.ProcessPacket(packet); len(zeekEvents) > 0 {
+				for _, event := range zeekEvents {
+					if unified := ude.normalizeZeekEvent(event); unified != nil {
+						alerts = append(alerts, *unified)
+					}
+				}
+			}
+			
+		case "yara":
+			if yaraMatches := ude.yaraEngine.ProcessPacket(packet); len(yaraMatches) > 0 {
+				for _, match := range yaraMatches {
+					unified := ude.normalizeYARAMatch(match)
+					alerts = append(alerts, unified)
+				}
+			}
+			
+		case "sigma":
+			if sigmaAlerts := ude.sigmaEngine.ProcessPacket(packet); len(sigmaAlerts) > 0 {
+				for _, alert := range sigmaAlerts {
+					unified := ude.normalizeSigmaAlert(alert)
+					alerts = append(alerts, unified)
+				}
+			}
+		}
+	}
+	
+	// Always process through network attack detector
+	if networkAlerts := ude.networkAttackDetector.ProcessPacket(packet); len(networkAlerts) > 0 {
+		for _, alert := range networkAlerts {
+			unified := ude.normalizeNetworkAttackAlert(alert)
+			alerts = append(alerts, unified)
+		}
+	}
+	
+	// Add alerts and update stats
+	ude.mu.Lock()
+	for _, alert := range alerts {
+		alert.ID = ude.generateAlertID()
+		ude.alerts = append(ude.alerts, alert)
+		ude.stats.TotalAlerts++
+		ude.stats.AlertsByEngine[alert.Engine]++
+		ude.stats.AlertsBySeverity[alert.Severity]++
+		ude.stats.AlertsByCategory[alert.Category]++
+	}
+	ude.mu.Unlock()
+	
+	// Correlate alerts
+	if len(alerts) > 0 {
+		correlations := ude.correlator.CorrelateAlerts(alerts)
+		for _, correlation := range correlations {
+			ude.handleCorrelation(correlation)
+		}
+	}
+	
+	return alerts
+}
+
+func (ude *UnifiedDetectionEngine) normalizeSnortAlert(alert SnortAlert) UnifiedAlert {
+	return UnifiedAlert{
+		Timestamp:   alert.Timestamp,
+		Engine:      "snort",
+		Severity:    ude.mapPriorityToSeverity(alert.Priority),
+		Category:    ude.mapClasstypeToCategory(alert.Classtype),
+		RuleName:    alert.Message,
+		Description: alert.Message,
+		SourceIP:    alert.SrcIP,
+		DestIP:      alert.DstIP,
+		SourcePort:  alert.SrcPort,
+		DestPort:    alert.DstPort,
+		Protocol:    alert.Protocol,
+		Tags:        []string{alert.Classtype},
+		RawAlert:    alert,
+	}
+}
+
+func (ude *UnifiedDetectionEngine) normalizeSuricataAlert(alert SuricataAlert) UnifiedAlert {
+	severity := "medium"
+	if alert.Alert != nil {
+		severity = ude.mapSuricataSeverity(alert.Alert.Severity)
+	}
+	
+	return UnifiedAlert{
+		Timestamp:   alert.Timestamp,
+		Engine:      "suricata",
+		Severity:    severity,
+		Category:    alert.Alert.Category,
+		RuleName:    alert.Alert.Signature,
+		Description: alert.Alert.Signature,
+		SourceIP:    alert.SrcIP,
+		DestIP:      alert.DstIP,
+		SourcePort:  alert.SrcPort,
+		DestPort:    alert.DstPort,
+		Protocol:    alert.Protocol,
+		Tags:        alert.Alert.Metadata,
+		RawAlert:    alert,
+	}
+}
+
+func (ude *UnifiedDetectionEngine) normalizeZeekEvent(event ZeekEvent) *UnifiedAlert {
+	// Only convert certain Zeek events to alerts
+	if event.Type != "notice" && !strings.Contains(event.Type, "alert") {
+		return nil
+	}
+	
+	alert := &UnifiedAlert{
+		Timestamp:   event.Timestamp,
+		Engine:      "zeek",
+		Severity:    "medium",
+		Category:    "zeek_" + event.Type,
+		RuleName:    event.Type,
+		Description: fmt.Sprintf("Zeek %s event", event.Type),
+		Protocol:    "tcp", // Default
+		Tags:        []string{event.Type},
+		RawAlert:    event,
+	}
+	
+	// Extract connection info if available
+	if event.Connection != nil {
+		alert.SourceIP = event.Connection.OrigH
+		alert.DestIP = event.Connection.RespH
+		alert.SourcePort = event.Connection.OrigP
+		alert.DestPort = event.Connection.RespP
+		alert.Protocol = event.Connection.Proto
+	}
+	
+	return alert
+}
+
+func (ude *UnifiedDetectionEngine) normalizeYARAMatch(match YARAMatch) UnifiedAlert {
+	return UnifiedAlert{
+		Timestamp:   match.Timestamp,
+		Engine:      "yara",
+		Severity:    match.ThreatLevel,
+		Category:    ude.extractYARACategory(match.Tags),
+		RuleName:    match.RuleName,
+		Description: fmt.Sprintf("YARA rule match: %s", match.RuleName),
+		SourceIP:    match.PacketInfo.SrcIP,
+		DestIP:      match.PacketInfo.DstIP,
+		SourcePort:  match.PacketInfo.SrcPort,
+		DestPort:    match.PacketInfo.DstPort,
+		Protocol:    match.PacketInfo.Protocol,
+		Tags:        match.Tags,
+		RawAlert:    match,
+	}
+}
+
+func (ude *UnifiedDetectionEngine) normalizeSigmaAlert(alert SigmaAlert) UnifiedAlert {
+	// Extract IPs from packet info
+	srcIP := ""
+	dstIP := ""
+	srcPort := 0
+	dstPort := 0
+	protocol := ""
+	
+	if ip, ok := alert.PacketInfo["src_ip"].(string); ok {
+		srcIP = ip
+	}
+	if ip, ok := alert.PacketInfo["dst_ip"].(string); ok {
+		dstIP = ip
+	}
+	if port, ok := alert.PacketInfo["src_port"].(int); ok {
+		srcPort = port
+	}
+	if port, ok := alert.PacketInfo["dst_port"].(int); ok {
+		dstPort = port
+	}
+	if proto, ok := alert.PacketInfo["protocol"].(string); ok {
+		protocol = proto
+	}
+	
+	return UnifiedAlert{
+		Timestamp:   alert.Timestamp,
+		Engine:      "sigma",
+		Severity:    alert.Level,
+		Category:    ude.extractSigmaCategory(alert.Tags),
+		RuleName:    alert.RuleTitle,
+		Description: alert.Message,
+		SourceIP:    srcIP,
+		DestIP:      dstIP,
+		SourcePort:  srcPort,
+		DestPort:    dstPort,
+		Protocol:    protocol,
+		Tags:        alert.Tags,
+		References:  alert.References,
+		RawAlert:    alert,
+	}
+}
+
+func (ude *UnifiedDetectionEngine) normalizeNetworkAttackAlert(alert AttackAlert) UnifiedAlert {
+	return UnifiedAlert{
+		Timestamp:   alert.Timestamp,
+		Engine:      "network-attacks",
+		Severity:    alert.Severity,
+		Category:    alert.Type,
+		RuleName:    alert.Type,
+		Description: alert.Description,
+		SourceIP:    alert.SourceIP,
+		DestIP:      alert.DestIP,
+		SourcePort:  0, // Not always available
+		DestPort:    0, // Not always available
+		Protocol:    "various",
+		Tags:        []string{alert.Type, "network-attack"},
+		RawAlert:    alert,
+	}
+}
+
+// Helper functions
+
+func (ude *UnifiedDetectionEngine) generateAlertID() string {
+	return fmt.Sprintf("alert-%d-%d", time.Now().UnixNano(), ude.stats.TotalAlerts)
+}
+
+func (ude *UnifiedDetectionEngine) mapPriorityToSeverity(priority int) string {
+	switch priority {
+	case 1:
+		return "critical"
+	case 2:
+		return "high"
+	case 3:
+		return "medium"
+	default:
+		return "low"
+	}
+}
+
+func (ude *UnifiedDetectionEngine) mapSuricataSeverity(severity int) string {
+	switch severity {
+	case 1:
+		return "critical"
+	case 2:
+		return "high"
+	case 3:
+		return "medium"
+	default:
+		return "low"
+	}
+}
+
+func (ude *UnifiedDetectionEngine) mapClasstypeToCategory(classtype string) string {
+	categoryMap := map[string]string{
+		"trojan-activity":         "malware",
+		"attempted-admin":         "exploit",
+		"attempted-user":          "exploit",
+		"web-application-attack":  "web_attack",
+		"attempted-recon":         "recon",
+		"policy-violation":        "policy",
+		"protocol-command-decode": "anomaly",
+	}
+	
+	if category, ok := categoryMap[classtype]; ok {
+		return category
+	}
+	
+	return classtype
+}
+
+func (ude *UnifiedDetectionEngine) extractYARACategory(tags []string) string {
+	for _, tag := range tags {
+		switch tag {
+		case "malware", "backdoor", "trojan", "ransomware":
+			return "malware"
+		case "exploit", "vulnerability":
+			return "exploit"
+		case "webshell", "web":
+			return "web_attack"
+		}
+	}
+	return "yara_detection"
+}
+
+func (ude *UnifiedDetectionEngine) extractSigmaCategory(tags []string) string {
+	for _, tag := range tags {
+		if strings.HasPrefix(tag, "attack.") {
+			parts := strings.Split(tag, ".")
+			if len(parts) > 1 {
+				return parts[1]
+			}
+		}
+	}
+	return "sigma_detection"
+}
+
+// Correlation
+
+func (ac *AlertCorrelator) CorrelateAlerts(alerts []UnifiedAlert) []Correlation {
+	var correlations []Correlation
+	
+	// Add alerts to window
+	for _, alert := range alerts {
+		key := ac.getCorrelationKey(alert)
+		ac.alertWindow[key] = append(ac.alertWindow[key], alert)
+	}
+	
+	// Clean old alerts
+	ac.cleanOldAlerts()
+	
+	// Check correlation rules
+	for _, rule := range ac.rules {
+		if correlation := ac.checkRule(rule); correlation != nil {
+			correlations = append(correlations, *correlation)
+		}
+	}
+	
+	return correlations
+}
+
+func (ac *AlertCorrelator) getCorrelationKey(alert UnifiedAlert) string {
+	// Simple key based on source IP
+	return alert.SourceIP
+}
+
+func (ac *AlertCorrelator) cleanOldAlerts() {
+	cutoff := time.Now().Add(-ac.windowSize)
+	
+	for key, alerts := range ac.alertWindow {
+		var kept []UnifiedAlert
+		for _, alert := range alerts {
+			if alert.Timestamp.After(cutoff) {
+				kept = append(kept, alert)
+			}
+		}
+		
+		if len(kept) > 0 {
+			ac.alertWindow[key] = kept
+		} else {
+			delete(ac.alertWindow, key)
+		}
+	}
+}
+
+func (ac *AlertCorrelator) checkRule(rule CorrelationRule) *Correlation {
+	// Simplified rule checking
+	var matchedAlerts []string
+	
+	for _, alerts := range ac.alertWindow {
+		for _, alert := range alerts {
+			if ac.matchesConditions(alert, rule.Conditions) {
+				matchedAlerts = append(matchedAlerts, alert.ID)
+			}
+		}
+	}
+	
+	if len(matchedAlerts) >= 2 {
+		return &Correlation{
+			ID:         fmt.Sprintf("corr-%d", time.Now().UnixNano()),
+			Timestamp:  time.Now(),
+			RuleID:     rule.ID,
+			Alerts:     matchedAlerts,
+			Summary:    rule.Description,
+			Severity:   rule.NewSeverity,
+			Confidence: 0.8,
+		}
+	}
+	
+	return nil
+}
+
+func (ac *AlertCorrelator) matchesConditions(alert UnifiedAlert, conditions []CorrelationCondition) bool {
+	for _, condition := range conditions {
+		if !ac.matchCondition(alert, condition) {
+			return false
+		}
+	}
+	return true
+}
+
+func (ac *AlertCorrelator) matchCondition(alert UnifiedAlert, condition CorrelationCondition) bool {
+	// Simplified condition matching
+	switch condition.Field {
+	case "category":
+		if condition.Operator == "contains" {
+			return strings.Contains(alert.Category, condition.Value.(string))
+		}
+		return alert.Category == condition.Value.(string)
+		
+	case "engine":
+		return alert.Engine == condition.Value.(string)
+		
+	case "severity":
+		return alert.Severity == condition.Value.(string)
+		
+	case "src_ip":
+		return alert.SourceIP == condition.Value.(string)
+		
+	case "dst_ip":
+		return alert.DestIP == condition.Value.(string)
+	}
+	
+	return false
+}
+
+func (ude *UnifiedDetectionEngine) handleCorrelation(correlation Correlation) {
+	ude.mu.Lock()
+	defer ude.mu.Unlock()
+	
+	// Mark alerts as correlated
+	for _, alertID := range correlation.Alerts {
+		for i := range ude.alerts {
+			if ude.alerts[i].ID == alertID {
+				ude.alerts[i].Correlated = true
+				ude.alerts[i].CorrelationID = correlation.ID
+			}
+		}
+	}
+	
+	ude.stats.CorrelatedAlerts++
+	ude.correlator.correlations = append(ude.correlator.correlations, correlation)
+}
+
+// Output formatting
+
+func (ude *UnifiedDetectionEngine) GetAlertsAsJSON() ([]byte, error) {
+	ude.mu.RLock()
+	defer ude.mu.RUnlock()
+	
+	return json.MarshalIndent(ude.alerts, "", "  ")
+}
+
+func (ude *UnifiedDetectionEngine) GetAlertsAsCEF() []string {
+	ude.mu.RLock()
+	defer ude.mu.RUnlock()
+	
+	var cefAlerts []string
+	
+	for _, alert := range ude.alerts {
+		cef := fmt.Sprintf("CEF:0|NetMon|UnifiedDetection|1.0|%s|%s|%s|src=%s dst=%s spt=%d dpt=%d proto=%s",
+			alert.Engine,
+			alert.RuleName,
+			ude.mapSeverityToCEF(alert.Severity),
+			alert.SourceIP,
+			alert.DestIP,
+			alert.SourcePort,
+			alert.DestPort,
+			alert.Protocol)
+		
+		cefAlerts = append(cefAlerts, cef)
+	}
+	
+	return cefAlerts
+}
+
+func (ude *UnifiedDetectionEngine) mapSeverityToCEF(severity string) string {
+	severityMap := map[string]string{
+		"critical": "10",
+		"high":     "7",
+		"medium":   "5",
+		"low":      "3",
+	}
+	
+	if cef, ok := severityMap[severity]; ok {
+		return cef
+	}
+	
+	return "5"
+}
+
+// Getters
+
+func (ude *UnifiedDetectionEngine) GetAlerts() []UnifiedAlert {
+	ude.mu.RLock()
+	defer ude.mu.RUnlock()
+	
+	return append([]UnifiedAlert{}, ude.alerts...)
+}
+
+func (ude *UnifiedDetectionEngine) GetStats() UnifiedStats {
+	ude.mu.RLock()
+	defer ude.mu.RUnlock()
+	
+	return ude.stats
+}
+
+func (ude *UnifiedDetectionEngine) GetCorrelations() []Correlation {
+	return ude.correlator.correlations
+}
+
+func (ude *UnifiedDetectionEngine) GetEngineStats(engineName string) interface{} {
+	switch engineName {
+	case "snort":
+		if ude.snortEngine != nil {
+			return ude.snortEngine.GetStats()
+		}
+	case "suricata":
+		if ude.suricataEngine != nil {
+			return ude.suricataEngine.GetStats()
+		}
+	case "zeek":
+		if ude.zeekEngine != nil {
+			return ude.zeekEngine.GetStats()
+		}
+	case "yara":
+		if ude.yaraEngine != nil {
+			return ude.yaraEngine.GetStats()
+		}
+	case "sigma":
+		if ude.sigmaEngine != nil {
+			return ude.sigmaEngine.GetStats()
+		}
+	}
+	
+	return nil
+}
+
+// Cleanup
+
+func (ude *UnifiedDetectionEngine) ClearAlerts() {
+	ude.mu.Lock()
+	defer ude.mu.Unlock()
+	
+	ude.alerts = make([]UnifiedAlert, 0)
+	ude.correlator.correlations = make([]Correlation, 0)
+	
+	// Clear individual engines
+	for _, engine := range ude.engines {
+		engine.ClearAlerts()
+	}
+}

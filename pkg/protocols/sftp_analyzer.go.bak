@@ -1,0 +1,455 @@
+package protocols
+
+import (
+	"fmt"
+	"net"
+	"strings"
+	"time"
+
+	"github.com/google/gopacket"
+	"github.com/google/gopacket/layers"
+)
+
+type SFTPAnalyzer struct {
+	sessions map[string]*SFTPSession
+}
+
+type SFTPSession struct {
+	ID              string
+	ClientIP        net.IP
+	ServerIP        net.IP
+	ClientPort      uint16
+	ServerPort      uint16
+	State           string
+	Version         string
+	Operations      []SFTPOperation
+	BytesTransferred int64
+	StartTime       time.Time
+	LastActivity    time.Time
+	Complete        bool
+	Error           string
+}
+
+type SFTPOperation struct {
+	Type      string // "open", "read", "write", "close", "stat", "mkdir", etc.
+	Path      string
+	Handle    string
+	Size      int64
+	Timestamp time.Time
+	Complete  bool
+}
+
+const (
+	SFTP_STATE_INIT      = "init"
+	SFTP_STATE_VERSION   = "version"
+	SFTP_STATE_ACTIVE    = "active"
+	SFTP_STATE_COMPLETE  = "complete"
+	SFTP_STATE_ERROR     = "error"
+	
+	// SFTP message types
+	SSH_FXP_INIT        = 1
+	SSH_FXP_VERSION     = 2
+	SSH_FXP_OPEN        = 3
+	SSH_FXP_CLOSE       = 4
+	SSH_FXP_READ        = 5
+	SSH_FXP_WRITE       = 6
+	SSH_FXP_LSTAT       = 7
+	SSH_FXP_FSTAT       = 8
+	SSH_FXP_SETSTAT     = 9
+	SSH_FXP_FSETSTAT    = 10
+	SSH_FXP_OPENDIR     = 11
+	SSH_FXP_READDIR     = 12
+	SSH_FXP_REMOVE      = 13
+	SSH_FXP_MKDIR       = 14
+	SSH_FXP_RMDIR       = 15
+	SSH_FXP_REALPATH    = 16
+	SSH_FXP_STAT        = 17
+	SSH_FXP_RENAME      = 18
+	SSH_FXP_READLINK    = 19
+	SSH_FXP_SYMLINK     = 20
+	SSH_FXP_STATUS      = 101
+	SSH_FXP_HANDLE      = 102
+	SSH_FXP_DATA        = 103
+	SSH_FXP_NAME        = 104
+	SSH_FXP_ATTRS       = 105
+)
+
+func NewSFTPAnalyzer() *SFTPAnalyzer {
+	return &SFTPAnalyzer{
+		sessions: make(map[string]*SFTPSession),
+	}
+}
+
+func (sftp *SFTPAnalyzer) GetProtocol() string {
+	return "SFTP"
+}
+
+func (sftp *SFTPAnalyzer) GetPort() uint16 {
+	return 22 // SFTP runs over SSH
+}
+
+func (sftp *SFTPAnalyzer) ProcessPacket(packet gopacket.Packet) *ProtocolEvent {
+	tcpLayer := packet.Layer(layers.LayerTypeTCP)
+	if tcpLayer == nil {
+		return nil
+	}
+
+	tcp := tcpLayer.(*layers.TCP)
+	
+	// SFTP runs over SSH (port 22)
+	if tcp.DstPort != 22 && tcp.SrcPort != 22 {
+		return nil
+	}
+
+	payload := tcp.Payload
+	if len(payload) == 0 {
+		return nil
+	}
+
+	sessionID := sftp.getSessionID(packet)
+	session := sftp.getOrCreateSession(sessionID, packet)
+
+	return sftp.processSSHPayload(session, payload, packet)
+}
+
+func (sftp *SFTPAnalyzer) processSSHPayload(session *SFTPSession, payload []byte, packet gopacket.Packet) *ProtocolEvent {
+	// SFTP runs over SSH, so we need to detect SFTP patterns
+	data := string(payload)
+	
+	// Look for SSH version exchange
+	if strings.HasPrefix(data, "SSH-") {
+		return &ProtocolEvent{
+			Protocol:    "SFTP",
+			EventType:   "ssh_handshake",
+			Description: "SSH handshake for SFTP session",
+			Timestamp:   time.Now(),
+			SrcIP:       session.ClientIP.String(),
+			DstIP:       session.ServerIP.String(),
+			SrcPort:     int(session.ClientPort),
+			DstPort:     int(session.ServerPort),
+			Details: map[string]interface{}{
+				"session_id": session.ID,
+				"ssh_version": strings.TrimSpace(data),
+			},
+		}
+	}
+
+	// Look for SFTP subsystem request
+	if strings.Contains(data, "sftp") && strings.Contains(data, "subsystem") {
+		session.State = SFTP_STATE_INIT
+		return &ProtocolEvent{
+			Protocol:    "SFTP",
+			EventType:   "sftp_subsystem_request",
+			Description: "SFTP subsystem requested",
+			Timestamp:   time.Now(),
+			SrcIP:       session.ClientIP.String(),
+			DstIP:       session.ServerIP.String(),
+			SrcPort:     int(session.ClientPort),
+			DstPort:     int(session.ServerPort),
+			Details: map[string]interface{}{
+				"session_id": session.ID,
+			},
+		}
+	}
+
+	// Try to parse SFTP protocol messages
+	if session.State != SFTP_STATE_INIT {
+		return nil
+	}
+
+	return sftp.parseSFTPMessage(session, payload)
+}
+
+func (sftp *SFTPAnalyzer) parseSFTPMessage(session *SFTPSession, payload []byte) *ProtocolEvent {
+	if len(payload) < 5 {
+		return nil
+	}
+
+	// SFTP message format: length(4) + type(1) + data
+	msgType := uint8(payload[4])
+	
+	event := &ProtocolEvent{
+		Protocol:  "SFTP",
+		Timestamp: time.Now(),
+		SrcIP:     session.ClientIP.String(),
+		DstIP:     session.ServerIP.String(),
+		SrcPort:   int(session.ClientPort),
+		DstPort:   int(session.ServerPort),
+		Details:   make(map[string]interface{}),
+	}
+
+	switch msgType {
+	case SSH_FXP_INIT:
+		session.State = SFTP_STATE_VERSION
+		event.EventType = "sftp_init"
+		event.Description = "SFTP initialization"
+
+	case SSH_FXP_VERSION:
+		session.State = SFTP_STATE_ACTIVE
+		if len(payload) >= 9 {
+			version := uint32(payload[5])<<24 | uint32(payload[6])<<16 | uint32(payload[7])<<8 | uint32(payload[8])
+			session.Version = fmt.Sprintf("%d", version)
+			event.Details["version"] = version
+		}
+		event.EventType = "sftp_version"
+		event.Description = fmt.Sprintf("SFTP version negotiation: %s", session.Version)
+
+	case SSH_FXP_OPEN:
+		path := sftp.extractStringFromPayload(payload, 9)
+		operation := SFTPOperation{
+			Type:      "open",
+			Path:      path,
+			Timestamp: time.Now(),
+		}
+		session.Operations = append(session.Operations, operation)
+		event.EventType = "sftp_open"
+		event.Description = fmt.Sprintf("SFTP file open: %s", path)
+		event.Details["path"] = path
+
+	case SSH_FXP_CLOSE:
+		handle := sftp.extractStringFromPayload(payload, 9)
+		sftp.updateOperationByHandle(session, handle, "close")
+		event.EventType = "sftp_close"
+		event.Description = "SFTP file close"
+		event.Details["handle"] = handle
+
+	case SSH_FXP_READ:
+		handle := sftp.extractStringFromPayload(payload, 9)
+		event.EventType = "sftp_read"
+		event.Description = "SFTP file read"
+		event.Details["handle"] = handle
+
+	case SSH_FXP_WRITE:
+		handle := sftp.extractStringFromPayload(payload, 9)
+		session.BytesTransferred += int64(len(payload) - 20) // Approximate data size
+		event.EventType = "sftp_write"
+		event.Description = "SFTP file write"
+		event.Details["handle"] = handle
+		event.Details["data_size"] = len(payload) - 20
+
+	case SSH_FXP_MKDIR:
+		path := sftp.extractStringFromPayload(payload, 9)
+		operation := SFTPOperation{
+			Type:      "mkdir",
+			Path:      path,
+			Timestamp: time.Now(),
+		}
+		session.Operations = append(session.Operations, operation)
+		event.EventType = "sftp_mkdir"
+		event.Description = fmt.Sprintf("SFTP directory create: %s", path)
+		event.Details["path"] = path
+
+	case SSH_FXP_REMOVE:
+		path := sftp.extractStringFromPayload(payload, 9)
+		operation := SFTPOperation{
+			Type:      "remove",
+			Path:      path,
+			Timestamp: time.Now(),
+		}
+		session.Operations = append(session.Operations, operation)
+		event.EventType = "sftp_remove"
+		event.Description = fmt.Sprintf("SFTP file remove: %s", path)
+		event.Details["path"] = path
+
+	case SSH_FXP_RMDIR:
+		path := sftp.extractStringFromPayload(payload, 9)
+		operation := SFTPOperation{
+			Type:      "rmdir",
+			Path:      path,
+			Timestamp: time.Now(),
+		}
+		session.Operations = append(session.Operations, operation)
+		event.EventType = "sftp_rmdir"
+		event.Description = fmt.Sprintf("SFTP directory remove: %s", path)
+		event.Details["path"] = path
+
+	case SSH_FXP_RENAME:
+		oldPath := sftp.extractStringFromPayload(payload, 9)
+		// Extract new path (would need more complex parsing)
+		operation := SFTPOperation{
+			Type:      "rename",
+			Path:      oldPath,
+			Timestamp: time.Now(),
+		}
+		session.Operations = append(session.Operations, operation)
+		event.EventType = "sftp_rename"
+		event.Description = fmt.Sprintf("SFTP file rename: %s", oldPath)
+		event.Details["old_path"] = oldPath
+
+	case SSH_FXP_STAT, SSH_FXP_LSTAT, SSH_FXP_FSTAT:
+		path := sftp.extractStringFromPayload(payload, 9)
+		event.EventType = "sftp_stat"
+		event.Description = fmt.Sprintf("SFTP file stat: %s", path)
+		event.Details["path"] = path
+
+	case SSH_FXP_STATUS:
+		event.EventType = "sftp_status"
+		event.Description = "SFTP status response"
+
+	case SSH_FXP_HANDLE:
+		handle := sftp.extractStringFromPayload(payload, 9)
+		event.EventType = "sftp_handle"
+		event.Description = "SFTP handle response"
+		event.Details["handle"] = handle
+
+	case SSH_FXP_DATA:
+		dataSize := len(payload) - 9
+		session.BytesTransferred += int64(dataSize)
+		event.EventType = "sftp_data"
+		event.Description = "SFTP data transfer"
+		event.Details["data_size"] = dataSize
+
+	case SSH_FXP_NAME:
+		event.EventType = "sftp_name"
+		event.Description = "SFTP name response"
+
+	default:
+		return nil
+	}
+
+	// Add common details
+	event.Details["session_id"] = session.ID
+	event.Details["message_type"] = msgType
+	event.Details["bytes_transferred"] = session.BytesTransferred
+	event.Details["operations_count"] = len(session.Operations)
+
+	// Check for file transfer completion
+	if sftp.isFileTransferComplete(session) {
+		event.Details["extracted_file"] = sftp.createFileTransferSummary(session)
+	}
+
+	return event
+}
+
+func (sftp *SFTPAnalyzer) extractStringFromPayload(payload []byte, offset int) string {
+	if len(payload) < offset+4 {
+		return ""
+	}
+	
+	// Read string length (4 bytes)
+	length := uint32(payload[offset])<<24 | uint32(payload[offset+1])<<16 | 
+		uint32(payload[offset+2])<<8 | uint32(payload[offset+3])
+	
+	if len(payload) < offset+4+int(length) {
+		return ""
+	}
+	
+	return string(payload[offset+4 : offset+4+int(length)])
+}
+
+func (sftp *SFTPAnalyzer) updateOperationByHandle(session *SFTPSession, handle string, opType string) {
+	for i := range session.Operations {
+		if session.Operations[i].Handle == handle && !session.Operations[i].Complete {
+			session.Operations[i].Complete = true
+			break
+		}
+	}
+}
+
+func (sftp *SFTPAnalyzer) isFileTransferComplete(session *SFTPSession) bool {
+	// Simple heuristic: if we have open and close operations
+	hasOpen := false
+	hasClose := false
+	
+	for _, op := range session.Operations {
+		if op.Type == "open" {
+			hasOpen = true
+		}
+		if op.Type == "close" {
+			hasClose = true
+		}
+	}
+	
+	return hasOpen && hasClose && session.BytesTransferred > 0
+}
+
+func (sftp *SFTPAnalyzer) createFileTransferSummary(session *SFTPSession) map[string]interface{} {
+	var filename string
+	for _, op := range session.Operations {
+		if op.Type == "open" && op.Path != "" {
+			filename = op.Path
+			break
+		}
+	}
+	
+	return map[string]interface{}{
+		"filename":         filename,
+		"bytes_transferred": session.BytesTransferred,
+		"protocol":         "SFTP",
+		"client_ip":        session.ClientIP.String(),
+		"server_ip":        session.ServerIP.String(),
+		"start_time":       session.StartTime,
+		"duration":         time.Since(session.StartTime),
+		"operations":       len(session.Operations),
+	}
+}
+
+func (sftp *SFTPAnalyzer) getSessionID(packet gopacket.Packet) string {
+	netLayer := packet.NetworkLayer()
+	if netLayer == nil {
+		return ""
+	}
+
+	tcpLayer := packet.Layer(layers.LayerTypeTCP)
+	if tcpLayer == nil {
+		return ""
+	}
+
+	tcp := tcpLayer.(*layers.TCP)
+	src := netLayer.NetworkFlow().Src().String()
+	dst := netLayer.NetworkFlow().Dst().String()
+	
+	return fmt.Sprintf("%s:%d-%s:%d", src, tcp.SrcPort, dst, tcp.DstPort)
+}
+
+func (sftp *SFTPAnalyzer) getOrCreateSession(sessionID string, packet gopacket.Packet) *SFTPSession {
+	if session, exists := sftp.sessions[sessionID]; exists {
+		session.LastActivity = time.Now()
+		return session
+	}
+
+	netLayer := packet.NetworkLayer()
+	tcpLayer := packet.Layer(layers.LayerTypeTCP)
+	tcp := tcpLayer.(*layers.TCP)
+
+	session := &SFTPSession{
+		ID:           sessionID,
+		ClientIP:     net.ParseIP(netLayer.NetworkFlow().Src().String()),
+		ServerIP:     net.ParseIP(netLayer.NetworkFlow().Dst().String()),
+		ClientPort:   uint16(tcp.SrcPort),
+		ServerPort:   uint16(tcp.DstPort),
+		State:        SFTP_STATE_INIT,
+		StartTime:    time.Now(),
+		LastActivity: time.Now(),
+		Operations:   make([]SFTPOperation, 0),
+	}
+
+	sftp.sessions[sessionID] = session
+	return session
+}
+
+func (sftp *SFTPAnalyzer) GetSessions() map[string]interface{} {
+	sessions := make(map[string]interface{})
+	for id, session := range sftp.sessions {
+		sessions[id] = map[string]interface{}{
+			"client_ip":         session.ClientIP.String(),
+			"server_ip":         session.ServerIP.String(),
+			"state":             session.State,
+			"version":           session.Version,
+			"operations_count":  len(session.Operations),
+			"bytes_transferred": session.BytesTransferred,
+			"start_time":        session.StartTime,
+			"duration":          time.Since(session.StartTime),
+		}
+	}
+	return sessions
+}
+
+func (sftp *SFTPAnalyzer) CleanupSessions() {
+	cutoff := time.Now().Add(-10 * time.Minute)
+	for id, session := range sftp.sessions {
+		if session.LastActivity.Before(cutoff) || session.Complete {
+			delete(sftp.sessions, id)
+		}
+	}
+}

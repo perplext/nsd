@@ -1,0 +1,326 @@
+package protocols
+
+import (
+	"fmt"
+	"net"
+	"strconv"
+	"strings"
+	"time"
+
+	"github.com/google/gopacket"
+	"github.com/google/gopacket/layers"
+)
+
+type TFTPAnalyzer struct {
+	sessions map[string]*TFTPSession
+}
+
+type TFTPSession struct {
+	ID          string
+	ClientIP    net.IP
+	ServerIP    net.IP
+	ClientPort  uint16
+	ServerPort  uint16
+	Operation   string
+	Filename    string
+	Mode        string
+	BlockSize   int
+	Timeout     int
+	TransferSize int64
+	BlocksTotal int
+	BlocksReceived int
+	StartTime   time.Time
+	LastActivity time.Time
+	Complete    bool
+	Error       string
+	Data        []byte
+}
+
+type TFTPPacket struct {
+	Opcode   uint16
+	Filename string
+	Mode     string
+	Block    uint16
+	Data     []byte
+	Error    string
+}
+
+const (
+	TFTP_RRQ   = 1 // Read request
+	TFTP_WRQ   = 2 // Write request
+	TFTP_DATA  = 3 // Data
+	TFTP_ACK   = 4 // Acknowledgment
+	TFTP_ERROR = 5 // Error
+	TFTP_OACK  = 6 // Option acknowledgment
+)
+
+func NewTFTPAnalyzer() *TFTPAnalyzer {
+	return &TFTPAnalyzer{
+		sessions: make(map[string]*TFTPSession),
+	}
+}
+
+func (tftp *TFTPAnalyzer) GetProtocol() string {
+	return "TFTP"
+}
+
+func (tftp *TFTPAnalyzer) GetPort() uint16 {
+	return 69
+}
+
+func (tftp *TFTPAnalyzer) ProcessPacket(packet gopacket.Packet) *ProtocolEvent {
+	udpLayer := packet.Layer(layers.LayerTypeUDP)
+	if udpLayer == nil {
+		return nil
+	}
+
+	udp := udpLayer.(*layers.UDP)
+	
+	// TFTP uses port 69 for initial requests, then random ports for data transfer
+	if udp.DstPort != 69 && udp.SrcPort != 69 {
+		// Check if this is part of an existing session
+		sessionID := tftp.getSessionID(packet)
+		if _, exists := tftp.sessions[sessionID]; !exists {
+			return nil
+		}
+	}
+
+	payload := udp.Payload
+	if len(payload) < 2 {
+		return nil
+	}
+
+	tftpPacket := tftp.parseTFTPPacket(payload)
+	if tftpPacket == nil {
+		return nil
+	}
+
+	sessionID := tftp.getSessionID(packet)
+	session := tftp.getOrCreateSession(sessionID, packet)
+
+	return tftp.processPacketType(session, tftpPacket, packet)
+}
+
+func (tftp *TFTPAnalyzer) parseTFTPPacket(payload []byte) *TFTPPacket {
+	if len(payload) < 2 {
+		return nil
+	}
+
+	opcode := uint16(payload[0])<<8 | uint16(payload[1])
+	packet := &TFTPPacket{Opcode: opcode}
+
+	switch opcode {
+	case TFTP_RRQ, TFTP_WRQ:
+		// Read/Write Request: 2 bytes opcode + filename + 0 + mode + 0
+		parts := strings.Split(string(payload[2:]), "\x00")
+		if len(parts) >= 2 {
+			packet.Filename = parts[0]
+			packet.Mode = strings.ToLower(parts[1])
+		}
+
+	case TFTP_DATA:
+		// Data packet: 2 bytes opcode + 2 bytes block number + data
+		if len(payload) >= 4 {
+			packet.Block = uint16(payload[2])<<8 | uint16(payload[3])
+			packet.Data = payload[4:]
+		}
+
+	case TFTP_ACK:
+		// ACK packet: 2 bytes opcode + 2 bytes block number
+		if len(payload) >= 4 {
+			packet.Block = uint16(payload[2])<<8 | uint16(payload[3])
+		}
+
+	case TFTP_ERROR:
+		// Error packet: 2 bytes opcode + 2 bytes error code + error message + 0
+		if len(payload) >= 4 {
+			errorCode := uint16(payload[2])<<8 | uint16(payload[3])
+			errorMsg := string(payload[4:])
+			if idx := strings.Index(errorMsg, "\x00"); idx != -1 {
+				errorMsg = errorMsg[:idx]
+			}
+			packet.Error = fmt.Sprintf("Error %d: %s", errorCode, errorMsg)
+		}
+
+	case TFTP_OACK:
+		// Option ACK: 2 bytes opcode + option1 + 0 + value1 + 0 + ...
+		options := strings.Split(string(payload[2:]), "\x00")
+		// Parse options if needed for extended features
+		_ = options
+
+	default:
+		return nil
+	}
+
+	return packet
+}
+
+func (tftp *TFTPAnalyzer) getSessionID(packet gopacket.Packet) string {
+	netLayer := packet.NetworkLayer()
+	if netLayer == nil {
+		return ""
+	}
+
+	udpLayer := packet.Layer(layers.LayerTypeUDP)
+	if udpLayer == nil {
+		return ""
+	}
+
+	udp := udpLayer.(*layers.UDP)
+	src := netLayer.NetworkFlow().Src().String()
+	dst := netLayer.NetworkFlow().Dst().String()
+	
+	// Create consistent session ID regardless of direction
+	if src < dst {
+		return fmt.Sprintf("%s:%d-%s:%d", src, udp.SrcPort, dst, udp.DstPort)
+	}
+	return fmt.Sprintf("%s:%d-%s:%d", dst, udp.DstPort, src, udp.SrcPort)
+}
+
+func (tftp *TFTPAnalyzer) getOrCreateSession(sessionID string, packet gopacket.Packet) *TFTPSession {
+	if session, exists := tftp.sessions[sessionID]; exists {
+		session.LastActivity = time.Now()
+		return session
+	}
+
+	netLayer := packet.NetworkLayer()
+	udpLayer := packet.Layer(layers.LayerTypeUDP)
+	udp := udpLayer.(*layers.UDP)
+
+	session := &TFTPSession{
+		ID:           sessionID,
+		ClientIP:     net.ParseIP(netLayer.NetworkFlow().Src().String()),
+		ServerIP:     net.ParseIP(netLayer.NetworkFlow().Dst().String()),
+		ClientPort:   uint16(udp.SrcPort),
+		ServerPort:   uint16(udp.DstPort),
+		StartTime:    time.Now(),
+		LastActivity: time.Now(),
+		BlockSize:    512, // Default TFTP block size
+		Data:         make([]byte, 0),
+	}
+
+	tftp.sessions[sessionID] = session
+	return session
+}
+
+func (tftp *TFTPAnalyzer) processPacketType(session *TFTPSession, packet *TFTPPacket, rawPacket gopacket.Packet) *ProtocolEvent {
+	event := &ProtocolEvent{
+		Protocol:  "TFTP",
+		Timestamp: time.Now(),
+		SrcIP:     session.ClientIP.String(),
+		DstIP:     session.ServerIP.String(),
+		SrcPort:   int(session.ClientPort),
+		DstPort:   int(session.ServerPort),
+		Details:   make(map[string]interface{}),
+	}
+
+	switch packet.Opcode {
+	case TFTP_RRQ:
+		session.Operation = "READ"
+		session.Filename = packet.Filename
+		session.Mode = packet.Mode
+		event.EventType = "tftp_read_request"
+		event.Description = fmt.Sprintf("TFTP read request for %s (%s)", packet.Filename, packet.Mode)
+
+	case TFTP_WRQ:
+		session.Operation = "WRITE"
+		session.Filename = packet.Filename
+		session.Mode = packet.Mode
+		event.EventType = "tftp_write_request"
+		event.Description = fmt.Sprintf("TFTP write request for %s (%s)", packet.Filename, packet.Mode)
+
+	case TFTP_DATA:
+		session.Data = append(session.Data, packet.Data...)
+		session.BlocksReceived++
+		
+		// Check if this is the last block (less than 512 bytes)
+		if len(packet.Data) < session.BlockSize {
+			session.Complete = true
+			session.TransferSize = int64(len(session.Data))
+			
+			event.EventType = "tftp_transfer_complete"
+			event.Description = fmt.Sprintf("TFTP %s complete: %s (%d bytes)", 
+				strings.ToLower(session.Operation), session.Filename, session.TransferSize)
+			
+			// Create extracted file event
+			tftp.createFileEvent(session, event)
+		} else {
+			event.EventType = "tftp_data_block"
+			event.Description = fmt.Sprintf("TFTP data block %d for %s", packet.Block, session.Filename)
+		}
+
+	case TFTP_ACK:
+		event.EventType = "tftp_ack"
+		event.Description = fmt.Sprintf("TFTP ACK for block %d", packet.Block)
+
+	case TFTP_ERROR:
+		session.Error = packet.Error
+		session.Complete = true
+		event.EventType = "tftp_error"
+		event.Description = fmt.Sprintf("TFTP error: %s", packet.Error)
+
+	case TFTP_OACK:
+		event.EventType = "tftp_option_ack"
+		event.Description = "TFTP option acknowledgment"
+	}
+
+	// Add session details to event
+	event.Details["session_id"] = session.ID
+	event.Details["operation"] = session.Operation
+	event.Details["filename"] = session.Filename
+	event.Details["mode"] = session.Mode
+	event.Details["blocks_received"] = session.BlocksReceived
+	event.Details["transfer_size"] = len(session.Data)
+	event.Details["complete"] = session.Complete
+
+	if session.Error != "" {
+		event.Details["error"] = session.Error
+	}
+
+	return event
+}
+
+func (tftp *TFTPAnalyzer) createFileEvent(session *TFTPSession, event *ProtocolEvent) {
+	if session.Operation == "READ" && len(session.Data) > 0 {
+		event.Details["extracted_file"] = map[string]interface{}{
+			"filename":    session.Filename,
+			"size":        len(session.Data),
+			"protocol":    "TFTP",
+			"operation":   "READ",
+			"client_ip":   session.ClientIP.String(),
+			"server_ip":   session.ServerIP.String(),
+			"start_time":  session.StartTime,
+			"duration":    time.Since(session.StartTime),
+		}
+	}
+}
+
+func (tftp *TFTPAnalyzer) GetSessions() map[string]interface{} {
+	sessions := make(map[string]interface{})
+	for id, session := range tftp.sessions {
+		sessions[id] = map[string]interface{}{
+			"client_ip":      session.ClientIP.String(),
+			"server_ip":      session.ServerIP.String(),
+			"operation":      session.Operation,
+			"filename":       session.Filename,
+			"mode":           session.Mode,
+			"transfer_size":  session.TransferSize,
+			"blocks_total":   session.BlocksTotal,
+			"blocks_received": session.BlocksReceived,
+			"complete":       session.Complete,
+			"error":          session.Error,
+			"start_time":     session.StartTime,
+			"duration":       time.Since(session.StartTime),
+		}
+	}
+	return sessions
+}
+
+func (tftp *TFTPAnalyzer) CleanupSessions() {
+	cutoff := time.Now().Add(-5 * time.Minute)
+	for id, session := range tftp.sessions {
+		if session.LastActivity.Before(cutoff) || session.Complete {
+			delete(tftp.sessions, id)
+		}
+	}
+}

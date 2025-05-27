@@ -1,0 +1,356 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., v1.0.0)'
+        required: true
+        type: string
+
+env:
+  GO_VERSION: '1.21'
+
+jobs:
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+      version: ${{ steps.get_version.outputs.version }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get version
+        id: get_version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION=${GITHUB_REF#refs/tags/}
+          fi
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Generate changelog
+        id: changelog
+        uses: mikepenz/release-changelog-builder-action@v4
+        with:
+          configuration: ".github/changelog-config.json"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.get_version.outputs.version }}
+          release_name: NSD ${{ steps.get_version.outputs.version }}
+          body: |
+            ## What's Changed
+            ${{ steps.changelog.outputs.changelog }}
+            
+            ## Installation
+            
+            ### macOS
+            ```bash
+            brew install nsd
+            ```
+            
+            ### Linux
+            ```bash
+            # AMD64
+            wget https://github.com/user/nsd/releases/download/${{ steps.get_version.outputs.version }}/nsd-linux-amd64
+            chmod +x nsd-linux-amd64
+            sudo mv nsd-linux-amd64 /usr/local/bin/nsd
+            
+            # ARM64
+            wget https://github.com/user/nsd/releases/download/${{ steps.get_version.outputs.version }}/nsd-linux-arm64
+            chmod +x nsd-linux-arm64
+            sudo mv nsd-linux-arm64 /usr/local/bin/nsd
+            ```
+            
+            ### Windows
+            Download `nsd-windows-amd64.exe` from the assets below.
+            
+            ### Docker
+            ```bash
+            docker pull nsd/nsd:${{ steps.get_version.outputs.version }}
+            ```
+            
+            ## Checksums
+            See `checksums.txt` in the release assets.
+          draft: false
+          prerelease: false
+
+  build-release:
+    name: Build Release Assets
+    needs: create-release
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            goos: linux
+            goarch: amd64
+          - os: ubuntu-latest
+            goos: linux
+            goarch: arm64
+          - os: ubuntu-latest
+            goos: darwin
+            goarch: amd64
+          - os: ubuntu-latest
+            goos: darwin
+            goarch: arm64
+          - os: ubuntu-latest
+            goos: windows
+            goarch: amd64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libpcap-dev
+
+      - name: Build binary
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: 0
+        run: |
+          VERSION=${{ needs.create-release.outputs.version }}
+          output_name="nsd-${{ matrix.goos }}-${{ matrix.goarch }}"
+          if [ "${{ matrix.goos }}" = "windows" ]; then
+            output_name="${output_name}.exe"
+          fi
+          
+          # Build with version info
+          go build -ldflags="-s -w -X main.version=${VERSION} -X main.commit=${GITHUB_SHA} -X main.date=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            -o "${output_name}" ./cmd/nsd
+          
+          # Create archive
+          if [ "${{ matrix.goos }}" = "windows" ]; then
+            zip "${output_name}.zip" "${output_name}" LICENSE README.md
+            echo "asset_path=${output_name}.zip" >> $GITHUB_ENV
+            echo "asset_name=${output_name}.zip" >> $GITHUB_ENV
+          else
+            tar -czf "${output_name}.tar.gz" "${output_name}" LICENSE README.md
+            echo "asset_path=${output_name}.tar.gz" >> $GITHUB_ENV
+            echo "asset_name=${output_name}.tar.gz" >> $GITHUB_ENV
+          fi
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ${{ env.asset_path }}
+          asset_name: ${{ env.asset_name }}
+          asset_content_type: application/octet-stream
+
+  build-packages:
+    name: Build Distribution Packages
+    needs: create-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libpcap-dev rpm dpkg-dev
+
+      - name: Install fpm
+        run: |
+          sudo gem install fpm
+
+      - name: Build packages
+        run: |
+          VERSION=${{ needs.create-release.outputs.version }}
+          VERSION_NUM=${VERSION#v}
+          
+          # Build binary
+          go build -ldflags="-s -w -X main.version=${VERSION}" -o nsd ./cmd/nsd
+          
+          # Create directory structure
+          mkdir -p pkg-build/usr/local/bin
+          mkdir -p pkg-build/etc/nsd
+          mkdir -p pkg-build/usr/share/doc/nsd
+          mkdir -p pkg-build/usr/lib/systemd/system
+          
+          # Copy files
+          cp nsd pkg-build/usr/local/bin/
+          cp docs/examples/config.json pkg-build/etc/nsd/
+          cp LICENSE README.md pkg-build/usr/share/doc/nsd/
+          cp .github/nsd.service pkg-build/usr/lib/systemd/system/
+          
+          # Build DEB package
+          fpm -s dir -t deb \
+            -n nsd \
+            -v ${VERSION_NUM} \
+            --description "Network Sniffing Dashboard" \
+            --url "https://github.com/user/nsd" \
+            --maintainer "NSD Team <nsd@example.com>" \
+            --license "MIT" \
+            --depends libpcap0.8 \
+            --after-install .github/scripts/postinstall.sh \
+            --before-remove .github/scripts/preremove.sh \
+            -C pkg-build \
+            .
+          
+          # Build RPM package
+          fpm -s dir -t rpm \
+            -n nsd \
+            -v ${VERSION_NUM} \
+            --description "Network Sniffing Dashboard" \
+            --url "https://github.com/user/nsd" \
+            --maintainer "NSD Team <nsd@example.com>" \
+            --license "MIT" \
+            --depends libpcap \
+            --after-install .github/scripts/postinstall.sh \
+            --before-remove .github/scripts/preremove.sh \
+            -C pkg-build \
+            .
+
+      - name: Upload DEB Package
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./nsd_*.deb
+          asset_name: nsd_${{ needs.create-release.outputs.version }}_amd64.deb
+          asset_content_type: application/vnd.debian.binary-package
+
+      - name: Upload RPM Package
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./nsd-*.rpm
+          asset_name: nsd-${{ needs.create-release.outputs.version }}.x86_64.rpm
+          asset_content_type: application/x-rpm
+
+  docker-release:
+    name: Docker Release
+    needs: create-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            nsd/nsd
+            ghcr.io/user/nsd
+          tags: |
+            type=semver,pattern={{version}},value=${{ needs.create-release.outputs.version }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ needs.create-release.outputs.version }}
+            type=semver,pattern={{major}},value=${{ needs.create-release.outputs.version }}
+            type=raw,value=latest
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            VERSION=${{ needs.create-release.outputs.version }}
+            COMMIT=${{ github.sha }}
+            BUILD_DATE=${{ github.event.repository.updated_at }}
+
+  checksums:
+    name: Generate Checksums
+    needs: [create-release, build-release]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+
+      - name: Generate checksums
+        run: |
+          find . -type f \( -name "*.tar.gz" -o -name "*.zip" -o -name "*.deb" -o -name "*.rpm" \) | while read file; do
+            sha256sum "$file" >> checksums.txt
+          done
+
+      - name: Upload checksums
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./checksums.txt
+          asset_name: checksums.txt
+          asset_content_type: text/plain
+
+  update-homebrew:
+    name: Update Homebrew Formula
+    needs: [create-release, checksums]
+    runs-on: ubuntu-latest
+    if: "!contains(github.ref, '-rc') && !contains(github.ref, '-beta')"
+    steps:
+      - name: Update Homebrew formula
+        uses: dawidd6/action-homebrew-bump-formula@v3
+        with:
+          token: ${{ secrets.HOMEBREW_GITHUB_TOKEN }}
+          formula: nsd
+          tag: ${{ needs.create-release.outputs.version }}
+
+  announce:
+    name: Announce Release
+    needs: [create-release, build-release, docker-release]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send notification
+        run: |
+          echo "NSD ${{ needs.create-release.outputs.version }} has been released!"
+          # Add notification logic here (Discord, Slack, etc.)

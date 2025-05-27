@@ -1,0 +1,40 @@
+[Unit]
+Description=NSD Network Sniffing Dashboard
+Documentation=https://github.com/user/nsd
+After=network.target
+
+[Service]
+Type=simple
+User=root
+Group=nsd
+ExecStartPre=/usr/bin/test -f /etc/nsd/config.json
+ExecStart=/usr/local/bin/nsd -config /etc/nsd/config.json
+Restart=on-failure
+RestartSec=10
+
+# Security
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/log/nsd /var/lib/nsd
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+LockPersonality=true
+RestrictRealtime=true
+RestrictNamespaces=true
+RestrictSUIDSGID=true
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=4096
+MemoryMax=2G
+CPUQuota=80%
+
+# Capabilities
+AmbientCapabilities=CAP_NET_RAW CAP_NET_ADMIN CAP_SETUID CAP_SETGID
+CapabilityBoundingSet=CAP_NET_RAW CAP_NET_ADMIN CAP_SETUID CAP_SETGID
+
+[Install]
+WantedBy=multi-user.target
