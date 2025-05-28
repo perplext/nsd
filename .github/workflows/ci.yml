@@ -231,7 +231,7 @@ jobs:
           go build -ldflags="-s -w -X main.version=${{ github.sha }}" -o "bin/${output_name}" ./cmd/nsd
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: nsd-${{ matrix.goos }}-${{ matrix.goarch }}
           path: bin/*
