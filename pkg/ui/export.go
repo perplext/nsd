@@ -5,7 +5,7 @@ import (
 	"time"
 
 	chart "github.com/wcharczuk/go-chart/v2"
-	"github.com/user/nsd/pkg/graph"
+	"github.com/perplext/nsd/pkg/graph"
 )
 
 // ensure graph import is used

@@ -8,8 +8,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/user/nsd/pkg/graph"
-	"github.com/user/nsd/pkg/netcap"
+	"github.com/perplext/nsd/pkg/graph"
+	"github.com/perplext/nsd/pkg/netcap"
 )
 
 // Test UI ExportSVG method

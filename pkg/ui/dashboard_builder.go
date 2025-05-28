@@ -5,7 +5,7 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-	"github.com/user/nsd/pkg/netcap"
+	"github.com/perplext/nsd/pkg/netcap"
 )
 
 // DashboardBuilder provides an interface for building custom dashboards

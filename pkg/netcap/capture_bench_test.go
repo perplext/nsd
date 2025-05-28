@@ -10,8 +10,8 @@ import (
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcap"
-	"github.com/user/nsd/pkg/ratelimit"
-	"github.com/user/nsd/pkg/resource"
+	"github.com/perplext/nsd/pkg/ratelimit"
+	"github.com/perplext/nsd/pkg/resource"
 )
 
 // BenchmarkPacketProcessing benchmarks packet processing performance

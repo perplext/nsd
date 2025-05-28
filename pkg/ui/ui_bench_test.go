@@ -7,8 +7,8 @@ import (
 	
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-	"github.com/user/nsd/pkg/graph"
-	"github.com/user/nsd/pkg/netcap"
+	"github.com/perplext/nsd/pkg/graph"
+	"github.com/perplext/nsd/pkg/netcap"
 )
 
 // MockScreen implements tcell.Screen for benchmarking

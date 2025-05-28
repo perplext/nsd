@@ -6,8 +6,8 @@ import (
     "sync"
     "time"
 
-    "github.com/user/nsd/pkg/netcap"
-    pluginapi "github.com/user/nsd/pkg/plugin"
+    "github.com/perplext/nsd/pkg/netcap"
+    pluginapi "github.com/perplext/nsd/pkg/plugin"
 )
 
 // SimplePlugin logs packet buffer length periodically

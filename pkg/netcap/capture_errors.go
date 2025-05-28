@@ -6,7 +6,7 @@ import (
 	"time"
 	
 	"github.com/google/gopacket/pcap"
-	"github.com/user/nsd/pkg/errors"
+	"github.com/perplext/nsd/pkg/errors"
 )
 
 // ErrorHandler handles errors with configurable behavior

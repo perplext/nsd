@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/rivo/tview"
-	"github.com/user/nsd/pkg/netcap"
-	"github.com/user/nsd/pkg/utils"
+	"github.com/perplext/nsd/pkg/netcap"
+	"github.com/perplext/nsd/pkg/utils"
 )
 
 // SpeedometerVisualization shows bandwidth as a speedometer gauge

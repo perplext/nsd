@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/rivo/tview"
-	"github.com/user/nsd/pkg/netcap"
+	"github.com/perplext/nsd/pkg/netcap"
 )
 
 func TestSetThemeValid(t *testing.T) {

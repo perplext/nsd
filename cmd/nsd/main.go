@@ -9,10 +9,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/user/nsd/pkg/netcap"
-	"github.com/user/nsd/pkg/ui"
-	"github.com/user/nsd/pkg/plugin"
-	"github.com/user/nsd/pkg/ui/i18n"
+	"github.com/perplext/nsd/pkg/netcap"
+	"github.com/perplext/nsd/pkg/ui"
+	"github.com/perplext/nsd/pkg/plugin"
+	"github.com/perplext/nsd/pkg/ui/i18n"
 )
 
 func main() {

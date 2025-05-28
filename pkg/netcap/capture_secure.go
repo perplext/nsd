@@ -7,7 +7,7 @@ import (
 	
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/pcap"
-	"github.com/user/nsd/pkg/security"
+	"github.com/perplext/nsd/pkg/security"
 )
 
 // SecureNetworkMonitor provides network monitoring with security validation

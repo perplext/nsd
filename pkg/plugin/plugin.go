@@ -4,7 +4,7 @@ import (
     "fmt"
     stdplugin "plugin"
 
-    "github.com/user/nsd/pkg/netcap"
+    "github.com/perplext/nsd/pkg/netcap"
 )
 
 // UIHandler interface for plugins that want to interact with the UI

@@ -10,7 +10,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
-	"github.com/user/nsd/pkg/netcap"
+	"github.com/perplext/nsd/pkg/netcap"
 )
 
 type Server struct {

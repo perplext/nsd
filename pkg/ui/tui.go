@@ -19,10 +19,10 @@ import (
 	"github.com/shirou/gopsutil/v3/mem"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-	"github.com/user/nsd/pkg/graph"
-	"github.com/user/nsd/pkg/netcap"
-	"github.com/user/nsd/pkg/ui/i18n"
-	"github.com/user/nsd/pkg/utils"
+	"github.com/perplext/nsd/pkg/graph"
+	"github.com/perplext/nsd/pkg/netcap"
+	"github.com/perplext/nsd/pkg/ui/i18n"
+	"github.com/perplext/nsd/pkg/utils"
 )
 
 // UI represents the terminal user interface

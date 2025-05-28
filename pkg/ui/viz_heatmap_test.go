@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/user/nsd/pkg/netcap"
+	"github.com/perplext/nsd/pkg/netcap"
 )
 
 func TestNewHeatmapVisualization(t *testing.T) {

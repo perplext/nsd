@@ -9,7 +9,7 @@ import (
 	
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/user/nsd/pkg/netcap"
+	"github.com/perplext/nsd/pkg/netcap"
 )
 
 func TestNetworkCapture(t *testing.T) {

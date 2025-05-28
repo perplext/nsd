@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/rivo/tview"
-	"github.com/user/nsd/pkg/netcap"
-	"github.com/user/nsd/pkg/security"
+	"github.com/perplext/nsd/pkg/netcap"
+	"github.com/perplext/nsd/pkg/security"
 )
 
 // DetectionDashboardVisualization shows real-time security detections

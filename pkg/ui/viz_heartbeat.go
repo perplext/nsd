@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/rivo/tview"
-	"github.com/user/nsd/pkg/netcap"
+	"github.com/perplext/nsd/pkg/netcap"
 )
 
 // HeartbeatVisualization shows network health as EKG-style graphs

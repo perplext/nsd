@@ -6,7 +6,7 @@ import (
 	"os"
 	"runtime/debug"
 	
-	"github.com/user/nsd/pkg/errors"
+	"github.com/perplext/nsd/pkg/errors"
 )
 
 // setupErrorHandling configures global error handling

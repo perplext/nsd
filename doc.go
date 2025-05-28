@@ -11,11 +11,11 @@ plugin system for extensibility.
 
 To install NSD:
 
-	go install github.com/user/nsd/cmd/nsd@latest
+	go install github.com/perplext/nsd/cmd/nsd@latest
 
 Or build from source:
 
-	git clone https://github.com/user/nsd
+	git clone https://github.com/perplext/nsd
 	cd nsd
 	make build
 
@@ -50,7 +50,7 @@ NSD is organized into several packages:
 
 The netcap package provides the core packet capture functionality:
 
-	import "github.com/user/nsd/pkg/netcap"
+	import "github.com/perplext/nsd/pkg/netcap"
 
 	monitor := netcap.NewNetworkMonitor()
 	err := monitor.StartCapture("eth0")
@@ -67,7 +67,7 @@ The netcap package provides the core packet capture functionality:
 
 The ui package provides a rich terminal interface:
 
-	import "github.com/user/nsd/pkg/ui"
+	import "github.com/perplext/nsd/pkg/ui"
 
 	ui := ui.NewUI(monitor).
 		SetTheme("Dark+").
@@ -81,7 +81,7 @@ The ui package provides a rich terminal interface:
 
 NSD includes comprehensive security features:
 
-	import "github.com/user/nsd/pkg/security"
+	import "github.com/perplext/nsd/pkg/security"
 
 	// Validate inputs
 	validator := security.NewValidator()

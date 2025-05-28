@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/rivo/tview"
-	"github.com/user/nsd/pkg/netcap"
+	"github.com/perplext/nsd/pkg/netcap"
 )
 
 // MatrixRainVisualization shows packets falling Matrix-style

@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/rivo/tview"
-	"github.com/user/nsd/pkg/netcap"
+	"github.com/perplext/nsd/pkg/netcap"
 )
 
 // SunburstVisualization shows connection states in a hierarchical sunburst

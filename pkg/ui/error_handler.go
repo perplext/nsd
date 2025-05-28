@@ -9,7 +9,7 @@ import (
 	
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-	neterrors "github.com/user/nsd/pkg/errors"
+	neterrors "github.com/perplext/nsd/pkg/errors"
 )
 
 // ErrorDisplay handles error display in the UI

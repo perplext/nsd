@@ -9,7 +9,7 @@ import (
 	
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/pcap"
-	neterrors "github.com/user/nsd/pkg/errors"
+	neterrors "github.com/perplext/nsd/pkg/errors"
 )
 
 // ImprovedNetworkMonitor is an enhanced version with better error handling

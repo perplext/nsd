@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/rivo/tview"
-	"github.com/user/nsd/pkg/netcap"
+	"github.com/perplext/nsd/pkg/netcap"
 )
 
 // PacketDistributionVisualization shows packet size distribution

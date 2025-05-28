@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/rivo/tview"
-	"github.com/user/nsd/pkg/netcap"
+	"github.com/perplext/nsd/pkg/netcap"
 )
 
 // DNSTimelineVisualization shows DNS queries over time
