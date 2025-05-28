@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 env:
-  GO_VERSION: '1.21'
+  GO_VERSION: '1.24'
   GOLANGCI_LINT_VERSION: 'v1.54'
 
 jobs:
@@ -49,7 +49,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        go: ['1.21', '1.22']
+        go: ['1.23', '1.24']
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout code
@@ -88,7 +88,7 @@ jobs:
           CGO_ENABLED: 1
 
       - name: Upload coverage to Codecov
-        if: matrix.os == 'ubuntu-latest' && matrix.go == '1.21'
+        if: matrix.os == 'ubuntu-latest' && matrix.go == '1.24'
         uses: codecov/codecov-action@v5
         with:
           file: ./coverage.out
