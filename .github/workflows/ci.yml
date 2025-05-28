@@ -299,7 +299,7 @@ jobs:
           go install golang.org/x/tools/cmd/godoc@latest
           godoc -http=:6060 &
           sleep 5
-          wget -r -np -k -E -p -erobots=off http://localhost:6060/pkg/github.com/user/nsd/
+          wget -r -np -k -E -p -erobots=off http://localhost:6060/pkg/github.com/perplext/nsd/
           mv localhost:6060 docs/api/godoc
 
       - name: Deploy to GitHub Pages
