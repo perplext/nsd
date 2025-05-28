@@ -1,3 +1,6 @@
+# golangci-lint configuration
+# See https://golangci-lint.run/usage/configuration/
+
 run:
   timeout: 5m
   issues-exit-code: 1
@@ -75,7 +78,7 @@ linters-settings:
   unused:
     go: "1.21"
   goimports:
-    local-prefixes: github.com/user/netmon
+    local-prefixes: github.com/perplext/nsd
   gocognit:
     min-complexity: 20
   nestif:
