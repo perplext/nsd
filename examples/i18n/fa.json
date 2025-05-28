@@ -32,5 +32,21 @@
   "requires_root": "این برنامه برای ضبط بسته‌ها به دسترسی root/administrator نیاز دارد.",
   "run_as_root": "لطفاً با sudo یا به عنوان administrator اجرا کنید.",
   "secure_nonsecure_pie": "نمودار دایره‌ای امن در مقابل ناامن [6]",
-  "service_usage_pie": "نمودار دایره‌ای استفاده از سرویس [4]"
+  "service_usage_pie": "نمودار دایره‌ای استفاده از سرویس [4]",
+  "plugins": "Plugins",
+  "world_map": "World Map",
+  "remote_ip": "Remote IP",
+  "country": "Country",
+  "exit_menu_text": "What would you like to do?",
+  "options": "Options",
+  "quit": "Quit",
+  "cancel": "Cancel",
+  "source": "Source",
+  "destination": "Destination",
+  "proto": "Proto",
+  "svc": "Service",
+  "bytes": "Bytes",
+  "pkts": "Packets",
+  "activity": "Activity",
+  "last_seen": "Last Seen"
 }

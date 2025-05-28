@@ -32,5 +32,21 @@
   "requires_root": "Diese Anwendung erfordert Root-/Administratorenrechte zum Erfassen von Paketen.",
   "run_as_root": "Bitte mit sudo oder als Administrator ausführen.",
   "secure_nonsecure_pie": "Sicher vs unsicher Tortendiagramm [6]",
-  "service_usage_pie": "Tortendiagramm der Dienstnutzung [4]"
+  "service_usage_pie": "Tortendiagramm der Dienstnutzung [4]",
+  "plugins": "Plugins",
+  "world_map": "Weltkarte",
+  "remote_ip": "Remote-IP",
+  "country": "Land",
+  "exit_menu_text": "Was möchten Sie tun?",
+  "options": "Optionen",
+  "quit": "Beenden",
+  "cancel": "Abbrechen",
+  "source": "Quelle",
+  "destination": "Ziel",
+  "proto": "Proto",
+  "svc": "Dienst",
+  "bytes": "Bytes",
+  "pkts": "Pakete",
+  "activity": "Aktivität",
+  "last_seen": "Zuletzt gesehen"
 }

@@ -1,0 +1,129 @@
+name: ❓ Question
+description: Ask a question about NSD usage or functionality
+title: "[Question]: "
+labels: ["question", "triage"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have a question about NSD? We're here to help! Please provide as much context as possible.
+        
+        **Note:** For general discussions, consider using [GitHub Discussions](https://github.com/perplext/nsd/discussions) instead.
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Your Question
+      description: What would you like to know about NSD?
+      placeholder: Please describe your question in detail.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Question Category
+      description: What area does your question relate to?
+      options:
+        - Installation and Setup
+        - Basic Usage
+        - Network Interface Configuration
+        - Command Line Options
+        - Configuration Files
+        - Themes and Customization
+        - Plugin Development
+        - Web Dashboard
+        - API Usage
+        - Performance and Optimization
+        - Troubleshooting
+        - Integrations
+        - Security
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context and Background
+      description: |
+        Provide any relevant context about your setup, what you're trying to achieve, 
+        or what you've already tried.
+      placeholder: |
+        Describe your setup, goals, or any attempts you've made to solve this yourself.
+        Include your OS, NSD version, and any relevant configuration.
+    validations:
+      required: false
+
+  - type: input
+    id: version
+    attributes:
+      label: NSD Version
+      description: What version of NSD are you using? Run `nsd --version` to find out.
+      placeholder: v1.0.0
+    validations:
+      required: false
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating System
+      description: What operating system are you using?
+      options:
+        - Linux (Ubuntu/Debian)
+        - Linux (CentOS/RHEL)
+        - Linux (Arch)
+        - Linux (Other)
+        - macOS
+        - Windows 10
+        - Windows 11
+        - Other
+        - Not applicable
+    validations:
+      required: false
+
+  - type: textarea
+    id: attempted
+    attributes:
+      label: What Have You Tried?
+      description: |
+        Describe any solutions you've already attempted or documentation you've consulted.
+      placeholder: |
+        - I've read the documentation at...
+        - I've tried the following commands...
+        - I've searched for similar issues...
+    validations:
+      required: false
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior or Outcome
+      description: What do you expect to happen or what are you trying to achieve?
+      placeholder: Describe what you're hoping to accomplish or what you expect to see.
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Information
+      description: |
+        Any additional information, logs, screenshots, or context that might be helpful.
+        You can attach files by dragging & dropping them here.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submission Checklist
+      description: Please confirm the following before submitting.
+      options:
+        - label: I have searched existing issues and discussions for similar questions
+          required: true
+        - label: I have read the relevant documentation
+          required: true
+        - label: This is a specific question rather than a general discussion topic
+          required: true

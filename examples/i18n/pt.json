@@ -32,5 +32,21 @@
   "requires_root": "Este aplicativo requer privilégios de root/administrador para capturar pacotes.",
   "run_as_root": "Por favor, execute com sudo ou como administrador.",
   "secure_nonsecure_pie": "Gráfico de pizza seguro vs inseguro [6]",
-  "service_usage_pie": "Gráfico de pizza de uso de serviço [4]"
+  "service_usage_pie": "Gráfico de pizza de uso de serviço [4]",
+  "plugins": "Plugins",
+  "world_map": "Mapa mundial",
+  "remote_ip": "IP remoto",
+  "country": "País",
+  "exit_menu_text": "O que você gostaria de fazer?",
+  "options": "Opções",
+  "quit": "Sair",
+  "cancel": "Cancelar",
+  "source": "Origem",
+  "destination": "Destino",
+  "proto": "Proto",
+  "svc": "Serviço",
+  "bytes": "Bytes",
+  "pkts": "Pacotes",
+  "activity": "Atividade",
+  "last_seen": "Visto por último"
 }

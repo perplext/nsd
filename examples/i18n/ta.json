@@ -32,5 +32,21 @@
   "requires_root": "பேக்கெட்டுகளை பிடிக்க இந்த செயலிக்கு ரூட்/நிர்வாகி உரிமைகள் தேவை.",
   "run_as_root": "தயவுசெய்து sudo உடன் அல்லது நிர்வாகியாக இயக்கவும்.",
   "secure_nonsecure_pie": "பாதுகாப்பான vs பாதுகாப்பற்ற பை வரைபடம் [6]",
-  "service_usage_pie": "சேவை பயன்பாடு பை வரைபடம் [4]"
+  "service_usage_pie": "சேவை பயன்பாடு பை வரைபடம் [4]",
+  "plugins": "Plugins",
+  "world_map": "World Map",
+  "remote_ip": "Remote IP",
+  "country": "Country",
+  "exit_menu_text": "What would you like to do?",
+  "options": "Options",
+  "quit": "Quit",
+  "cancel": "Cancel",
+  "source": "Source",
+  "destination": "Destination",
+  "proto": "Proto",
+  "svc": "Service",
+  "bytes": "Bytes",
+  "pkts": "Packets",
+  "activity": "Activity",
+  "last_seen": "Last Seen"
 }

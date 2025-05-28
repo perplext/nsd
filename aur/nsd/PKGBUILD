@@ -1,0 +1,211 @@
+# Maintainer: NSD Team <nsd@example.com>
+pkgname=nsd
+pkgver=1.0.0
+pkgrel=1
+pkgdesc="Network Sniffing Dashboard - Real-time network monitoring with terminal UI"
+arch=('x86_64' 'aarch64' 'armv7h')
+url="https://github.com/perplext/nsd"
+license=('MIT')
+depends=('libpcap' 'glibc')
+makedepends=('go' 'git')
+optdepends=(
+    'nftables: for advanced filtering'
+    'iptables: for legacy filtering support'
+)
+source=("$pkgname-$pkgver.tar.gz::https://github.com/perplext/$pkgname/archive/v$pkgver.tar.gz")
+sha256sums=('SKIP')  # Will be updated when building
+backup=('etc/nsd/nsd.conf')
+
+prepare() {
+    cd "$pkgname-$pkgver"
+    mkdir -p build/
+}
+
+build() {
+    cd "$pkgname-$pkgver"
+    
+    export CGO_CPPFLAGS="${CPPFLAGS}"
+    export CGO_CFLAGS="${CFLAGS}"
+    export CGO_CXXFLAGS="${CXXFLAGS}"
+    export CGO_LDFLAGS="${LDFLAGS}"
+    export GOFLAGS="-buildmode=pie -trimpath -ldflags=-linkmode=external -mod=readonly -modcacherw"
+    
+    # Build the main binary
+    go build -o build/nsd ./cmd/nsd
+    
+    # Build the i18n scaffold tool
+    go build -o build/nsd-i18n-scaffold ./cmd/i18n-scaffold
+}
+
+check() {
+    cd "$pkgname-$pkgver"
+    
+    # Run tests
+    go test -v ./pkg/...
+}
+
+package() {
+    cd "$pkgname-$pkgver"
+    
+    # Install main binary
+    install -Dm755 build/nsd "$pkgdir/usr/bin/nsd"
+    install -Dm755 build/nsd-i18n-scaffold "$pkgdir/usr/bin/nsd-i18n-scaffold"
+    
+    # Install documentation
+    install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
+    install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+    install -Dm644 CLAUDE.md "$pkgdir/usr/share/doc/$pkgname/CLAUDE.md"
+    
+    # Install additional documentation
+    cp -r docs "$pkgdir/usr/share/doc/$pkgname/"
+    
+    # Install examples and translations
+    install -dm755 "$pkgdir/usr/share/$pkgname"
+    cp -r examples "$pkgdir/usr/share/$pkgname/"
+    
+    # Install web UI files
+    cp -r web "$pkgdir/usr/share/$pkgname/"
+    
+    # Install systemd service file
+    install -Dm644 - "$pkgdir/usr/lib/systemd/system/nsd.service" << 'EOF'
+[Unit]
+Description=NSD Network Sniffing Dashboard
+Documentation=https://github.com/perplext/nsd
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/nsd -i auto
+Restart=on-failure
+RestartSec=5
+User=root
+Group=root
+
+# Security settings
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/log /tmp
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+    # Install default configuration
+    install -Dm644 - "$pkgdir/etc/nsd/nsd.conf" << 'EOF'
+# NSD Configuration File
+# See 'man nsd' for more information
+
+# Default interface to monitor (auto-detect if not specified)
+#interface = eth0
+
+# Default theme
+theme = Dark+
+
+# Enable web dashboard
+web-port = 8080
+
+# Recording directory
+recording-dir = /var/log/nsd/recordings
+
+# Alert configuration
+alert-email = false
+alert-webhook = false
+
+# Plugin directory
+plugin-dir = /usr/lib/nsd/plugins
+EOF
+
+    # Create directories for runtime files
+    install -dm755 "$pkgdir/var/log/nsd"
+    install -dm755 "$pkgdir/usr/lib/nsd/plugins"
+    
+    # Install bash completion
+    install -Dm644 - "$pkgdir/usr/share/bash-completion/completions/nsd" << 'EOF'
+# NSD bash completion
+_nsd() {
+    local cur prev opts
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+    
+    opts="-i --interface -t --theme -f --filter --theme-file --auto-theme 
+          -s --style --gradient --export-svg --export-png --plugins 
+          --i18n-file --web-port --api-port --help --version"
+    
+    case ${prev} in
+        -i|--interface)
+            local interfaces=$(ip link show | grep -oP '^\d+: \K[^:]+' | grep -v lo)
+            COMPREPLY=( $(compgen -W "${interfaces}" -- ${cur}) )
+            return 0
+            ;;
+        -t|--theme)
+            COMPREPLY=( $(compgen -W "Dark+ Light Monokai Solarized Nord Dracula CyberpunkNeon Matrix" -- ${cur}) )
+            return 0
+            ;;
+        -s|--style)
+            COMPREPLY=( $(compgen -W "Rounded Sharp Double ASCII" -- ${cur}) )
+            return 0
+            ;;
+        --theme-file|--i18n-file)
+            COMPREPLY=( $(compgen -f -- ${cur}) )
+            return 0
+            ;;
+    esac
+    
+    COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+    return 0
+}
+complete -F _nsd nsd
+EOF
+
+    # Install man page
+    install -Dm644 - "$pkgdir/usr/share/man/man1/nsd.1" << 'EOF'
+.TH NSD 1 "2025-01-01" "1.0.0" "Network Sniffing Dashboard"
+.SH NAME
+nsd \- Network Sniffing Dashboard
+.SH SYNOPSIS
+.B nsd
+[\fIOPTIONS\fR] \-i \fIINTERFACE\fR
+.SH DESCRIPTION
+NSD is a cross-platform network traffic monitoring tool with a terminal UI. It provides real-time network statistics, visual traffic graphs, and connection details.
+.SH OPTIONS
+.TP
+.BR \-i ", " \-\-interface =\fIINTERFACE\fR
+Network interface to monitor
+.TP
+.BR \-t ", " \-\-theme =\fITHEME\fR
+Color theme to use
+.TP
+.BR \-f ", " \-\-filter =\fIFILTER\fR
+BPF filter expression
+.TP
+.BR \-\-web\-port =\fIPORT\fR
+Enable web dashboard on specified port
+.SH EXAMPLES
+.TP
+Monitor eth0 interface:
+.B nsd -i eth0
+.TP
+Monitor with HTTPS traffic filter:
+.B nsd -i eth0 -f "tcp port 443"
+.TP
+Use dark theme with web dashboard:
+.B nsd -i eth0 -t Dark+ --web-port 8080
+.SH FILES
+.TP
+.I /etc/nsd/nsd.conf
+System-wide configuration file
+.TP
+.I ~/.config/nsd/
+User configuration directory
+.SH SEE ALSO
+.BR tcpdump (1),
+.BR wireshark (1),
+.BR netstat (8)
+.SH BUGS
+Report bugs at: https://github.com/perplext/nsd/issues
+EOF
+}

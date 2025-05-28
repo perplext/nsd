@@ -32,5 +32,21 @@
   "requires_root": "Ứng dụng này yêu cầu quyền root/quản trị để bắt gói.",
   "run_as_root": "Vui lòng chạy với sudo hoặc với quyền quản trị.",
   "secure_nonsecure_pie": "Biểu đồ tròn an toàn vs không an toàn [6]",
-  "service_usage_pie": "Biểu đồ tròn sử dụng dịch vụ [4]"
+  "service_usage_pie": "Biểu đồ tròn sử dụng dịch vụ [4]",
+  "plugins": "Plugins",
+  "world_map": "World Map",
+  "remote_ip": "Remote IP",
+  "country": "Country",
+  "exit_menu_text": "What would you like to do?",
+  "options": "Options",
+  "quit": "Quit",
+  "cancel": "Cancel",
+  "source": "Source",
+  "destination": "Destination",
+  "proto": "Proto",
+  "svc": "Service",
+  "bytes": "Bytes",
+  "pkts": "Packets",
+  "activity": "Activity",
+  "last_seen": "Last Seen"
 }

@@ -32,5 +32,21 @@
   "requires_root": "ప్యాకెట్లు క్యాప్చర్ చేయడానికి ఈ యాప్‌కు రూట్/అడ్మిన్ అనుమతులు అవసరం.",
   "run_as_root": "దయచేసి sudoతో లేదా అడ్మిన్‌గా ప్రారంభించండి.",
   "secure_nonsecure_pie": "సురక్షిత vs అసురక్షిత పై చార్ట్ [6]",
-  "service_usage_pie": "సేవ వినియోగం పై చార్ట్ [4]"
+  "service_usage_pie": "సేవ వినియోగం పై చార్ట్ [4]",
+  "plugins": "Plugins",
+  "world_map": "World Map",
+  "remote_ip": "Remote IP",
+  "country": "Country",
+  "exit_menu_text": "What would you like to do?",
+  "options": "Options",
+  "quit": "Quit",
+  "cancel": "Cancel",
+  "source": "Source",
+  "destination": "Destination",
+  "proto": "Proto",
+  "svc": "Service",
+  "bytes": "Bytes",
+  "pkts": "Packets",
+  "activity": "Activity",
+  "last_seen": "Last Seen"
 }

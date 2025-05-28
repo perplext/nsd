@@ -32,5 +32,21 @@
   "requires_root": "Kinakailangan ng pribilehiyo ng root/administrator para maka-capture ng mga pakete.",
   "run_as_root": "Mangyaring patakbuhin gamit ang sudo o bilang administrator.",
   "secure_nonsecure_pie": "Pie chart ng secure vs hindi secure [6]",
-  "service_usage_pie": "Pie chart ng paggamit ng serbisyo [4]"
+  "service_usage_pie": "Pie chart ng paggamit ng serbisyo [4]",
+  "plugins": "Plugins",
+  "world_map": "World Map",
+  "remote_ip": "Remote IP",
+  "country": "Country",
+  "exit_menu_text": "What would you like to do?",
+  "options": "Options",
+  "quit": "Quit",
+  "cancel": "Cancel",
+  "source": "Source",
+  "destination": "Destination",
+  "proto": "Proto",
+  "svc": "Service",
+  "bytes": "Bytes",
+  "pkts": "Packets",
+  "activity": "Activity",
+  "last_seen": "Last Seen"
 }

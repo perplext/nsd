@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NSD - Network Sniffing Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: #fff;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .card h3 {
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+            color: #fff;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #00d4aa;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 10px;
+        }
+
+        .connections-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .connections-table th,
+        .connections-table td {
+            padding: 8px 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .connections-table th {
+            background: rgba(255, 255, 255, 0.1);
+            font-weight: 600;
+        }
+
+        .connections-table tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-online {
+            background: #00d4aa;
+        }
+
+        .status-offline {
+            background: #ff6b6b;
+        }
+
+        .refresh-btn {
+            background: linear-gradient(45deg, #00d4aa, #007991);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: transform 0.2s;
+        }
+
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌐 NSD Dashboard</h1>
+            <p>Real-time Network Monitoring & Traffic Analysis</p>
+            <button class="refresh-btn" onclick="refreshData()">🔄 Refresh Data</button>
+        </div>
+
+        <div class="dashboard">
+            <!-- Overview Stats -->
+            <div class="card">
+                <h3>📊 Network Overview</h3>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value" id="totalPackets">0</div>
+                        <div class="stat-label">Total Packets</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="totalBytes">0 B</div>
+                        <div class="stat-label">Total Bytes</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="packetRate">0/s</div>
+                        <div class="stat-label">Packet Rate</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="byteRate">0 B/s</div>
+                        <div class="stat-label">Byte Rate</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Protocol Distribution -->
+            <div class="card">
+                <h3>🔗 Protocol Distribution</h3>
+                <div class="chart-container">
+                    <canvas id="protocolChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Traffic Over Time -->
+            <div class="card">
+                <h3>📈 Traffic Over Time</h3>
+                <div class="chart-container">
+                    <canvas id="trafficChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Active Connections -->
+            <div class="card">
+                <h3>🔌 Active Connections</h3>
+                <div style="max-height: 300px; overflow-y: auto;">
+                    <table class="connections-table">
+                        <thead>
+                            <tr>
+                                <th>Source</th>
+                                <th>Destination</th>
+                                <th>Protocol</th>
+                                <th>Bytes</th>
+                            </tr>
+                        </thead>
+                        <tbody id="connectionsTable">
+                            <tr>
+                                <td colspan="4" style="text-align: center; opacity: 0.7;">Loading connections...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Interface Statistics -->
+            <div class="card">
+                <h3>🌐 Interface Statistics</h3>
+                <div id="interfaceStats">
+                    <div class="stat-item">
+                        <span class="status-indicator status-online"></span>
+                        <strong>eth0:</strong> 1,234 packets, 64.2 KB/s
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Status -->
+            <div class="card">
+                <h3>⚡ System Status</h3>
+                <div class="stat-item">
+                    <span class="status-indicator status-online"></span>
+                    <strong>NSD Service:</strong> Running
+                </div>
+                <div class="stat-item">
+                    <span class="status-indicator status-online"></span>
+                    <strong>API Server:</strong> Connected
+                </div>
+                <div class="stat-item">
+                    <span class="status-indicator status-online"></span>
+                    <strong>WebSocket:</strong> Active
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let protocolChart, trafficChart;
+        let websocket;
+        let trafficData = [];
+
+        // Initialize charts
+        function initCharts() {
+            // Protocol Distribution Chart
+            const protocolCtx = document.getElementById('protocolChart').getContext('2d');
+            protocolChart = new Chart(protocolCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['TCP', 'UDP', 'ICMP', 'HTTP', 'HTTPS'],
+                    datasets: [{
+                        data: [40, 25, 10, 15, 10],
+                        backgroundColor: [
+                            '#00d4aa',
+                            '#007991',
+                            '#ff6b6b',
+                            '#4ecdc4',
+                            '#45b7d1'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#fff' }
+                        }
+                    }
+                }
+            });
+
+            // Traffic Over Time Chart
+            const trafficCtx = document.getElementById('trafficChart').getContext('2d');
+            trafficChart = new Chart(trafficCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Bytes/sec',
+                        data: [],
+                        borderColor: '#00d4aa',
+                        backgroundColor: 'rgba(0, 212, 170, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            ticks: { color: '#fff' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        },
+                        x: {
+                            ticks: { color: '#fff' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: { color: '#fff' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Connect to WebSocket
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/api/v1/ws`;
+            
+            websocket = new WebSocket(wsUrl);
+            
+            websocket.onopen = function() {
+                console.log('WebSocket connected');
+                updateSystemStatus('websocket', true);
+            };
+            
+            websocket.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                updateDashboard(data);
+            };
+            
+            websocket.onclose = function() {
+                console.log('WebSocket disconnected');
+                updateSystemStatus('websocket', false);
+                // Reconnect after 5 seconds
+                setTimeout(connectWebSocket, 5000);
+            };
+            
+            websocket.onerror = function(error) {
+                console.error('WebSocket error:', error);
+                updateSystemStatus('websocket', false);
+            };
+        }
+
+        // Update dashboard with new data
+        function updateDashboard(data) {
+            // Update overview stats
+            document.getElementById('totalPackets').textContent = data.total_packets.toLocaleString();
+            document.getElementById('totalBytes').textContent = formatBytes(data.total_bytes);
+            document.getElementById('packetRate').textContent = data.packet_rate.toFixed(1) + '/s';
+            document.getElementById('byteRate').textContent = formatBytes(data.byte_rate) + '/s';
+
+            // Update protocol chart
+            if (data.protocols) {
+                const labels = Object.keys(data.protocols);
+                const values = Object.values(data.protocols);
+                protocolChart.data.labels = labels;
+                protocolChart.data.datasets[0].data = values;
+                protocolChart.update();
+            }
+
+            // Update traffic chart
+            const now = new Date().toLocaleTimeString();
+            trafficData.push({ time: now, bytes: data.byte_rate });
+            if (trafficData.length > 20) trafficData.shift(); // Keep last 20 points
+
+            trafficChart.data.labels = trafficData.map(d => d.time);
+            trafficChart.data.datasets[0].data = trafficData.map(d => d.bytes);
+            trafficChart.update();
+
+            // Update connections table
+            updateConnectionsTable(data.connections || []);
+        }
+
+        // Update connections table
+        function updateConnectionsTable(connections) {
+            const tbody = document.getElementById('connectionsTable');
+            tbody.innerHTML = '';
+
+            if (connections.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; opacity: 0.7;">No active connections</td></tr>';
+                return;
+            }
+
+            connections.slice(0, 10).forEach(conn => {
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td>${conn.source}</td>
+                    <td>${conn.destination}</td>
+                    <td>${conn.protocol}</td>
+                    <td>${formatBytes(conn.bytes)}</td>
+                `;
+            });
+        }
+
+        // Update system status
+        function updateSystemStatus(service, isOnline) {
+            const indicators = {
+                'websocket': document.querySelector('.card:last-child .stat-item:last-child .status-indicator')
+            };
+            
+            if (indicators[service]) {
+                indicators[service].className = `status-indicator ${isOnline ? 'status-online' : 'status-offline'}`;
+            }
+        }
+
+        // Format bytes
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // Refresh data manually
+        function refreshData() {
+            fetch('/api/v1/stats')
+                .then(response => response.json())
+                .then(result => {
+                    if (result.status === 'success') {
+                        updateDashboard(result.data);
+                    }
+                })
+                .catch(error => console.error('Error fetching data:', error));
+        }
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            initCharts();
+            connectWebSocket();
+            
+            // Initial data load
+            refreshData();
+        });
+    </script>
+</body>
+</html>

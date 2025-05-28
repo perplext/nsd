@@ -32,5 +32,21 @@
   "requires_root": "Cette application nécessite des privilèges root/administrateur pour capturer des paquets.",
   "run_as_root": "Veuillez exécuter avec sudo ou en tant qu'administrateur.",
   "secure_nonsecure_pie": "Camembert sécurisé vs non sécurisé [6]",
-  "service_usage_pie": "Camembert d'utilisation du service [4]"
+  "service_usage_pie": "Camembert d'utilisation du service [4]",
+  "plugins": "Plugins",
+  "world_map": "Carte du monde",
+  "remote_ip": "IP distante",
+  "country": "Pays",
+  "exit_menu_text": "Que souhaitez-vous faire ?",
+  "options": "Options",
+  "quit": "Quitter",
+  "cancel": "Annuler",
+  "source": "Source",
+  "destination": "Destination",
+  "proto": "Proto",
+  "svc": "Service",
+  "bytes": "Octets",
+  "pkts": "Paquets",
+  "activity": "Activité",
+  "last_seen": "Vu en dernier"
 }

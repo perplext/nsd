@@ -1,0 +1,164 @@
+name: 🚀 Feature Request
+description: Suggest a new feature or enhancement
+title: "[Feature]: "
+labels: ["enhancement", "triage"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for suggesting a new feature! Please provide as much detail as possible to help us understand your request.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Feature Summary
+      description: A brief, clear summary of the feature you'd like to see added.
+      placeholder: Briefly describe the feature you'd like to request.
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: What problem does this feature solve? What's the motivation behind this request?
+      placeholder: |
+        Describe the problem you're trying to solve or the use case that isn't currently supported.
+        Example: "As a network administrator, I need to..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe the solution you'd like to see implemented.
+      placeholder: |
+        Describe your proposed solution in detail. How should this feature work?
+        What should the user interface look like? What commands or options should be added?
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternative Solutions
+      description: Have you considered any alternative solutions or workarounds?
+      placeholder: |
+        Describe any alternative solutions you've considered or workarounds you're currently using.
+    validations:
+      required: false
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Feature Category
+      description: Which area of NSD does this feature relate to?
+      options:
+        - User Interface (Terminal UI)
+        - Web Dashboard
+        - Network Capture
+        - Protocol Analysis
+        - Visualization/Charts
+        - Plugin System
+        - Configuration
+        - Performance
+        - Security
+        - Documentation
+        - Installation/Packaging
+        - API/Integration
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority Level
+      description: How important is this feature to you?
+      options:
+        - Low - Nice to have
+        - Medium - Would improve my workflow
+        - High - Important for my use case
+        - Critical - Blocking my adoption of NSD
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: complexity
+    attributes:
+      label: Implementation Complexity (if known)
+      description: If you have technical knowledge, how complex do you think this feature would be to implement?
+      options:
+        - label: Simple - Small UI change or configuration option
+        - label: Medium - New functionality or moderate code changes
+        - label: Complex - Major architectural changes or new subsystems
+        - label: Not sure - I don't know the technical complexity
+
+  - type: textarea
+    id: examples
+    attributes:
+      label: Examples and References
+      description: |
+        Provide examples, mockups, or references to similar features in other tools.
+        You can attach images by dragging & dropping them here.
+      placeholder: |
+        Include examples of similar features in other tools, mockups of the UI,
+        or any other references that might help explain your request.
+    validations:
+      required: false
+
+  - type: textarea
+    id: use-cases
+    attributes:
+      label: Use Cases
+      description: Describe specific scenarios where this feature would be useful.
+      placeholder: |
+        Provide concrete examples of how you or others would use this feature.
+        The more specific, the better!
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: platforms
+    attributes:
+      label: Target Platforms
+      description: Which platforms should this feature support?
+      options:
+        - label: Linux
+        - label: macOS
+        - label: Windows
+        - label: All platforms
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Add any other context, screenshots, or examples about the feature request here.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution
+      description: Are you interested in contributing to this feature?
+      options:
+        - label: I would be willing to implement this feature myself
+        - label: I would be willing to help with testing
+        - label: I would be willing to help with documentation
+        - label: I would be willing to provide feedback during development
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submission Checklist
+      description: Please confirm the following before submitting.
+      options:
+        - label: I have searched existing issues to make sure this feature hasn't been requested before
+          required: true
+        - label: I have checked the documentation to make sure this feature doesn't already exist
+          required: true
+        - label: I have provided a clear description of the problem and proposed solution
+          required: true

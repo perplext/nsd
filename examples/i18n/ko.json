@@ -32,5 +32,21 @@
   "requires_root": "이 애플리케이션은 패킷 캡처를 위해 root/관리자 권한이 필요합니다.",
   "run_as_root": "sudo 또는 관리자 권한으로 실행하세요.",
   "secure_nonsecure_pie": "안전 vs 비안전 파이 차트 [6]",
-  "service_usage_pie": "서비스 사용 파이 차트 [4]"
+  "service_usage_pie": "서비스 사용 파이 차트 [4]",
+  "plugins": "플러그인",
+  "world_map": "세계 지도",
+  "remote_ip": "원격 IP",
+  "country": "국가",
+  "exit_menu_text": "무엇을 하시겠습니까?",
+  "options": "옵션",
+  "quit": "종료",
+  "cancel": "취소",
+  "source": "소스",
+  "destination": "대상",
+  "proto": "프로토",
+  "svc": "서비스",
+  "bytes": "바이트",
+  "pkts": "패킷",
+  "activity": "활동",
+  "last_seen": "마지막으로 본"
 }

@@ -32,5 +32,21 @@
   "requires_root": "Esta aplicación requiere privilegios de root/administrador para capturar paquetes.",
   "run_as_root": "Por favor, ejecute con sudo o como administrador.",
   "secure_nonsecure_pie": "Gráfico de pastel seguro vs no seguro [6]",
-  "service_usage_pie": "Gráfico de pastel de uso de servicio [4]"
+  "service_usage_pie": "Gráfico de pastel de uso de servicio [4]",
+  "plugins": "Complementos",
+  "world_map": "Mapa mundial",
+  "remote_ip": "IP remota",
+  "country": "País",
+  "exit_menu_text": "¿Qué desea hacer?",
+  "options": "Opciones",
+  "quit": "Salir",
+  "cancel": "Cancelar",
+  "source": "Origen",
+  "destination": "Destino",
+  "proto": "Proto",
+  "svc": "Servicio",
+  "bytes": "Bytes",
+  "pkts": "Paquetes",
+  "activity": "Actividad",
+  "last_seen": "Visto por última vez"
 }

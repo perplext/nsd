@@ -32,5 +32,21 @@
   "requires_root": "Programu hii inahitaji vibali vya root/msimamizi ili kushika vifurushi.",
   "run_as_root": "Tafadhali endesha na sudo au kama msimamizi.",
   "secure_nonsecure_pie": "Chati ya pai salama vs isiyo salama [6]",
-  "service_usage_pie": "Chati ya pai cha matumizi ya huduma [4]"
+  "service_usage_pie": "Chati ya pai cha matumizi ya huduma [4]",
+  "plugins": "Plugins",
+  "world_map": "World Map",
+  "remote_ip": "Remote IP",
+  "country": "Country",
+  "exit_menu_text": "What would you like to do?",
+  "options": "Options",
+  "quit": "Quit",
+  "cancel": "Cancel",
+  "source": "Source",
+  "destination": "Destination",
+  "proto": "Proto",
+  "svc": "Service",
+  "bytes": "Bytes",
+  "pkts": "Packets",
+  "activity": "Activity",
+  "last_seen": "Last Seen"
 }

@@ -32,5 +32,21 @@
   "requires_root": "Questa applicazione richiede privilegi di root/amministratore per catturare i pacchetti.",
   "run_as_root": "Esegui con sudo o come amministratore.",
   "secure_nonsecure_pie": "Torta sicuro vs non sicuro [6]",
-  "service_usage_pie": "Grafico a torta utilizzo servizio [4]"
+  "service_usage_pie": "Grafico a torta utilizzo servizio [4]",
+  "plugins": "Plugin",
+  "world_map": "Mappa del mondo",
+  "remote_ip": "IP remoto",
+  "country": "Paese",
+  "exit_menu_text": "Cosa vuoi fare?",
+  "options": "Opzioni",
+  "quit": "Esci",
+  "cancel": "Annulla",
+  "source": "Origine",
+  "destination": "Destinazione",
+  "proto": "Proto",
+  "svc": "Servizio",
+  "bytes": "Byte",
+  "pkts": "Pacchetti",
+  "activity": "Attività",
+  "last_seen": "Visto l'ultima volta"
 }

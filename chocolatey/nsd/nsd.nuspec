@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>nsd</id>
+    <version>1.0.0</version>
+    <packageSourceUrl>https://github.com/perplext/nsd</packageSourceUrl>
+    <owners>NSD Team</owners>
+    <title>NSD (Network Sniffing Dashboard)</title>
+    <authors>NSD Contributors</authors>
+    <projectUrl>https://github.com/perplext/nsd</projectUrl>
+    <iconUrl>https://raw.githubusercontent.com/perplext/nsd/main/docs/icon.png</iconUrl>
+    <copyright>2025 NSD Contributors</copyright>
+    <licenseUrl>https://github.com/perplext/nsd/blob/main/LICENSE</licenseUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <projectSourceUrl>https://github.com/perplext/nsd</projectSourceUrl>
+    <docsUrl>https://github.com/perplext/nsd/blob/main/README.md</docsUrl>
+    <bugTrackerUrl>https://github.com/perplext/nsd/issues</bugTrackerUrl>
+    <tags>network monitoring sniffing dashboard terminal cli pcap traffic analysis security</tags>
+    <summary>Real-time network traffic monitoring with terminal UI</summary>
+    <description><![CDATA[
+# NSD (Network Sniffing Dashboard)
+
+NSD is a cross-platform network traffic monitoring tool with a terminal UI similar to btop. It provides real-time network statistics, visual traffic graphs, and connection details using WinPcap/Npcap for packet capture on Windows.
+
+## Features
+
+- **Real-time Monitoring**: Live network traffic analysis with instant updates
+- **Rich Visualizations**: Multiple view modes including graphs, tables, and histograms
+- **Protocol Analysis**: Detailed breakdown of network protocols and services
+- **Connection Tracking**: Monitor active connections with detailed statistics
+- **BPF Filtering**: Advanced packet filtering using Berkeley Packet Filter expressions
+- **Plugin System**: Extensible architecture with Go plugin support
+- **Theme Customization**: Multiple built-in themes plus custom theme support
+- **Internationalization**: Support for 34+ languages
+- **Web Dashboard**: Browser-based interface for remote monitoring
+- **REST API**: Programmatic access to network statistics
+- **Traffic Recording**: Capture and replay network traffic for analysis
+- **Alert System**: Configurable alerts and notifications
+
+## Requirements
+
+- Windows 10 or later
+- Administrator privileges for packet capture
+- Npcap or WinPcap installed (automatically handled by installer)
+
+## Usage
+
+Run from command prompt or PowerShell as Administrator:
+
+```
+nsd -i "Ethernet" 
+nsd -i "Wi-Fi" -theme Dark+
+nsd -i "Ethernet" -filter "tcp port 443"
+```
+
+## Support
+
+- Documentation: https://github.com/perplext/nsd/docs
+- Issues: https://github.com/perplext/nsd/issues
+- Discussions: https://github.com/perplext/nsd/discussions
+]]></description>
+    <releaseNotes>https://github.com/perplext/nsd/releases</releaseNotes>
+    <dependencies>
+      <dependency id="npcap" version="1.70" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="tools\**" target="tools" />
+  </files>
+</package>

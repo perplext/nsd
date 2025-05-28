@@ -32,5 +32,21 @@
   "requires_root": "dis app need root/admin right to capture packets",
   "run_as_root": "abeg run am with sudo or as admin",
   "secure_nonsecure_pie": "secure vs non-secure pie chart [6]",
-  "service_usage_pie": "service usage pie chart [4]"
+  "service_usage_pie": "service usage pie chart [4]",
+  "plugins": "Plugins",
+  "world_map": "World Map",
+  "remote_ip": "Remote IP",
+  "country": "Country",
+  "exit_menu_text": "What would you like to do?",
+  "options": "Options",
+  "quit": "Quit",
+  "cancel": "Cancel",
+  "source": "Source",
+  "destination": "Destination",
+  "proto": "Proto",
+  "svc": "Service",
+  "bytes": "Bytes",
+  "pkts": "Packets",
+  "activity": "Activity",
+  "last_seen": "Last Seen"
 }

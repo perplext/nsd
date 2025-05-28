@@ -1,0 +1,156 @@
+name: 🐛 Bug Report
+description: Report a bug or unexpected behavior
+title: "[Bug]: "
+labels: ["bug", "triage"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug! Please fill out the form below to help us understand and reproduce the issue.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is.
+      placeholder: Describe what happened and what you expected to happen instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: Please provide step-by-step instructions to reproduce the issue.
+      placeholder: |
+        1. Start NSD with command '...'
+        2. Navigate to '...'
+        3. Click on '...'
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+      placeholder: Describe the expected behavior.
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened? Include any error messages.
+      placeholder: Describe what actually happened, including any error messages or logs.
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: NSD Version
+      description: What version of NSD are you running? Run `nsd --version` to find out.
+      placeholder: v1.0.0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating System
+      description: What operating system are you using?
+      options:
+        - Linux (Ubuntu/Debian)
+        - Linux (CentOS/RHEL)
+        - Linux (Arch)
+        - Linux (Other)
+        - macOS
+        - Windows 10
+        - Windows 11
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: os-version
+    attributes:
+      label: OS Version
+      description: What version of your operating system?
+      placeholder: Ubuntu 22.04, macOS 13.1, Windows 11, etc.
+    validations:
+      required: false
+
+  - type: input
+    id: interface
+    attributes:
+      label: Network Interface
+      description: Which network interface were you monitoring?
+      placeholder: eth0, wlan0, en0, etc.
+    validations:
+      required: false
+
+  - type: textarea
+    id: command
+    attributes:
+      label: Command Line Arguments
+      description: What command line arguments did you use to start NSD?
+      placeholder: nsd -i eth0 -theme Dark+ --web-port 8080
+    validations:
+      required: false
+
+  - type: textarea
+    id: config
+    attributes:
+      label: Configuration
+      description: If you're using a configuration file, please paste the relevant parts here.
+      render: json
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Please paste any relevant log output. Run with `NSD_DEBUG=1` for more verbose logs.
+      render: text
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: environment
+    attributes:
+      label: Environment Details
+      description: Please select all that apply to your environment.
+      options:
+        - label: Running with root/administrator privileges
+        - label: Using custom themes
+        - label: Using plugins
+        - label: Using web dashboard
+        - label: Using Docker/containers
+        - label: Using VPN or special network setup
+        - label: Running on virtual machine
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Add any other context about the problem here, such as screenshots, network topology, or related issues.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submission Checklist
+      description: Please confirm the following before submitting.
+      options:
+        - label: I have searched existing issues to make sure this bug hasn't been reported before
+          required: true
+        - label: I have tried the latest version of NSD
+          required: true
+        - label: I have included all the requested information above
+          required: true

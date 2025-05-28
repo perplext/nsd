@@ -32,5 +32,21 @@
   "requires_root": "Hierdie toepassing vereis root-/administrateurvoorregte om pakkette vas te vang.",
   "run_as_root": "Voer asseblief uit met sudo of as administrateur.",
   "secure_nonsecure_pie": "Veilige vs Onveilige taartgrafiek [6]",
-  "service_usage_pie": "Diensgebruik taartgrafiek [4]"
+  "service_usage_pie": "Diensgebruik taartgrafiek [4]",
+  "plugins": "Plugins",
+  "world_map": "World Map",
+  "remote_ip": "Remote IP",
+  "country": "Country",
+  "exit_menu_text": "What would you like to do?",
+  "options": "Options",
+  "quit": "Quit",
+  "cancel": "Cancel",
+  "source": "Source",
+  "destination": "Destination",
+  "proto": "Proto",
+  "svc": "Service",
+  "bytes": "Bytes",
+  "pkts": "Packets",
+  "activity": "Activity",
+  "last_seen": "Last Seen"
 }

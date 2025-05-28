@@ -32,5 +32,21 @@
   "requires_root": "このアプリケーションはパケットキャプチャにroot/管理者権限が必要です。",
   "run_as_root": "sudoまたは管理者として実行してください。",
   "secure_nonsecure_pie": "安全 vs 非安全円グラフ [6]",
-  "service_usage_pie": "サービス使用円グラフ [4]"
+  "service_usage_pie": "サービス使用円グラフ [4]",
+  "plugins": "プラグイン",
+  "world_map": "世界地図",
+  "remote_ip": "リモートIP",
+  "country": "国",
+  "exit_menu_text": "何をしたいですか？",
+  "options": "オプション",
+  "quit": "終了",
+  "cancel": "キャンセル",
+  "source": "送信元",
+  "destination": "宛先",
+  "proto": "プロト",
+  "svc": "サービス",
+  "bytes": "バイト",
+  "pkts": "パケット",
+  "activity": "アクティビティ",
+  "last_seen": "最終確認"
 }

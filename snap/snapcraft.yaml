@@ -1,0 +1,87 @@
+name: nsd
+base: core22
+version: '1.0.0'
+summary: Network Sniffing Dashboard - Real-time network monitoring
+description: |
+  NSD (Network Sniffing Dashboard) is a cross-platform network traffic 
+  monitoring tool with a terminal UI similar to btop. It provides real-time 
+  network statistics, visual traffic graphs, and connection details using 
+  libpcap for packet capture.
+
+  Features:
+  - Real-time network traffic monitoring
+  - Multiple visualization modes (graphs, tables, histograms)
+  - Protocol analysis and statistics
+  - Connection tracking and details
+  - BPF filtering support
+  - Plugin system for extensibility
+  - Theme customization
+  - Internationalization (34+ languages)
+  - Web dashboard and REST API
+  - Traffic recording and replay
+  - Alert and notification system
+
+grade: stable
+confinement: strict
+
+architectures:
+  - build-on: amd64
+  - build-on: arm64
+  - build-on: armhf
+
+apps:
+  nsd:
+    command: bin/nsd
+    plugs:
+      - network
+      - network-control
+      - network-observe
+      - network-bind
+      - system-observe
+      - hardware-observe
+      - home
+      - removable-media
+    environment:
+      LD_LIBRARY_PATH: $SNAP/lib:$SNAP/usr/lib:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET
+
+parts:
+  nsd:
+    plugin: go
+    source: .
+    source-type: git
+    build-snaps:
+      - go/1.21/stable
+    build-packages:
+      - libpcap-dev
+      - build-essential
+      - pkg-config
+    stage-packages:
+      - libpcap0.8
+    override-build: |
+      craftctl default
+      # Copy additional files
+      cp -r examples $CRAFTCTL_PART_INSTALL/
+      cp -r docs $CRAFTCTL_PART_INSTALL/
+      cp -r web $CRAFTCTL_PART_INSTALL/
+      mkdir -p $CRAFTCTL_PART_INSTALL/themes
+      mkdir -p $CRAFTCTL_PART_INSTALL/plugins
+    organize:
+      bin/nsd: bin/nsd
+
+plugs:
+  network:
+    interface: network
+  network-control:
+    interface: network-control
+  network-observe:
+    interface: network-observe
+  network-bind:
+    interface: network-bind
+  system-observe:
+    interface: system-observe
+  hardware-observe:
+    interface: hardware-observe
+  home:
+    interface: home
+  removable-media:
+    interface: removable-media

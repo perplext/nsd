@@ -32,5 +32,21 @@
   "requires_root": "此應用程式需要 root/管理員權限來擷取封包。",
   "run_as_root": "請使用 sudo 或以管理員身份執行。",
   "secure_nonsecure_pie": "安全 vs 不安全圓餅圖 [6]",
-  "service_usage_pie": "服務使用圓餅圖 [4]"
+  "service_usage_pie": "服務使用圓餅圖 [4]",
+  "plugins": "Plugins",
+  "world_map": "World Map",
+  "remote_ip": "Remote IP",
+  "country": "Country",
+  "exit_menu_text": "What would you like to do?",
+  "options": "Options",
+  "quit": "Quit",
+  "cancel": "Cancel",
+  "source": "Source",
+  "destination": "Destination",
+  "proto": "Proto",
+  "svc": "Service",
+  "bytes": "Bytes",
+  "pkts": "Packets",
+  "activity": "Activity",
+  "last_seen": "Last Seen"
 }

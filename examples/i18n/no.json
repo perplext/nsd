@@ -32,5 +32,21 @@
   "requires_root": "Denne applikasjonen krever root-/administratorrettigheter for å fange pakker.",
   "run_as_root": "Vennligst kjør med sudo eller som administrator.",
   "secure_nonsecure_pie": "Sikkert vs usikkert kakediagram [6]",
-  "service_usage_pie": "Tjenestebruk-kakediagram [4]"
+  "service_usage_pie": "Tjenestebruk-kakediagram [4]",
+  "plugins": "Plugins",
+  "world_map": "World Map",
+  "remote_ip": "Remote IP",
+  "country": "Country",
+  "exit_menu_text": "What would you like to do?",
+  "options": "Options",
+  "quit": "Quit",
+  "cancel": "Cancel",
+  "source": "Source",
+  "destination": "Destination",
+  "proto": "Proto",
+  "svc": "Service",
+  "bytes": "Bytes",
+  "pkts": "Packets",
+  "activity": "Activity",
+  "last_seen": "Last Seen"
 }

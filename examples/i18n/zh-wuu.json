@@ -32,5 +32,21 @@
   "requires_root": "此应用程序需要 root/管理员权限来捕获数据包。",
   "run_as_root": "请使用 sudo 或以管理员身份运行。",
   "secure_nonsecure_pie": "安全与非安全饼图 [6]",
-  "service_usage_pie": "服务使用饼图 [4]"
+  "service_usage_pie": "服务使用饼图 [4]",
+  "plugins": "Plugins",
+  "world_map": "World Map",
+  "remote_ip": "Remote IP",
+  "country": "Country",
+  "exit_menu_text": "What would you like to do?",
+  "options": "Options",
+  "quit": "Quit",
+  "cancel": "Cancel",
+  "source": "Source",
+  "destination": "Destination",
+  "proto": "Proto",
+  "svc": "Service",
+  "bytes": "Bytes",
+  "pkts": "Packets",
+  "activity": "Activity",
+  "last_seen": "Last Seen"
 }
