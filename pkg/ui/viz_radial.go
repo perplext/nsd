@@ -233,12 +233,14 @@ func abs(x int) int {
 	return x
 }
 
-func radialMin(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
+// radialMin returns the minimum of two integers
+// Keeping for potential future use
+// func radialMin(a, b int) int {
+// 	if a < b {
+// 		return a
+// 	}
+// 	return b
+// }
 
 func truncate(s string, n int) string {
 	if len(s) <= n {
