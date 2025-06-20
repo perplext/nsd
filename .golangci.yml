@@ -10,10 +10,7 @@ run:
   build-tags:
     - integration
 
-output:
-  formats: 
-    default:
-      format: colored-line-number
+# output section removed for v2 compatibility
 
 linters:
   enable:

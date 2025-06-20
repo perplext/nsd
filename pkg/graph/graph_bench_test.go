@@ -7,8 +7,6 @@ import (
 	"testing"
 	"time"
 	"unsafe"
-	
-	"github.com/gdamore/tcell/v2"
 )
 
 // BenchmarkGraphDataOperations benchmarks data operations
@@ -194,13 +192,8 @@ func BenchmarkMultiGraph(b *testing.B) {
 			
 			// Add graphs
 			for i := 0; i < count; i++ {
-				g := NewGraph()
-				g.SetTitle(fmt.Sprintf("Graph %d", i))
-				// Create a GraphWidget wrapper
-				gw := &GraphWidget{
-					graph: g,
-					title: fmt.Sprintf("Graph %d", i),
-				}
+				gw := NewGraphWidget()
+				gw.SetTitle(fmt.Sprintf("Graph %d", i))
 				mg.AddGraph(gw)
 			}
 			

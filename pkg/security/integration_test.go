@@ -58,8 +58,6 @@ func TestSecurityIntegration(t *testing.T) {
 			t.Skip("Skipping privilege test - not running as root")
 		}
 		
-		pm := NewPrivilegeManager()
-		
 		// Test getting secure defaults
 		defaults := GetSecureDefaults()
 		// These fields don't exist in SecureDefaults

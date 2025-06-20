@@ -9,7 +9,6 @@ import (
 	
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
-	"github.com/google/gopacket/pcap"
 	"github.com/perplext/nsd/pkg/ratelimit"
 	"github.com/perplext/nsd/pkg/resource"
 )

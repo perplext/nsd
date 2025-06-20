@@ -45,6 +45,7 @@ func (s *SimpleScreen) PollEvent() tcell.Event                              { re
 func (s *SimpleScreen) PostEvent(ev tcell.Event) error                      { return nil }
 func (s *SimpleScreen) ChannelEvents(ch chan<- tcell.Event, quit <-chan struct{}) {}
 func (s *SimpleScreen) PostEventWait(tcell.Event)                           {}
+func (s *SimpleScreen) HasPendingEvent() bool                               { return false }
 func (s *SimpleScreen) EnableFocus()                                         {}
 func (s *SimpleScreen) DisableFocus()                                        {}
 func (s *SimpleScreen) Beep() error                                         { return nil }
