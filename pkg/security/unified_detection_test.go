@@ -35,6 +35,9 @@ func createTestPacket() gopacket.Packet {
 		SYN:     true,
 	}
 	
+	// Set network layer for checksum calculation
+	tcp.SetNetworkLayerForChecksum(&ip)
+	
 	buf := gopacket.NewSerializeBuffer()
 	opts := gopacket.SerializeOptions{FixLengths: true, ComputeChecksums: true}
 	gopacket.SerializeLayers(buf, opts, &eth, &ip, &tcp)
@@ -80,7 +83,7 @@ func TestUnifiedDetectionEngine_ProcessPacket(t *testing.T) {
 	packet := createTestPacket()
 	alerts := ude.ProcessPacket(packet)
 	
-	// Should return empty alerts for a normal packet
+	// Should return non-nil alerts (may be empty) for a normal packet
 	assert.NotNil(t, alerts)
 	
 	// Check stats were updated

@@ -31,6 +31,7 @@ func TestSuricataEngine_ProcessPacket(t *testing.T) {
 	// Test with normal packet
 	packet := createTestPacket()
 	alerts := engine.ProcessPacket(packet)
+	// ProcessPacket should return a non-nil empty slice for packets that don't match rules
 	assert.NotNil(t, alerts)
 	
 	// Test with HTTP packet

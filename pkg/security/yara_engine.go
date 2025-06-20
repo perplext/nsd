@@ -305,10 +305,11 @@ func (ye *YARAEngine) ProcessPacket(packet gopacket.Packet) []YARAMatch {
 	// Extract packet details
 	details := ye.extractPacketDetails(packet)
 	if details.Payload == nil || len(details.Payload) == 0 {
-		return nil
+		return []YARAMatch{}
 	}
 	
-	var matches []YARAMatch
+	// Initialize as empty slice, not nil
+	matches := make([]YARAMatch, 0)
 	
 	// Check each rule against the packet
 	for _, rule := range ye.rules {

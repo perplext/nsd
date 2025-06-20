@@ -91,6 +91,8 @@ func NewGraph() *Graph {
 
 // SetStyle sets the graph rendering style
 func (g *Graph) SetStyle(style GraphStyle) *Graph {
+	g.mutex.Lock()
+	defer g.mutex.Unlock()
 	g.style = style
 	return g
 }
@@ -135,12 +137,16 @@ func getBrailleChar(heights [8]int) rune {
 
 // SetTitle sets the graph title
 func (g *Graph) SetTitle(title string) *Graph {
+	g.mutex.Lock()
+	defer g.mutex.Unlock()
 	g.title = title
 	return g
 }
 
 // SetColor sets the primary graph color
 func (g *Graph) SetColor(color tcell.Color) *Graph {
+	g.mutex.Lock()
+	defer g.mutex.Unlock()
 	g.color = color
 	g.calculateGradientColors() // recalculate gradients
 	return g
@@ -148,6 +154,8 @@ func (g *Graph) SetColor(color tcell.Color) *Graph {
 
 // SetSecondaryColor sets the secondary graph color
 func (g *Graph) SetSecondaryColor(color tcell.Color) *Graph {
+	g.mutex.Lock()
+	defer g.mutex.Unlock()
 	g.secondaryColor = color
 	g.calculateGradientColors() // recalculate gradients
 	return g
@@ -155,6 +163,8 @@ func (g *Graph) SetSecondaryColor(color tcell.Color) *Graph {
 
 // SetMaxValue sets the maximum value for the y-axis
 func (g *Graph) SetMaxValue(max float64) *Graph {
+	g.mutex.Lock()
+	defer g.mutex.Unlock()
 	g.maxValue = max
 	g.autoScale = false
 	return g
@@ -162,18 +172,24 @@ func (g *Graph) SetMaxValue(max float64) *Graph {
 
 // SetAutoScale enables or disables auto-scaling
 func (g *Graph) SetAutoScale(auto bool) *Graph {
+	g.mutex.Lock()
+	defer g.mutex.Unlock()
 	g.autoScale = auto
 	return g
 }
 
 // SetUnit sets the unit for the y-axis
 func (g *Graph) SetUnit(unit string) *Graph {
+	g.mutex.Lock()
+	defer g.mutex.Unlock()
 	g.unit = unit
 	return g
 }
 
 // SetLabels sets the labels for the primary and secondary data
 func (g *Graph) SetLabels(primary, secondary string) *Graph {
+	g.mutex.Lock()
+	defer g.mutex.Unlock()
 	g.primaryLabel = primary
 	g.secondaryLabel = secondary
 	return g
@@ -181,18 +197,24 @@ func (g *Graph) SetLabels(primary, secondary string) *Graph {
 
 // ShowLegend enables or disables the legend
 func (g *Graph) ShowLegend(show bool) *Graph {
+	g.mutex.Lock()
+	defer g.mutex.Unlock()
 	g.showLegend = show
 	return g
 }
 
 // SetGradientEnabled toggles static gradient shading for the graph
 func (g *Graph) SetGradientEnabled(enabled bool) *Graph {
+	g.mutex.Lock()
+	defer g.mutex.Unlock()
 	g.gradientEnabled = enabled
 	return g
 }
 
 // GradientEnabled reports whether static gradient shading is enabled
 func (g *Graph) GradientEnabled() bool {
+	g.mutex.RLock()
+	defer g.mutex.RUnlock()
 	return g.gradientEnabled
 }
 
@@ -633,6 +655,7 @@ type GraphWidget struct {
 	dataFunc        func() (float64, float64)
 	stopChan        chan struct{}
 	started         bool
+	widgetMutex     sync.RWMutex
 }
 
 // NewGraphWidget creates a new graph widget
@@ -647,31 +670,45 @@ func NewGraphWidget() *GraphWidget {
 
 // SetDataFunc sets the function that provides data for the graph
 func (gw *GraphWidget) SetDataFunc(f func() (float64, float64)) *GraphWidget {
+	gw.widgetMutex.Lock()
+	defer gw.widgetMutex.Unlock()
 	gw.dataFunc = f
 	return gw
 }
 
 // SetSampleInterval sets how often to sample data
 func (gw *GraphWidget) SetSampleInterval(d time.Duration) *GraphWidget {
+	gw.widgetMutex.Lock()
+	defer gw.widgetMutex.Unlock()
 	gw.sampleInterval = d
 	return gw
 }
 
 // SetHistoryDuration sets how much history to keep
 func (gw *GraphWidget) SetHistoryDuration(d time.Duration) *GraphWidget {
+	gw.widgetMutex.Lock()
+	defer gw.widgetMutex.Unlock()
 	gw.historyDuration = d
 	maxPoints := int(d / gw.sampleInterval)
-	gw.Graph.maxPoints = maxPoints
+	gw.mutex.Lock()
+	gw.maxPoints = maxPoints
+	gw.mutex.Unlock()
 	return gw
 }
 
 // Start starts the data collection
 func (gw *GraphWidget) Start() {
+	gw.widgetMutex.Lock()
 	if gw.started || gw.dataFunc == nil {
+		gw.widgetMutex.Unlock()
 		return
 	}
 	
 	gw.started = true
+	dataFunc := gw.dataFunc
+	sampleInterval := gw.sampleInterval
+	stopChan := gw.stopChan
+	gw.widgetMutex.Unlock()
 	
 	// Add some initial test data to make the graph visible immediately
 	for i := 0; i < 10; i++ {
@@ -680,22 +717,22 @@ func (gw *GraphWidget) Start() {
 	}
 	
 	// Set initial max value
-	gw.maxValue = 100
+	gw.SetMaxValue(100)
 	
 	go func() {
 		// Add an initial real data point immediately in the goroutine
-		primary, secondary := gw.dataFunc()
+		primary, secondary := dataFunc()
 		gw.AddDualPoint(primary, secondary)
 		
-		ticker := time.NewTicker(gw.sampleInterval)
+		ticker := time.NewTicker(sampleInterval)
 		defer ticker.Stop()
 		
 		for {
 			select {
 			case <-ticker.C:
-				primary, secondary := gw.dataFunc()
+				primary, secondary := dataFunc()
 				gw.AddDualPoint(primary, secondary)
-			case <-gw.stopChan:
+			case <-stopChan:
 				return
 			}
 		}
@@ -704,12 +741,18 @@ func (gw *GraphWidget) Start() {
 
 // Stop stops the data collection
 func (gw *GraphWidget) Stop() {
+	gw.widgetMutex.Lock()
+	defer gw.widgetMutex.Unlock()
+	
 	if !gw.started {
 		return
 	}
 	
-	close(gw.stopChan)
+	if gw.stopChan != nil {
+		close(gw.stopChan)
+	}
 	gw.started = false
+	gw.stopChan = make(chan struct{})
 }
 
 // GraphWidgets returns the slice of GraphWidget pointers in the MultiGraph
@@ -737,6 +780,8 @@ func (gw *GraphWidget) SecondaryDataPoints() []DataPoint {
 
 // Labels returns the primary and secondary labels of the GraphWidget
 func (gw *GraphWidget) Labels() (string, string) {
+    gw.mutex.RLock()
+    defer gw.mutex.RUnlock()
     return gw.primaryLabel, gw.secondaryLabel
 }
 

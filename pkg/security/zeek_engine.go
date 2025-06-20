@@ -284,7 +284,7 @@ func (ze *ZeekEngine) ProcessPacket(packet gopacket.Packet) []ZeekEvent {
 	// Get or create connection
 	conn := ze.trackConnection(packet)
 	if conn == nil {
-		return nil
+		return []ZeekEvent{}
 	}
 	
 	var events []ZeekEvent
@@ -293,6 +293,13 @@ func (ze *ZeekEngine) ProcessPacket(packet gopacket.Packet) []ZeekEvent {
 	if tcpLayer := packet.Layer(layers.LayerTypeTCP); tcpLayer != nil {
 		if handler, ok := ze.eventHandler.handlers["tcp_packet"]; ok {
 			handler(ze, packet, conn)
+		}
+		// Check for HTTP on standard ports
+		tcp := tcpLayer.(*layers.TCP)
+		if tcp.DstPort == 80 || tcp.SrcPort == 80 || tcp.DstPort == 8080 || tcp.SrcPort == 8080 {
+			if handler, ok := ze.eventHandler.handlers["http_packet"]; ok {
+				handler(ze, packet, conn)
+			}
 		}
 	} else if udpLayer := packet.Layer(layers.LayerTypeUDP); udpLayer != nil {
 		if handler, ok := ze.eventHandler.handlers["udp_packet"]; ok {
