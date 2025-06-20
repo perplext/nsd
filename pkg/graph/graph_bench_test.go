@@ -21,7 +21,7 @@ func BenchmarkGraphDataOperations(b *testing.B) {
 		b.ReportAllocs()
 		
 		for i := 0; i < b.N; i++ {
-			g.AddDataPoint(float64(i), float64(i)*1.5)
+			g.AddDualPoint(float64(i), float64(i)*1.5)
 		}
 		
 		b.ReportMetric(float64(len(g.data)), "datapoints")
@@ -35,7 +35,7 @@ func BenchmarkGraphDataOperations(b *testing.B) {
 		b.ReportAllocs()
 		
 		for i := 0; i < b.N; i++ {
-			g.AddDataPoint(float64(i), float64(i)*1.5)
+			g.AddDualPoint(float64(i), float64(i)*1.5)
 		}
 	})
 	
@@ -44,17 +44,21 @@ func BenchmarkGraphDataOperations(b *testing.B) {
 		
 		// Pre-populate
 		for i := 0; i < 1000; i++ {
-			g.AddDataPoint(float64(i), float64(i)*1.5)
+			g.AddDualPoint(float64(i), float64(i)*1.5)
 		}
 		
 		b.ResetTimer()
 		b.ReportAllocs()
 		
 		for i := 0; i < b.N; i++ {
-			g.ClearData()
+			// Clear data by resetting slices
+		g.mutex.Lock()
+		g.data = g.data[:0]
+		g.secondaryData = g.secondaryData[:0]
+		g.mutex.Unlock()
 			// Re-populate for next iteration
 			for j := 0; j < 1000; j++ {
-				g.AddDataPoint(float64(j), float64(j)*1.5)
+				g.AddDualPoint(float64(j), float64(j)*1.5)
 			}
 		}
 	})
@@ -62,7 +66,8 @@ func BenchmarkGraphDataOperations(b *testing.B) {
 
 // BenchmarkGraphRendering benchmarks different rendering styles
 func BenchmarkGraphRendering(b *testing.B) {
-	styles := []string{"braille", "block", "tty"}
+	styles := []GraphStyle{StyleBraille, StyleBlock, StyleTTY}
+	styleNames := []string{"braille", "block", "tty"}
 	dataSizes := []int{10, 100, 1000}
 	screenSizes := []struct {
 		width, height int
@@ -73,10 +78,10 @@ func BenchmarkGraphRendering(b *testing.B) {
 		{200, 60, "Large"},
 	}
 	
-	for _, style := range styles {
+	for idx, style := range styles {
 		for _, dataSize := range dataSizes {
 			for _, screenSize := range screenSizes {
-				b.Run(fmt.Sprintf("%s-%dpts-%s", style, dataSize, screenSize.name), 
+				b.Run(fmt.Sprintf("%s-%dpts-%s", styleNames[idx], dataSize, screenSize.name), 
 					func(b *testing.B) {
 					screen := NewMockScreen(screenSize.width, screenSize.height)
 					g := NewGraph()
@@ -85,14 +90,14 @@ func BenchmarkGraphRendering(b *testing.B) {
 					// Add data
 					for i := 0; i < dataSize; i++ {
 						y := math.Sin(float64(i)*0.1) * 50 + 50
-						g.AddDataPoint(y, y*0.8)
+						g.AddDualPoint(y, y*0.8)
 					}
 					
 					b.ResetTimer()
 					b.ReportAllocs()
 					
 					for i := 0; i < b.N; i++ {
-						g.DrawInBounds(screen, 0, 0, screenSize.width, screenSize.height)
+						g.Draw(screen)
 					}
 				})
 			}
@@ -102,11 +107,11 @@ func BenchmarkGraphRendering(b *testing.B) {
 
 // BenchmarkBrailleGeneration benchmarks Braille character generation
 func BenchmarkBrailleGeneration(b *testing.B) {
-	patterns := [][]bool{
-		{true, false, true, false, true, false, true, false},
-		{false, true, false, true, false, true, false, true},
-		{true, true, true, true, false, false, false, false},
-		{false, false, false, false, true, true, true, true},
+	patterns := [][8]int{
+		{1, 0, 1, 0, 1, 0, 1, 0},
+		{0, 1, 0, 1, 0, 1, 0, 1},
+		{1, 1, 1, 1, 0, 0, 0, 0},
+		{0, 0, 0, 0, 1, 1, 1, 1},
 	}
 	
 	b.ResetTimer()
@@ -114,10 +119,7 @@ func BenchmarkBrailleGeneration(b *testing.B) {
 	
 	for i := 0; i < b.N; i++ {
 		pattern := patterns[i%len(patterns)]
-		_ = getBrailleChar(
-			pattern[0], pattern[1], pattern[2], pattern[3],
-			pattern[4], pattern[5], pattern[6], pattern[7],
-		)
+		_ = getBrailleChar(pattern)
 	}
 }
 
@@ -127,7 +129,7 @@ func BenchmarkInterpolation(b *testing.B) {
 	
 	// Add sparse data
 	for i := 0; i < 100; i += 10 {
-		g.AddDataPoint(float64(i), float64(i)*2)
+		g.AddDualPoint(float64(i), float64(i)*2)
 	}
 	
 	b.ResetTimer()
@@ -198,7 +200,7 @@ func BenchmarkMultiGraph(b *testing.B) {
 			for i := 0; i < 100; i++ {
 				for j := 0; j < count; j++ {
 					if g := mg.GetGraph(fmt.Sprintf("graph%d", j)); g != nil {
-						g.AddDataPoint(float64(i), float64(i*j))
+						g.AddDualPoint(float64(i), float64(i*j))
 					}
 				}
 			}
@@ -279,7 +281,7 @@ func BenchmarkConcurrentDataAccess(b *testing.B) {
 	
 	// Pre-populate
 	for i := 0; i < 1000; i++ {
-		g.AddDataPoint(float64(i), float64(i)*1.5)
+		g.AddDualPoint(float64(i), float64(i)*1.5)
 	}
 	
 	b.RunParallel(func(pb *testing.PB) {
@@ -288,7 +290,7 @@ func BenchmarkConcurrentDataAccess(b *testing.B) {
 			switch i % 3 {
 			case 0:
 				// Add data
-				g.AddDataPoint(float64(i), float64(i)*1.5)
+				g.AddDualPoint(float64(i), float64(i)*1.5)
 			case 1:
 				// Read data
 				pts := g.DataPoints()
@@ -330,7 +332,7 @@ func BenchmarkMemoryUsage(b *testing.B) {
 			g := NewGraph()
 			// Add typical amount of data
 			for j := 0; j < 1000; j++ {
-				g.AddDataPoint(float64(j), float64(j)*1.5)
+				g.AddDualPoint(float64(j), float64(j)*1.5)
 			}
 			graphs[i] = g
 		}
