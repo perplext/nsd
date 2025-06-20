@@ -3,6 +3,7 @@ package security
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -41,7 +42,7 @@ func TestValidateAndCleanPath(t *testing.T) {
 		},
 		{
 			name:        "Path too long",
-			path:        string(make([]byte, 5000)),
+			path:        strings.Repeat("a", 5000),
 			allowedDir:  tmpDir,
 			wantErr:     true,
 			errContains: "too long",
