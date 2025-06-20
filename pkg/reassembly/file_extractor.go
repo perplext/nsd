@@ -7,6 +7,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"log"
 	"mime"
 	"net"
 	"os"
@@ -128,7 +129,8 @@ func NewFileExtractor(outputDir string, maxFileSize int64) *FileExtractor {
 	// Create output directory
 	// Use secure permissions for output directory
 	if err := os.MkdirAll(outputDir, 0700); err != nil {
-		return nil, fmt.Errorf("failed to create output directory: %v", err)
+		log.Printf("Warning: failed to create output directory: %v", err)
+		// Continue anyway, the directory might be created later
 	}
 
 	// Initialize stream factory
