@@ -87,15 +87,32 @@ func (pm *PrivilegeManager) checkLinuxCapabilities() error {
 		return fmt.Errorf("failed to get executable path: %w", err)
 	}
 	
-	// Validate the executable path to prevent injection
-	validator := NewValidator()
-	if err := validator.ValidateFilePath(execPath); err != nil {
-		return fmt.Errorf("invalid executable path: %w", err)
+	// Enhanced security validation for executable path
+	if err := pm.validateExecutablePath(execPath); err != nil {
+		return fmt.Errorf("executable path security validation failed: %w", err)
 	}
 	
-	// Try to execute a capability check
-	// This is a simplified check - real implementation would use libcap
-	cmd := exec.Command("getcap", execPath)
+	// Use absolute path for getcap to prevent PATH manipulation
+	getcapPath := "/usr/bin/getcap"
+	if _, err := os.Stat(getcapPath); os.IsNotExist(err) {
+		// Fallback to /usr/sbin/getcap or /bin/getcap
+		if _, err := os.Stat("/usr/sbin/getcap"); err == nil {
+			getcapPath = "/usr/sbin/getcap"
+		} else if _, err := os.Stat("/bin/getcap"); err == nil {
+			getcapPath = "/bin/getcap"
+		} else {
+			return fmt.Errorf("getcap command not found in standard locations")
+		}
+	}
+	
+	// Create command with secure environment
+	cmd := exec.Command(getcapPath, execPath)
+	cmd.Env = []string{
+		"PATH=/usr/bin:/bin:/usr/sbin:/sbin",
+		"USER=nobody",
+		"HOME=/tmp",
+	}
+	
 	output, err := cmd.Output()
 	if err != nil {
 		return fmt.Errorf("no capabilities set (run: sudo setcap cap_net_raw,cap_net_admin+eip %s)", execPath)
@@ -106,6 +123,59 @@ func (pm *PrivilegeManager) checkLinuxCapabilities() error {
 		if !containsCapability(outputStr, cap) {
 			return fmt.Errorf("missing capability: %s", cap)
 		}
+	}
+	
+	return nil
+}
+
+// validateExecutablePath provides enhanced validation for executable paths
+func (pm *PrivilegeManager) validateExecutablePath(execPath string) error {
+	// Basic validation using existing validator
+	validator := NewValidator()
+	if err := validator.ValidateFilePath(execPath); err != nil {
+		return fmt.Errorf("basic path validation failed: %w", err)
+	}
+	
+	// Additional checks specific to executable paths
+	if !filepath.IsAbs(execPath) {
+		return fmt.Errorf("executable path must be absolute")
+	}
+	
+	// Check for suspicious patterns in executable path
+	suspiciousPatterns := []string{
+		"../", "./", "//", "\\", "$", "`", ";", "&", "|",
+		"$(", "${", "~", "*", "?", "[", "]", "{", "}",
+	}
+	
+	for _, pattern := range suspiciousPatterns {
+		if strings.Contains(execPath, pattern) {
+			return fmt.Errorf("executable path contains suspicious pattern: %s", pattern)
+		}
+	}
+	
+	// Ensure the executable exists and is actually a file
+	info, err := os.Stat(execPath)
+	if err != nil {
+		return fmt.Errorf("cannot stat executable: %w", err)
+	}
+	
+	if info.IsDir() {
+		return fmt.Errorf("executable path points to a directory, not a file")
+	}
+	
+	// Check if it's actually executable
+	if info.Mode()&0111 == 0 {
+		return fmt.Errorf("file is not executable")
+	}
+	
+	// Validate path length to prevent buffer overflow attacks
+	if len(execPath) > 4096 {
+		return fmt.Errorf("executable path too long: %d characters", len(execPath))
+	}
+	
+	// Check for null bytes that could cause security issues
+	if strings.Contains(execPath, "\x00") {
+		return fmt.Errorf("executable path contains null bytes")
 	}
 	
 	return nil
