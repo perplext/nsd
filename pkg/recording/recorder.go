@@ -198,7 +198,10 @@ func (r *Recorder) StopRecording() error {
 
 	// Save metadata
 	metadataPath := r.recording.FilePath + ".meta"
-	if metadataFile, err := security.SafeCreateFile(metadataPath, r.outputDir); err == nil {
+	metadataFile, err := security.SafeCreateFile(metadataPath, r.outputDir)
+	if err != nil {
+		log.Printf("Failed to create metadata file: %v", err)
+	} else {
 		if err := json.NewEncoder(metadataFile).Encode(r.recording); err != nil {
 			log.Printf("Failed to encode metadata: %v", err)
 		}
@@ -282,7 +285,10 @@ func (p *Player) LoadRecording(recordingPath string) error {
 	
 	// Load metadata
 	metadataPath := recordingPath + ".meta"
-	metadataFile, err := security.SafeOpenFile(metadataPath, filepath.Dir(recordingPath))
+	
+	// Get the directory from the recording path to use for validation
+	recordingDir := filepath.Dir(recordingPath)
+	metadataFile, err := security.SafeOpenFile(metadataPath, recordingDir)
 	if err != nil {
 		return fmt.Errorf("failed to open metadata file: %v", err)
 	}
@@ -318,7 +324,9 @@ func (p *Player) Play() error {
 		return err
 	}
 	
-	file, err := os.Open(p.recording.FilePath)
+	// Get the directory from the recording path to use for validation
+	recordingDir := filepath.Dir(p.recording.FilePath)
+	file, err := security.SafeOpenFile(p.recording.FilePath, recordingDir)
 	if err != nil {
 		return fmt.Errorf("failed to open recording file: %v", err)
 	}
@@ -489,6 +497,7 @@ func ListRecordings(recordingDir string) ([]Recording, error) {
 	}
 
 	for _, metaFile := range files {
+		// Use safe file opening with the recording directory as allowed directory
 		file, err := security.SafeOpenFile(metaFile, recordingDir)
 		if err != nil {
 			continue
