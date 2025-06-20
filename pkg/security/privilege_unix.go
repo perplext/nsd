@@ -4,6 +4,7 @@ package security
 
 import (
 	"fmt"
+	"math"
 	"os"
 	"os/exec"
 	"os/user"
@@ -12,6 +13,17 @@ import (
 	"strings"
 	"syscall"
 )
+
+// safeIntToUint32 safely converts an int to uint32 with bounds checking
+func safeIntToUint32(value int) (uint32, error) {
+	if value < 0 {
+		return 0, fmt.Errorf("cannot convert negative value %d to uint32", value)
+	}
+	if value > math.MaxUint32 {
+		return 0, fmt.Errorf("value %d exceeds uint32 maximum (%d)", value, math.MaxUint32)
+	}
+	return uint32(value), nil
+}
 
 // DropPrivileges drops root privileges after setup (Unix implementation)
 func (pm *PrivilegeManager) DropPrivileges(username string) error {
@@ -135,17 +147,6 @@ func (s *Sandbox) setResourceLimits() error {
 	return nil
 }
 
-// safeIntToUint32 safely converts an int to uint32 with bounds checking
-func safeIntToUint32(value int, valueName string) (uint32, error) {
-	if value < 0 {
-		return 0, fmt.Errorf("%s cannot be negative: %d", valueName, value)
-	}
-	if value > 0xFFFFFFFF {
-		return 0, fmt.Errorf("%s exceeds uint32 range: %d", valueName, value)
-	}
-	return uint32(value), nil
-}
-
 // Execute runs a command securely (Unix implementation)
 func (se *SecureExec) Execute(cmdName string, args ...string) ([]byte, error) {
 	// Validate command is allowed
@@ -164,18 +165,17 @@ func (se *SecureExec) Execute(cmdName string, args ...string) ([]byte, error) {
 	cmd := exec.Command(cmdName, args...)
 	cmd.Env = se.environmentVars
 	
-	// Safe conversion of UID and GID with bounds checking
-	uid, err := safeIntToUint32(os.Getuid(), "UID")
+	// Set security attributes
+	uid, err := safeIntToUint32(os.Getuid())
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert UID: %w", err)
 	}
 	
-	gid, err := safeIntToUint32(os.Getgid(), "GID")
+	gid, err := safeIntToUint32(os.Getgid())
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert GID: %w", err)
 	}
 	
-	// Set security attributes
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		// Drop supplementary groups
 		Credential: &syscall.Credential{
