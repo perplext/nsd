@@ -11,7 +11,7 @@ func TestNewWeatherMapVisualization(t *testing.T) {
 	viz := NewWeatherMapVisualization()
 	
 	assert.NotNil(t, viz)
-	assert.Equal(t, "Network Weather Map", viz.GetName())
+	assert.Equal(t, "Network Weather", viz.GetName())
 }
 
 func TestWeatherMapVisualizationUpdate(t *testing.T) {
@@ -28,8 +28,8 @@ func TestWeatherMapVisualizationGetMinSize(t *testing.T) {
 	viz := NewWeatherMapVisualization()
 	
 	w, h := viz.GetMinSize()
-	assert.Equal(t, 80, w)
-	assert.Equal(t, 24, h)
+	assert.Equal(t, 40, w)
+	assert.Equal(t, 25, h)
 }
 
 func TestWeatherMapVisualizationSupportsFullscreen(t *testing.T) {

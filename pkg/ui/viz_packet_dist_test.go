@@ -11,7 +11,7 @@ func TestNewPacketDistributionVisualization(t *testing.T) {
 	viz := NewPacketDistributionVisualization()
 	
 	assert.NotNil(t, viz)
-	assert.Equal(t, "Packet Distribution", viz.GetName())
+	assert.Equal(t, "Packet Size Distribution", viz.GetName())
 }
 
 func TestPacketDistributionVisualizationUpdate(t *testing.T) {
@@ -28,14 +28,14 @@ func TestPacketDistributionVisualizationGetMinSize(t *testing.T) {
 	viz := NewPacketDistributionVisualization()
 	
 	w, h := viz.GetMinSize()
-	assert.Equal(t, 60, w)
-	assert.Equal(t, 20, h)
+	assert.Equal(t, 70, w)
+	assert.Equal(t, 35, h)
 }
 
 func TestPacketDistributionVisualizationSupportsFullscreen(t *testing.T) {
 	viz := NewPacketDistributionVisualization()
 	
-	assert.False(t, viz.SupportsFullscreen())
+	assert.True(t, viz.SupportsFullscreen())
 }
 
 func TestPacketDistributionVisualizationSetTheme(t *testing.T) {

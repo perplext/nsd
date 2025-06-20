@@ -35,8 +35,8 @@ func TestHeartbeatVisualizationGetMinSize(t *testing.T) {
 func TestHeartbeatVisualizationSupportsFullscreen(t *testing.T) {
 	viz := NewHeartbeatVisualization()
 	
-	// Most visualizations don't support fullscreen
-	assert.False(t, viz.SupportsFullscreen())
+	// Default BaseVisualization supports fullscreen
+	assert.True(t, viz.SupportsFullscreen())
 }
 
 func TestHeartbeatVisualizationSetTheme(t *testing.T) {

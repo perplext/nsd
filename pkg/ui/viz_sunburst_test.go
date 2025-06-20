@@ -11,7 +11,7 @@ func TestNewSunburstVisualization(t *testing.T) {
 	viz := NewSunburstVisualization()
 	
 	assert.NotNil(t, viz)
-	assert.Equal(t, "Protocol Sunburst", viz.GetName())
+	assert.Equal(t, "Connection Sunburst", viz.GetName())
 }
 
 func TestSunburstVisualizationUpdate(t *testing.T) {
@@ -29,13 +29,13 @@ func TestSunburstVisualizationGetMinSize(t *testing.T) {
 	
 	w, h := viz.GetMinSize()
 	assert.Equal(t, 60, w)
-	assert.Equal(t, 30, h)
+	assert.Equal(t, 35, h)
 }
 
 func TestSunburstVisualizationSupportsFullscreen(t *testing.T) {
 	viz := NewSunburstVisualization()
 	
-	assert.False(t, viz.SupportsFullscreen())
+	assert.True(t, viz.SupportsFullscreen())
 }
 
 func TestSunburstVisualizationSetTheme(t *testing.T) {

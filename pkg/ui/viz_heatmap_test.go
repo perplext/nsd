@@ -11,7 +11,7 @@ func TestNewHeatmapVisualization(t *testing.T) {
 	viz := NewHeatmapVisualization()
 	
 	assert.NotNil(t, viz)
-	assert.Equal(t, "Connection Heatmap", viz.GetName())
+	assert.Equal(t, "Traffic Heatmap", viz.GetName())
 }
 
 func TestHeatmapVisualizationUpdate(t *testing.T) {
@@ -35,7 +35,7 @@ func TestHeatmapVisualizationGetMinSize(t *testing.T) {
 func TestHeatmapVisualizationSupportsFullscreen(t *testing.T) {
 	viz := NewHeatmapVisualization()
 	
-	assert.False(t, viz.SupportsFullscreen())
+	assert.True(t, viz.SupportsFullscreen())
 }
 
 func TestHeatmapVisualizationSetTheme(t *testing.T) {

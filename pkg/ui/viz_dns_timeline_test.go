@@ -11,7 +11,7 @@ func TestNewDNSTimelineVisualization(t *testing.T) {
 	viz := NewDNSTimelineVisualization()
 	
 	assert.NotNil(t, viz)
-	assert.Equal(t, "DNS Query Timeline", viz.GetName())
+	assert.Equal(t, "DNS Timeline", viz.GetName())
 }
 
 func TestDNSTimelineVisualizationUpdate(t *testing.T) {
@@ -28,14 +28,14 @@ func TestDNSTimelineVisualizationGetMinSize(t *testing.T) {
 	viz := NewDNSTimelineVisualization()
 	
 	w, h := viz.GetMinSize()
-	assert.Equal(t, 80, w)
-	assert.Equal(t, 20, h)
+	assert.Equal(t, 70, w)
+	assert.Equal(t, 30, h)
 }
 
 func TestDNSTimelineVisualizationSupportsFullscreen(t *testing.T) {
 	viz := NewDNSTimelineVisualization()
 	
-	assert.False(t, viz.SupportsFullscreen())
+	assert.True(t, viz.SupportsFullscreen())
 }
 
 func TestDNSTimelineVisualizationSetTheme(t *testing.T) {

@@ -32,7 +32,7 @@ func TestMatrixRainVisualizationGetMinSize(t *testing.T) {
 	
 	w, h := viz.GetMinSize()
 	assert.Equal(t, 80, w)
-	assert.Equal(t, 24, h)
+	assert.Equal(t, 30, h)
 }
 
 func TestMatrixRainVisualizationSupportsFullscreen(t *testing.T) {

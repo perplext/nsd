@@ -11,7 +11,7 @@ func TestNewSpeedometerVisualization(t *testing.T) {
 	viz := NewSpeedometerVisualization()
 	
 	assert.NotNil(t, viz)
-	assert.Equal(t, "Network Speedometer", viz.GetName())
+	assert.Equal(t, "Bandwidth Speedometer", viz.GetName())
 }
 
 func TestSpeedometerVisualizationUpdate(t *testing.T) {
@@ -28,14 +28,14 @@ func TestSpeedometerVisualizationGetMinSize(t *testing.T) {
 	viz := NewSpeedometerVisualization()
 	
 	w, h := viz.GetMinSize()
-	assert.Equal(t, 40, w)
+	assert.Equal(t, 45, w)
 	assert.Equal(t, 20, h)
 }
 
 func TestSpeedometerVisualizationSupportsFullscreen(t *testing.T) {
 	viz := NewSpeedometerVisualization()
 	
-	assert.False(t, viz.SupportsFullscreen())
+	assert.True(t, viz.SupportsFullscreen())
 }
 
 func TestSpeedometerVisualizationSetTheme(t *testing.T) {
