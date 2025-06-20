@@ -3,7 +3,6 @@ package netcap
 import (
 	"context"
 	"fmt"
-	"log"
 	"sync"
 	"time"
 	

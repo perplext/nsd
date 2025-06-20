@@ -78,11 +78,13 @@ func (nm *SecureNetworkMonitor) StartSecureCapture(interfaceName string) error {
 		}
 	}
 	
-	nm.handle = handle
-	nm.packetSource = gopacket.NewPacketSource(handle, handle.LinkType())
+	// Store handle in ActiveHandles map
+	nm.mutex.Lock()
+	nm.ActiveHandles[interfaceName] = handle
+	nm.mutex.Unlock()
 	
 	// Start packet processing goroutine
-	go nm.processPackets()
+	go nm.processPackets(interfaceName, handle)
 	
 	return nil
 }
@@ -104,26 +106,29 @@ func (nm *SecureNetworkMonitor) ValidatePacket(packet gopacket.Packet) error {
 
 // GetSecureStats returns sanitized statistics
 func (nm *SecureNetworkMonitor) GetSecureStats() map[string]interface{} {
-	stats := nm.GetStats()
+	ifStats := nm.GetInterfaceStats()
 	
 	// Sanitize statistics to prevent information leakage
 	secureStats := make(map[string]interface{})
 	
-	// Only include safe statistics
-	safeKeys := []string{
-		"TotalPackets",
-		"TotalBytes", 
-		"PacketsPerSecond",
-		"BytesPerSecond",
-		"ActiveConnections",
-		"TopProtocols",
+	// Calculate total packets and bytes
+	var totalPackets, totalBytes uint64
+	for _, stats := range ifStats {
+		totalPackets += stats.PacketsIn + stats.PacketsOut
+		totalBytes += stats.BytesIn + stats.BytesOut
 	}
 	
-	for _, key := range safeKeys {
-		if val, ok := stats[key]; ok {
-			secureStats[key] = val
-		}
+	// Add calculated statistics
+	secureStats["TotalPackets"] = totalPackets
+	secureStats["TotalBytes"] = totalBytes
+	secureStats["InterfaceCount"] = len(ifStats)
+	
+	// Calculate active connections
+	totalConnections := 0
+	for _, stats := range ifStats {
+		totalConnections += len(stats.Connections)
 	}
+	secureStats["ActiveConnections"] = totalConnections
 	
 	return secureStats
 }

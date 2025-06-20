@@ -136,9 +136,6 @@ func (cm *ControlledMonitor) processPacketsControlled(interfaceName string, hand
 		NoCopy: true,
 	}
 	
-	// Create context for rate limiting
-	ctx := context.Background()
-	
 	for {
 		select {
 		case <-cm.ctx.Done():
@@ -253,9 +250,9 @@ func (cm *ControlledMonitor) processPacketPooled(packet gopacket.Packet) {
 func (cm *ControlledMonitor) handleThrottle(reason string) {
 	log.Printf("Throttling activated: %s", reason)
 	
-	// Reduce rate limits by 50%
+	// Let the adaptive limiter adjust itself based on current conditions
 	if cm.rateLimiter != nil {
-		cm.rateLimiter.reduceLimits(0.5)
+		cm.rateLimiter.Adjust()
 	}
 }
 
@@ -276,9 +273,9 @@ func (cm *ControlledMonitor) handleRecovery(reason string) {
 	log.Printf("Recovered from resource constraints")
 	cm.emergencyMode = false
 	
-	// Restore rate limits gradually
+	// Let the adaptive limiter adjust itself based on improved conditions
 	if cm.rateLimiter != nil {
-		cm.rateLimiter.increaseLimits(1.2)
+		cm.rateLimiter.Adjust()
 	}
 }
 
