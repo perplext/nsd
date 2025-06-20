@@ -3,14 +3,13 @@ package resource
 import (
 	"context"
 	"fmt"
+	"os"
 	"runtime"
 	"runtime/debug"
 	"sync"
 	"sync/atomic"
 	"time"
 	
-	"github.com/shirou/gopsutil/v3/cpu"
-	"github.com/shirou/gopsutil/v3/mem"
 	"github.com/shirou/gopsutil/v3/process"
 )
 
@@ -76,7 +75,7 @@ func NewController(cfg *Config) (*Controller, error) {
 	proc, err := process.NewProcess(pid)
 	if err != nil {
 		// Try current process
-		proc, err = process.NewProcess(int32(runtime.Getpid()))
+		proc, err = process.NewProcess(int32(os.Getpid()))
 		if err != nil {
 			return nil, fmt.Errorf("failed to get process info: %w", err)
 		}

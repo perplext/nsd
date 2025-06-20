@@ -341,7 +341,6 @@ func (p *Player) playPackets() {
 	}
 
 	var lastTimestamp time.Time
-	startTime := time.Now()
 
 	for {
 		data, ci, err := pcapReader.ReadPacketData()
