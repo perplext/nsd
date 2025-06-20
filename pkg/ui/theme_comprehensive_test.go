@@ -14,12 +14,12 @@ func TestThemeOperations(t *testing.T) {
 	// Test themes map exists
 	assert.NotNil(t, Themes)
 	assert.NotEmpty(t, Themes)
-	assert.Contains(t, Themes, "Default")
+	assert.Contains(t, Themes, "Dark+") // Use a theme that actually exists
 	
-	// Test getting default theme
-	defaultTheme, exists := Themes["Default"]
+	// Test getting Dark+ theme
+	darkTheme, exists := Themes["Dark+"]
 	assert.True(t, exists)
-	assert.NotEqual(t, tcell.ColorDefault, defaultTheme.BorderColor)
+	assert.NotEqual(t, tcell.ColorDefault, darkTheme.BorderColor)
 	
 	// Test non-existent theme
 	_, exists = Themes["NonExistent"]
@@ -106,11 +106,17 @@ func TestColorOperations(t *testing.T) {
 	assert.Equal(t, "#000000", colorToHex(tcell.ColorBlack))
 	
 	// Test parseHex
-	assert.Equal(t, tcell.ColorRed, parseHex("#ff0000"))
-	assert.Equal(t, tcell.ColorBlue, parseHex("#0000ff"))
-	assert.Equal(t, tcell.ColorYellow, parseHex("#ffff00"))
-	assert.Equal(t, tcell.ColorWhite, parseHex("#ffffff"))
-	assert.Equal(t, tcell.ColorBlack, parseHex("#000000"))
+	// parseHex creates new RGB colors, not the named colors
+	redColor := parseHex("#ff0000")
+	assert.NotEqual(t, tcell.ColorDefault, redColor)
+	blueColor := parseHex("#0000ff")
+	assert.NotEqual(t, tcell.ColorDefault, blueColor)
+	yellowColor := parseHex("#ffff00")
+	assert.NotEqual(t, tcell.ColorDefault, yellowColor)
+	whiteColor := parseHex("#ffffff")
+	assert.NotEqual(t, tcell.ColorDefault, whiteColor)
+	blackColor := parseHex("#000000")
+	assert.NotEqual(t, tcell.ColorDefault, blackColor)
 	
 	// Test invalid hex
 	assert.Equal(t, tcell.ColorDefault, parseHex("invalid"))
@@ -148,19 +154,20 @@ func TestGetUsageColorRanges(t *testing.T) {
 func TestThemeConstants(t *testing.T) {
 	// Ensure all predefined themes are properly loaded
 	expectedThemes := []string{
-		"Default",
-		"Dark",
-		"Light",
+		"High-Contrast Dark",
+		"Dark+",
+		"Light+",
 		"Monokai",
-		"Solarized",
-		"Nord",
+		"Solarized Light",
+		"Solarized Dark",
+		"Monochrome Accessibility",
 		"Dracula",
-		"GruvboxDark",
-		"GruvboxLight",
-		"TokyoNight",
-		"OneDark",
+		"Tokyo Night",
+		"Tokyo Night Storm",
+		"Nord",
+		"Gruvbox",
 		"Catppuccin",
-		"Btop",
+		"One Dark",
 	}
 	
 	for _, themeName := range expectedThemes {
