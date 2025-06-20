@@ -25,10 +25,6 @@ func (s *SimpleScreen) ShowCursor(int, int)                                 {}
 func (s *SimpleScreen) HideCursor()                                         {}
 func (s *SimpleScreen) SetCursorStyle(tcell.CursorStyle, ...tcell.Color)    {}
 func (s *SimpleScreen) SetCell(x, y int, style tcell.Style, ch ...rune)     {}
-func (s *SimpleScreen) GetContent(x, y int) (mainc rune, combc []rune, style tcell.Style, width int) {
-	return ' ', nil, tcell.StyleDefault, 1
-}
-func (s *SimpleScreen) SetContent(x, y int, mainc rune, combc []rune, style tcell.Style) {}
 func (s *SimpleScreen) GetCursorStyle() tcell.CursorStyle                   { return tcell.CursorStyleDefault }
 func (s *SimpleScreen) CanDisplay(rune, bool) bool                          { return true }
 func (s *SimpleScreen) CharacterSet() string                                { return "UTF-8" }
