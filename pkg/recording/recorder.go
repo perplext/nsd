@@ -129,8 +129,13 @@ func (r *Recorder) StartRecording(name, description string, mode RecordingMode) 
 		return nil, fmt.Errorf("failed to create output directory: %v", err)
 	}
 
+	// Validate the constructed file path
+	if err := validateRecordingPath(recording.FilePath); err != nil {
+		return nil, fmt.Errorf("invalid recording file path: %v", err)
+	}
+	
 	// Open output file
-	file, err := os.Create(recording.FilePath)
+	file, err := os.Create(recording.FilePath) // #nosec G304 - path validated above
 	if err != nil {
 		return nil, fmt.Errorf("failed to create recording file: %v", err)
 	}
@@ -187,7 +192,7 @@ func (r *Recorder) StopRecording() error {
 
 	// Save metadata
 	metadataPath := r.recording.FilePath + ".meta"
-	if metadataFile, err := os.Create(metadataPath); err == nil {
+	if metadataFile, err := os.Create(metadataPath); err == nil { // #nosec G304 - derived from validated path
 		json.NewEncoder(metadataFile).Encode(r.recording)
 		metadataFile.Close()
 	}
@@ -267,7 +272,7 @@ func (p *Player) LoadRecording(recordingPath string) error {
 	
 	// Load metadata
 	metadataPath := recordingPath + ".meta"
-	metadataFile, err := os.Open(metadataPath)
+	metadataFile, err := os.Open(metadataPath) // #nosec G304 - derived from validated path
 	if err != nil {
 		return fmt.Errorf("failed to open metadata file: %v", err)
 	}

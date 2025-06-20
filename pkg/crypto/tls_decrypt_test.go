@@ -49,7 +49,7 @@ func createTestCertAndKey(t *testing.T) (certFile, keyFile string) {
 
 	// Write certificate
 	certFile = filepath.Join(tmpDir, "test.crt")
-	certOut, err := os.Create(certFile)
+	certOut, err := os.Create(certFile) // #nosec G304 - test file in temp directory
 	require.NoError(t, err)
 	defer func() {
 		if err := certOut.Close(); err != nil {
@@ -62,7 +62,7 @@ func createTestCertAndKey(t *testing.T) (certFile, keyFile string) {
 
 	// Write key
 	keyFile = filepath.Join(tmpDir, "test.key")
-	keyOut, err := os.Create(keyFile)
+	keyOut, err := os.Create(keyFile) // #nosec G304 - test file in temp directory
 	require.NoError(t, err)
 	defer func() {
 		if err := keyOut.Close(); err != nil {

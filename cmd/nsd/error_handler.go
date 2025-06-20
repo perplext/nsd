@@ -125,7 +125,7 @@ func saveEmergencyState() {
 	crashFile := filepath.Join(os.TempDir(), fmt.Sprintf("nsd_crash_%d.log", os.Getpid()))
 	
 	// Use OpenFile with secure permissions
-	f, err := os.OpenFile(crashFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600)
+	f, err := os.OpenFile(crashFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600) // #nosec G304 - using os.TempDir()
 	if err != nil {
 		log.Printf("Failed to create crash file: %v", err)
 		return
