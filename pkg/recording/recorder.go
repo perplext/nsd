@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -151,7 +152,9 @@ func (r *Recorder) StartRecording(name, description string, mode RecordingMode) 
 	case ModePackets:
 		r.pcapWriter = pcapgo.NewWriter(r.currentWriter)
 		if err := r.pcapWriter.WriteFileHeader(65536, 1); err != nil {
-			r.currentWriter.Close()
+			if closeErr := r.currentWriter.Close(); closeErr != nil {
+				log.Printf("Failed to close writer after error: %v", closeErr)
+			}
 			return nil, fmt.Errorf("failed to write PCAP header: %v", err)
 		}
 	case ModeStats, ModeBoth:
@@ -176,7 +179,9 @@ func (r *Recorder) StopRecording() error {
 
 	// Close writers
 	if r.currentWriter != nil {
-		r.currentWriter.Close()
+		if err := r.currentWriter.Close(); err != nil {
+			log.Printf("Failed to close writer: %v", err)
+		}
 	}
 
 	// Update recording metadata
@@ -193,8 +198,12 @@ func (r *Recorder) StopRecording() error {
 	// Save metadata
 	metadataPath := r.recording.FilePath + ".meta"
 	if metadataFile, err := os.Create(metadataPath); err == nil { // #nosec G304 - derived from validated path
-		json.NewEncoder(metadataFile).Encode(r.recording)
-		metadataFile.Close()
+		if err := json.NewEncoder(metadataFile).Encode(r.recording); err != nil {
+			log.Printf("Failed to encode metadata: %v", err)
+		}
+		if err := metadataFile.Close(); err != nil {
+			log.Printf("Failed to close metadata file: %v", err)
+		}
 	}
 
 	r.isRecording = false
@@ -276,7 +285,11 @@ func (p *Player) LoadRecording(recordingPath string) error {
 	if err != nil {
 		return fmt.Errorf("failed to open metadata file: %v", err)
 	}
-	defer metadataFile.Close()
+	defer func() {
+		if err := metadataFile.Close(); err != nil {
+			log.Printf("Failed to close metadata file: %v", err)
+		}
+	}()
 
 	var recording Recording
 	if err := json.NewDecoder(metadataFile).Decode(&recording); err != nil {
@@ -313,7 +326,9 @@ func (p *Player) Play() error {
 	if p.recording.Compressed {
 		gzReader, err := gzip.NewReader(file)
 		if err != nil {
-			file.Close()
+			if closeErr := file.Close(); closeErr != nil {
+				log.Printf("Failed to close file after error: %v", closeErr)
+			}
 			return fmt.Errorf("failed to create gzip reader: %v", err)
 		}
 		reader = gzReader
