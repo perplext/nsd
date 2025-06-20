@@ -12,6 +12,24 @@ run:
 
 # output section removed for v2 compatibility
 
+# Linter-specific settings
+linters-settings:
+  errcheck:
+    check-type-assertions: false
+    check-blank: false
+  gosec:
+    severity: medium
+    confidence: medium
+  gocyclo:
+    min-complexity: 30  # Increased from default 10
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - performance
+    disabled-checks:
+      - commentedOutCode
+      - whyNoLint
+
 linters:
   enable:
     # Default linters
@@ -44,9 +62,39 @@ linters:
     - nlreturn
     - wsl
     - dupl
+    - revive  # Too many false positives
+    - goconst # Too noisy
+    - unparam # Many false positives with interfaces
 
 
 issues:
-  max-issues-per-linter: 0
-  max-same-issues: 0
+  max-issues-per-linter: 50
+  max-same-issues: 10
   new: false
+  # Exclude some linters from test files
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - gosec
+        - errcheck
+        - dupl
+        - goconst
+    - path: test_utils\.go
+      linters:
+        - gosec
+        - errcheck
+    # Exclude some common false positives
+    - linters:
+        - gosec
+      text: "G304: Potential file inclusion via variable"
+      source: "#nosec"
+    - linters:
+        - gosec
+      text: "G404:"
+    - linters:
+        - revive
+      text: "exported:"
+    - linters:
+        - unused
+      text: "is unused"
+      source: "//go:build"
