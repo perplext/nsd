@@ -473,6 +473,8 @@ func (nm *NetworkMonitor) GetStats() map[string]interface{} {
 		packetSum := iface.PacketsIn + iface.PacketsOut
 		if packetSum < iface.PacketsIn { // Overflow check
 			totalPackets = math.MaxInt64
+		} else if packetSum > uint64(math.MaxInt64) { // Check if uint64 value exceeds int64 max
+			totalPackets = math.MaxInt64
 		} else if packetSum > uint64(math.MaxInt64-totalPackets) {
 			totalPackets = math.MaxInt64
 		} else {
@@ -481,6 +483,8 @@ func (nm *NetworkMonitor) GetStats() map[string]interface{} {
 		
 		byteSum := iface.BytesIn + iface.BytesOut
 		if byteSum < iface.BytesIn { // Overflow check
+			totalBytes = math.MaxInt64
+		} else if byteSum > uint64(math.MaxInt64) { // Check if uint64 value exceeds int64 max
 			totalBytes = math.MaxInt64
 		} else if byteSum > uint64(math.MaxInt64-totalBytes) {
 			totalBytes = math.MaxInt64
