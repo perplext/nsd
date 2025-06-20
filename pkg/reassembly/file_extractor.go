@@ -128,7 +128,7 @@ func NewFileExtractor(outputDir string, maxFileSize int64) *FileExtractor {
 	// Create output directory
 	// Use secure permissions for output directory
 	if err := os.MkdirAll(outputDir, 0700); err != nil {
-		return fmt.Errorf("failed to create output directory: %v", err)
+		return nil, fmt.Errorf("failed to create output directory: %v", err)
 	}
 
 	// Initialize stream factory
@@ -512,7 +512,7 @@ func (h *httpStream) saveFile(file ExtractedFile) error {
 	fullDir := filepath.Join(h.extractor.outputDir, dateDir)
 	// Use secure permissions for directory creation
 	if err := os.MkdirAll(fullDir, 0700); err != nil {
-		return "", fmt.Errorf("failed to create directory: %v", err)
+		return fmt.Errorf("failed to create directory: %v", err)
 	}
 	
 	// Generate unique filename
