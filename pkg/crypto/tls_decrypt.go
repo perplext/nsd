@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net"
+	"path/filepath"
 	"strings"
 	"sync"
 
@@ -87,6 +88,11 @@ func NewTLSDecryptor() *TLSDecryptor {
 
 // LoadPrivateKey loads a private key and certificate for a domain
 func (t *TLSDecryptor) LoadPrivateKey(domain, certPath, keyPath string) error {
+	// Validate certificate path
+	if err := validateCryptoPath(certPath); err != nil {
+		return fmt.Errorf("invalid certificate path: %w", err)
+	}
+	
 	// Load certificate
 	certData, err := ioutil.ReadFile(certPath)
 	if err != nil {
@@ -103,7 +109,11 @@ func (t *TLSDecryptor) LoadPrivateKey(domain, certPath, keyPath string) error {
 		return fmt.Errorf("failed to parse certificate: %w", err)
 	}
 
-	// Load private key
+	// Validate and load private key
+	if err := validateCryptoPath(keyPath); err != nil {
+		return fmt.Errorf("invalid key path: %w", err)
+	}
+	
 	keyData, err := ioutil.ReadFile(keyPath)
 	if err != nil {
 		return fmt.Errorf("failed to read private key: %w", err)
@@ -147,6 +157,11 @@ func (t *TLSDecryptor) LoadPrivateKey(domain, certPath, keyPath string) error {
 
 // LoadKeyLogFile loads a Chrome/Firefox SSLKEYLOGFILE
 func (t *TLSDecryptor) LoadKeyLogFile(path string) error {
+	// Validate path
+	if err := validateCryptoPath(path); err != nil {
+		return fmt.Errorf("invalid key log path: %w", err)
+	}
+	
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
 		return fmt.Errorf("failed to read key log file: %w", err)
@@ -582,4 +597,38 @@ func (t *TLSDecryptor) GetSessionStats() map[string]int {
 	}
 	
 	return stats
+}
+
+// validateCryptoPath validates a file path to prevent directory traversal
+func validateCryptoPath(path string) error {
+	// Clean the path to remove any ../ or ./ elements
+	cleanPath := filepath.Clean(path)
+	
+	// Get absolute path
+	absPath, err := filepath.Abs(cleanPath)
+	if err != nil {
+		return fmt.Errorf("invalid path: %v", err)
+	}
+	
+	// Check if path contains suspicious patterns
+	if strings.Contains(path, "..") {
+		return fmt.Errorf("path contains directory traversal pattern")
+	}
+	
+	// Ensure the file has a valid extension for crypto files
+	ext := strings.ToLower(filepath.Ext(absPath))
+	validExts := map[string]bool{
+		".pem": true,
+		".crt": true,
+		".cer": true,
+		".key": true,
+		".log": true,
+		".txt": true,
+	}
+	
+	if !validExts[ext] {
+		return fmt.Errorf("invalid file extension for crypto file: %s", ext)
+	}
+	
+	return nil
 }

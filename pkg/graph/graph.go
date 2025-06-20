@@ -403,18 +403,36 @@ func (g *Graph) drawBrailleGraph(screen tcell.Screen, x, y, width, height int) {
 
 	// Sample data points
 	for i := 0; i < brailleWidth*2; i++ {
-		idx := int(float64(i) / float64(brailleWidth*2-1) * float64(len(g.data)-1))
-		if idx >= len(g.data) {
-			idx = len(g.data) - 1
+		// Safe integer conversion with bounds checking
+		idx := 0
+		if brailleWidth*2-1 > 0 && len(g.data) > 0 {
+			floatIdx := float64(i) / float64(brailleWidth*2-1) * float64(len(g.data)-1)
+			if floatIdx >= 0 && floatIdx < float64(len(g.data)) {
+				idx = int(floatIdx)
+				if idx >= len(g.data) {
+					idx = len(g.data) - 1
+				}
+			}
 		}
-		primaryValues[i] = g.data[idx].Value
+		if idx < len(g.data) {
+			primaryValues[i] = g.data[idx].Value
+		}
 		
 		if len(g.secondaryData) > 0 {
-			idx2 := int(float64(i) / float64(brailleWidth*2-1) * float64(len(g.secondaryData)-1))
-			if idx2 >= len(g.secondaryData) {
-				idx2 = len(g.secondaryData) - 1
+			// Safe integer conversion with bounds checking
+			idx2 := 0
+			if brailleWidth*2-1 > 0 {
+				floatIdx2 := float64(i) / float64(brailleWidth*2-1) * float64(len(g.secondaryData)-1)
+				if floatIdx2 >= 0 && floatIdx2 < float64(len(g.secondaryData)) {
+					idx2 = int(floatIdx2)
+					if idx2 >= len(g.secondaryData) {
+						idx2 = len(g.secondaryData) - 1
+					}
+				}
 			}
-			secondaryValues[i] = g.secondaryData[idx2].Value
+			if idx2 < len(g.secondaryData) {
+				secondaryValues[i] = g.secondaryData[idx2].Value
+			}
 		}
 	}
 
@@ -434,24 +452,40 @@ func (g *Graph) drawBrailleGraph(screen tcell.Screen, x, y, width, height int) {
 					continue
 				}
 
-				// Primary data
-				primaryHeight := int((primaryValues[dataIdx] / g.maxValue) * float64(brailleHeight))
-				if primaryHeight < 0 {
-					primaryHeight = 0
-				}
-				if primaryHeight > brailleHeight {
-					primaryHeight = brailleHeight
+				// Primary data with safe conversion
+				primaryHeight := 0
+				if g.maxValue > 0 {
+					heightRatio := primaryValues[dataIdx] / g.maxValue
+					if heightRatio > 1.0 {
+						heightRatio = 1.0
+					} else if heightRatio < 0 {
+						heightRatio = 0
+					}
+					primaryHeight = int(heightRatio * float64(brailleHeight))
+					if primaryHeight > brailleHeight {
+						primaryHeight = brailleHeight
+					} else if primaryHeight < 0 {
+						primaryHeight = 0
+					}
 				}
 
 				// Secondary data
 				secondaryHeight := 0
 				if len(g.secondaryData) > 0 && dataIdx < len(secondaryValues) {
-					secondaryHeight = int((secondaryValues[dataIdx] / g.maxValue) * float64(brailleHeight))
-					if secondaryHeight < 0 {
-						secondaryHeight = 0
-					}
-					if secondaryHeight > brailleHeight {
-						secondaryHeight = brailleHeight
+					// Safe conversion for secondary height
+					if g.maxValue > 0 {
+						heightRatio := secondaryValues[dataIdx] / g.maxValue
+						if heightRatio > 1.0 {
+							heightRatio = 1.0
+						} else if heightRatio < 0 {
+							heightRatio = 0
+						}
+						secondaryHeight = int(heightRatio * float64(brailleHeight))
+						if secondaryHeight > brailleHeight {
+							secondaryHeight = brailleHeight
+						} else if secondaryHeight < 0 {
+							secondaryHeight = 0
+						}
 					}
 				}
 
@@ -476,9 +510,16 @@ func (g *Graph) drawBrailleGraph(screen tcell.Screen, x, y, width, height int) {
 				var color tcell.Color
 				
 				if g.gradientEnabled && len(g.gradientColors) > 0 {
-					gradIdx := int(cellHeightRatio * float64(len(g.gradientColors)-1))
-					if gradIdx >= len(g.gradientColors) {
-						gradIdx = len(g.gradientColors) - 1
+					// Safe gradient index calculation
+					gradIdx := 0
+					if len(g.gradientColors) > 1 && cellHeightRatio >= 0 && cellHeightRatio <= 1.0 {
+						fIdx := cellHeightRatio * float64(len(g.gradientColors)-1)
+						gradIdx = int(fIdx)
+						if gradIdx >= len(g.gradientColors) {
+							gradIdx = len(g.gradientColors) - 1
+						} else if gradIdx < 0 {
+							gradIdx = 0
+						}
 					}
 					color = g.gradientColors[gradIdx]
 				} else {
@@ -511,25 +552,64 @@ func (g *Graph) drawBlockGraph(screen tcell.Screen, x, y, width, height int) {
 	// blocks := []rune{' ', '▁', '▂', '▃', '▄', '▅', '▆', '▇', '█'}
 
 	for col := 0; col < width; col++ {
-		// Sample data
-		idx := int(float64(col) / float64(width-1) * float64(len(g.data)-1))
-		if idx >= len(g.data) {
-			idx = len(g.data) - 1
+		// Sample data with safe conversion
+		idx := 0
+		if width > 1 && len(g.data) > 0 {
+			floatIdx := float64(col) / float64(width-1) * float64(len(g.data)-1)
+			if floatIdx >= 0 && floatIdx < float64(len(g.data)) {
+				idx = int(floatIdx)
+				if idx >= len(g.data) {
+					idx = len(g.data) - 1
+				}
+			}
 		}
-		primaryValue := g.data[idx].Value
+		primaryValue := float64(0)
+		if idx < len(g.data) {
+			primaryValue = g.data[idx].Value
+		}
 		
 		secondaryValue := float64(0)
-		if len(g.secondaryData) > 0 {
-			idx2 := int(float64(col) / float64(width-1) * float64(len(g.secondaryData)-1))
-			if idx2 >= len(g.secondaryData) {
-				idx2 = len(g.secondaryData) - 1
+		if len(g.secondaryData) > 0 && width > 1 {
+			// Safe conversion for secondary data
+			idx2 := 0
+			floatIdx2 := float64(col) / float64(width-1) * float64(len(g.secondaryData)-1)
+			if floatIdx2 >= 0 && floatIdx2 < float64(len(g.secondaryData)) {
+				idx2 = int(floatIdx2)
+				if idx2 >= len(g.secondaryData) {
+					idx2 = len(g.secondaryData) - 1
+				}
 			}
-			secondaryValue = g.secondaryData[idx2].Value
+			if idx2 < len(g.secondaryData) {
+				secondaryValue = g.secondaryData[idx2].Value
+			}
 		}
 
-		// Scale values
-		primaryHeight := int((primaryValue / g.maxValue) * float64(height))
-		secondaryHeight := int((secondaryValue / g.maxValue) * float64(height))
+		// Scale values with safe conversion
+		primaryHeight := 0
+		secondaryHeight := 0
+		if g.maxValue > 0 {
+			primaryRatio := primaryValue / g.maxValue
+			if primaryRatio > 1.0 {
+				primaryRatio = 1.0
+			} else if primaryRatio < 0 {
+				primaryRatio = 0
+			}
+			primaryHeight = int(primaryRatio * float64(height))
+			if primaryHeight > height {
+				primaryHeight = height
+			}
+			
+			secondaryRatio := secondaryValue / g.maxValue
+			if secondaryRatio > 1.0 {
+				secondaryRatio = 1.0
+			} else if secondaryRatio < 0 {
+				secondaryRatio = 0
+			}
+			secondaryHeight = int(secondaryRatio * float64(height))
+			if secondaryHeight > height {
+				secondaryHeight = height
+			}
+		}
 
 		// Draw column
 		for row := 0; row < height; row++ {
@@ -542,8 +622,16 @@ func (g *Graph) drawBlockGraph(screen tcell.Screen, x, y, width, height int) {
 			if cellHeight < primaryHeight && cellHeight < secondaryHeight {
 				// Both data points at this height
 				ch = '█'
-				if g.gradientEnabled && len(g.gradientColors) > 0 {
-					gradIdx := int(float64(row) / float64(height-1) * float64(len(g.gradientColors)-1))
+				if g.gradientEnabled && len(g.gradientColors) > 0 && height > 1 {
+					// Safe gradient index calculation
+					gradIdx := 0
+					floatIdx := float64(row) / float64(height-1) * float64(len(g.gradientColors)-1)
+					if floatIdx >= 0 && floatIdx <= float64(len(g.gradientColors)-1) {
+						gradIdx = int(floatIdx)
+						if gradIdx >= len(g.gradientColors) {
+							gradIdx = len(g.gradientColors) - 1
+						}
+					}
 					color = g.gradientColors[gradIdx]
 				} else {
 					color = g.color
@@ -572,17 +660,37 @@ func (g *Graph) drawTTYGraph(screen tcell.Screen, x, y, width, height int) {
 	}
 
 	for col := 0; col < width; col++ {
-		// Sample data
-		idx := int(float64(col) / float64(width-1) * float64(len(g.data)-1))
-		if idx >= len(g.data) {
-			idx = len(g.data) - 1
+		// Sample data with safe conversion
+		idx := 0
+		if width > 1 && len(g.data) > 0 {
+			floatIdx := float64(col) / float64(width-1) * float64(len(g.data)-1)
+			if floatIdx >= 0 && floatIdx < float64(len(g.data)) {
+				idx = int(floatIdx)
+				if idx >= len(g.data) {
+					idx = len(g.data) - 1
+				}
+			}
 		}
-		value := g.data[idx].Value
+		value := float64(0)
+		if idx < len(g.data) {
+			value = g.data[idx].Value
+		}
 		
-		// Scale value
-		scaledHeight := int((value / g.maxValue) * float64(height-1))
-		if scaledHeight >= height {
-			scaledHeight = height - 1
+		// Scale value with safe conversion
+		scaledHeight := 0
+		if g.maxValue > 0 && height > 1 {
+			heightRatio := value / g.maxValue
+			if heightRatio > 1.0 {
+				heightRatio = 1.0
+			} else if heightRatio < 0 {
+				heightRatio = 0
+			}
+			scaledHeight = int(heightRatio * float64(height-1))
+			if scaledHeight >= height {
+				scaledHeight = height - 1
+			} else if scaledHeight < 0 {
+				scaledHeight = 0
+			}
 		}
 
 		// Draw character
@@ -590,15 +698,35 @@ func (g *Graph) drawTTYGraph(screen tcell.Screen, x, y, width, height int) {
 		screen.SetContent(x+col, cellY, '*', nil, tcell.StyleDefault.Foreground(g.color))
 		
 		// Draw secondary data if available
-		if len(g.secondaryData) > 0 {
-			idx2 := int(float64(col) / float64(width-1) * float64(len(g.secondaryData)-1))
-			if idx2 >= len(g.secondaryData) {
-				idx2 = len(g.secondaryData) - 1
+		if len(g.secondaryData) > 0 && width > 1 {
+			// Safe conversion for secondary data
+			idx2 := 0
+			floatIdx2 := float64(col) / float64(width-1) * float64(len(g.secondaryData)-1)
+			if floatIdx2 >= 0 && floatIdx2 < float64(len(g.secondaryData)) {
+				idx2 = int(floatIdx2)
+				if idx2 >= len(g.secondaryData) {
+					idx2 = len(g.secondaryData) - 1
+				}
 			}
-			value2 := g.secondaryData[idx2].Value
-			scaledHeight2 := int((value2 / g.maxValue) * float64(height-1))
-			if scaledHeight2 >= height {
-				scaledHeight2 = height - 1
+			value2 := float64(0)
+			if idx2 < len(g.secondaryData) {
+				value2 = g.secondaryData[idx2].Value
+			}
+			
+			scaledHeight2 := 0
+			if g.maxValue > 0 && height > 1 {
+				heightRatio2 := value2 / g.maxValue
+				if heightRatio2 > 1.0 {
+					heightRatio2 = 1.0
+				} else if heightRatio2 < 0 {
+					heightRatio2 = 0
+				}
+				scaledHeight2 = int(heightRatio2 * float64(height-1))
+				if scaledHeight2 >= height {
+					scaledHeight2 = height - 1
+				} else if scaledHeight2 < 0 {
+					scaledHeight2 = 0
+				}
 			}
 			cellY2 := y + height - scaledHeight2 - 1
 			if cellY2 != cellY {

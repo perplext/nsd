@@ -85,7 +85,8 @@ CLIENT_RANDOM 52cb20b96d31e6c6bfde70317fb569a4d476e5b6b6905c0b5c73c79a4b055c73 7
 CLIENT_RANDOM 52cb20ba4a96de7a3858c4c5f87e4a62b193bbbcc64c7dd08f8b1d209c8c6e96 85e3f5e39b71f9a3f8a0b1b8e7e0e5a1e3f3b8e17e8e3a1f8e1b3e8a7e0b5a1e3f
 `
 	tmpFile := filepath.Join(t.TempDir(), "keylog.txt")
-	err := os.WriteFile(tmpFile, []byte(content), 0644)
+	// Use secure permissions for test files
+	err := os.WriteFile(tmpFile, []byte(content), 0600)
 	require.NoError(t, err)
 	return tmpFile
 }
@@ -158,7 +159,8 @@ func TestLoadPrivateKey(t *testing.T) {
 
 	// Test loading invalid PEM
 	invalidFile := filepath.Join(t.TempDir(), "invalid.key")
-	err = os.WriteFile(invalidFile, []byte("not a valid pem"), 0644)
+	// Use secure permissions for test files
+	err = os.WriteFile(invalidFile, []byte("not a valid pem"), 0600)
 	require.NoError(t, err)
 	err = td.LoadPrivateKey("test.example.com", certFile, invalidFile)
 	assert.Error(t, err)
@@ -180,7 +182,8 @@ func TestLoadKeyLogFile(t *testing.T) {
 
 	// Test loading file with invalid format
 	invalidFile := filepath.Join(t.TempDir(), "invalid.txt")
-	err = os.WriteFile(invalidFile, []byte("invalid format\nno valid entries"), 0644)
+	// Use secure permissions for test files
+	err = os.WriteFile(invalidFile, []byte("invalid format\nno valid entries"), 0600)
 	require.NoError(t, err)
 	err = td.LoadKeyLogFile(invalidFile)
 	assert.NoError(t, err) // Should not error, just skip invalid lines

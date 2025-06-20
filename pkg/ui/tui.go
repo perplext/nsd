@@ -2920,7 +2920,8 @@ func (ui *UI) saveRecording(filename string) error {
 		return err
 	}
 	
-	return os.WriteFile(filename, data, 0644)
+	// Use secure permissions for exported files
+	return os.WriteFile(filename, data, 0600)
 }
 
 // showReplayMenu shows menu to load and replay sessions
@@ -3298,7 +3299,8 @@ func (ui *UI) saveProfile(name string) error {
 	
 	// Create profiles directory if it doesn't exist
 	profilesDir := ui.getProfilesDir()
-	if err := os.MkdirAll(profilesDir, 0755); err != nil {
+	// Use secure permissions for profiles directory
+	if err := os.MkdirAll(profilesDir, 0700); err != nil {
 		return fmt.Errorf("failed to create profiles directory: %w", err)
 	}
 	
@@ -3309,7 +3311,8 @@ func (ui *UI) saveProfile(name string) error {
 		return fmt.Errorf("failed to marshal profile: %w", err)
 	}
 	
-	if err := os.WriteFile(filename, data, 0644); err != nil {
+	// Use secure permissions for profile files
+	if err := os.WriteFile(filename, data, 0600); err != nil {
 		return fmt.Errorf("failed to write profile file: %w", err)
 	}
 	
@@ -3671,7 +3674,8 @@ func (ui *UI) showDashboardBuilder() {
 		profilesDir := ui.getProfilesDir()
 		dashboardsDir := filepath.Join(profilesDir, "dashboards")
 		
-		if err := os.MkdirAll(dashboardsDir, 0755); err != nil {
+		// Use secure permissions for dashboards directory
+		if err := os.MkdirAll(dashboardsDir, 0700); err != nil {
 			ui.showError(fmt.Sprintf("Failed to create dashboards directory: %v", err))
 			return
 		}
@@ -3689,7 +3693,8 @@ func (ui *UI) showDashboardBuilder() {
 			return
 		}
 		
-		if err := os.WriteFile(filepath, data, 0644); err != nil {
+		// Use secure permissions for dashboard files
+		if err := os.WriteFile(filepath, data, 0600); err != nil {
 			ui.showError(fmt.Sprintf("Failed to save dashboard: %v", err))
 			return
 		}

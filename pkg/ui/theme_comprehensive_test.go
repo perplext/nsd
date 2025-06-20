@@ -59,7 +59,8 @@ func TestThemeFileOperations(t *testing.T) {
 	}`
 	
 	jsonPath := filepath.Join(tmpDir, "test.json")
-	err = os.WriteFile(jsonPath, []byte(jsonTheme), 0644)
+	// Use secure permissions for test files
+	err = os.WriteFile(jsonPath, []byte(jsonTheme), 0600)
 	require.NoError(t, err)
 	
 	// Create a test theme YAML file
@@ -74,7 +75,8 @@ func TestThemeFileOperations(t *testing.T) {
   statusBarBgColor: "#000000"`
 	
 	yamlPath := filepath.Join(tmpDir, "test.yaml")
-	err = os.WriteFile(yamlPath, []byte(yamlTheme), 0644)
+	// Use secure permissions for test files
+	err = os.WriteFile(yamlPath, []byte(yamlTheme), 0600)
 	require.NoError(t, err)
 	
 	// Test LoadThemes from JSON

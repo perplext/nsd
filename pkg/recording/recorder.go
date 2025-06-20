@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -123,8 +124,8 @@ func (r *Recorder) StartRecording(name, description string, mode RecordingMode) 
 	filename := fmt.Sprintf("%s_%s%s", recording.ID, recording.StartTime.Format("20060102_150405"), ext)
 	recording.FilePath = filepath.Join(r.outputDir, filename)
 
-	// Ensure output directory exists
-	if err := os.MkdirAll(r.outputDir, 0755); err != nil {
+	// Ensure output directory exists with secure permissions
+	if err := os.MkdirAll(r.outputDir, 0700); err != nil {
 		return nil, fmt.Errorf("failed to create output directory: %v", err)
 	}
 
@@ -259,6 +260,11 @@ func (p *Player) LoadRecording(recordingPath string) error {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
 
+	// Validate path to prevent directory traversal
+	if err := validateRecordingPath(recordingPath); err != nil {
+		return err
+	}
+	
 	// Load metadata
 	metadataPath := recordingPath + ".meta"
 	metadataFile, err := os.Open(metadataPath)
@@ -288,7 +294,11 @@ func (p *Player) Play() error {
 		return fmt.Errorf("playback already in progress")
 	}
 
-	// Open recording file
+	// Validate and open recording file
+	if err := validateRecordingPath(p.recording.FilePath); err != nil {
+		return err
+	}
+	
 	file, err := os.Open(p.recording.FilePath)
 	if err != nil {
 		return fmt.Errorf("failed to open recording file: %v", err)
@@ -474,4 +484,41 @@ func ListRecordings(recordingDir string) ([]Recording, error) {
 	}
 
 	return recordings, nil
+}
+
+// validateRecordingPath validates a recording file path to prevent directory traversal
+func validateRecordingPath(path string) error {
+	// Clean the path to remove any ../ or ./ elements
+	cleanPath := filepath.Clean(path)
+	
+	// Get absolute path
+	absPath, err := filepath.Abs(cleanPath)
+	if err != nil {
+		return fmt.Errorf("invalid recording path: %v", err)
+	}
+	
+	// Check if path contains suspicious patterns
+	if strings.Contains(path, "..") {
+		return fmt.Errorf("recording path contains directory traversal pattern")
+	}
+	
+	// Ensure the file has valid extension
+	ext := strings.ToLower(filepath.Ext(absPath))
+	validExts := map[string]bool{
+		".json": true,
+		".pcap": true,
+		".gz": true,
+		".meta": true,
+	}
+	
+	// Check for compound extensions like .json.gz
+	if strings.HasSuffix(absPath, ".json.gz") || strings.HasSuffix(absPath, ".pcap.gz") {
+		return nil
+	}
+	
+	if !validExts[ext] {
+		return fmt.Errorf("invalid recording file extension: %s", ext)
+	}
+	
+	return nil
 }

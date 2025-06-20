@@ -3,7 +3,7 @@ package i18n
 import (
     "encoding/json"
     "fmt"
-    "io/ioutil"
+    "os"
     "path/filepath"
     "strings"
 )
@@ -69,7 +69,12 @@ var Translations = map[string]string{
 
 // LoadTranslations loads a JSON translation file and merges into Translations.
 func LoadTranslations(path string) error {
-    data, err := ioutil.ReadFile(path)
+    // Validate path to prevent directory traversal
+    if err := validateI18nPath(path); err != nil {
+        return err
+    }
+    
+    data, err := os.ReadFile(path)
     if err != nil {
         return err
     }
@@ -95,4 +100,29 @@ func T(key string) string {
         return v
     }
     return key
+}
+
+// validateI18nPath validates an i18n file path to prevent directory traversal
+func validateI18nPath(path string) error {
+    // Clean the path to remove any ../ or ./ elements
+    cleanPath := filepath.Clean(path)
+    
+    // Get absolute path
+    absPath, err := filepath.Abs(cleanPath)
+    if err != nil {
+        return fmt.Errorf("invalid i18n path: %v", err)
+    }
+    
+    // Check if path contains suspicious patterns
+    if strings.Contains(path, "..") {
+        return fmt.Errorf("i18n path contains directory traversal pattern")
+    }
+    
+    // Ensure the file has .json extension
+    ext := strings.ToLower(filepath.Ext(absPath))
+    if ext != ".json" {
+        return fmt.Errorf("invalid i18n file extension: %s", ext)
+    }
+    
+    return nil
 }

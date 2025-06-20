@@ -67,7 +67,8 @@ func main() {
       fmt.Fprintf(os.Stderr, "Failed to marshal %s: %v\n", f, err)
       continue
     }
-    if err := ioutil.WriteFile(f, append(b, '\n'), 0644); err != nil {
+    // Use secure permissions for generated translation files
+    if err := ioutil.WriteFile(f, append(b, '\n'), 0600); err != nil {
       fmt.Fprintf(os.Stderr, "Failed to write %s: %v\n", f, err)
       continue
     }
