@@ -255,8 +255,8 @@ func validateBPFSyntax(filter string) error {
 
 // validateAbsolutePath validates absolute paths
 func validateAbsolutePath(path string) error {
-	// Restricted system paths
-	restrictedPaths := []string{
+	// Restricted system paths (Unix-style)
+	unixRestrictedPaths := []string{
 		"/etc",
 		"/sys",
 		"/proc",
@@ -271,20 +271,39 @@ func validateAbsolutePath(path string) error {
 		"/var/log/auth",
 	}
 	
-	for _, restricted := range restrictedPaths {
+	// Restricted system paths (Windows-style)
+	windowsRestrictedPaths := []string{
+		"C:\\Windows",
+		"C:\\Program Files",
+		"C:\\Program Files (x86)",
+		"C:\\System Volume Information",
+		"C:\\$Recycle.Bin",
+	}
+	
+	// Check against Unix-style restricted paths
+	for _, restricted := range unixRestrictedPaths {
 		if strings.HasPrefix(path, restricted) {
 			return fmt.Errorf("access to system path denied: %s", path)
 		}
 	}
 	
-	// Check if path exists and is accessible
+	// Check against Windows-style restricted paths
+	for _, restricted := range windowsRestrictedPaths {
+		if strings.HasPrefix(strings.ToLower(path), strings.ToLower(restricted)) {
+			return fmt.Errorf("access to system path denied: %s", path)
+		}
+	}
+	
+	// Check if path exists and is accessible - but don't panic on invalid paths
 	info, err := os.Stat(path)
 	if err != nil {
 		if os.IsNotExist(err) {
 			// Path doesn't exist, which might be OK for output files
 			return nil
 		}
-		return fmt.Errorf("cannot access path: %w", err)
+		// For other errors (like invalid path format), we'll treat them as access denied
+		// This prevents panics on Windows when checking Unix-style paths
+		return fmt.Errorf("cannot access path: invalid path format")
 	}
 	
 	// Don't allow writing to directories
