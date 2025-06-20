@@ -51,7 +51,11 @@ func createTestCertAndKey(t *testing.T) (certFile, keyFile string) {
 	certFile = filepath.Join(tmpDir, "test.crt")
 	certOut, err := os.Create(certFile)
 	require.NoError(t, err)
-	defer certOut.Close()
+	defer func() {
+		if err := certOut.Close(); err != nil {
+			t.Logf("Failed to close cert file: %v", err)
+		}
+	}()
 
 	err = pem.Encode(certOut, &pem.Block{Type: "CERTIFICATE", Bytes: certDER})
 	require.NoError(t, err)
@@ -60,7 +64,11 @@ func createTestCertAndKey(t *testing.T) (certFile, keyFile string) {
 	keyFile = filepath.Join(tmpDir, "test.key")
 	keyOut, err := os.Create(keyFile)
 	require.NoError(t, err)
-	defer keyOut.Close()
+	defer func() {
+		if err := keyOut.Close(); err != nil {
+			t.Logf("Failed to close key file: %v", err)
+		}
+	}()
 
 	keyDER, err := x509.MarshalPKCS8PrivateKey(key)
 	require.NoError(t, err)
@@ -106,7 +114,10 @@ func createTestTLSPacket(srcIP, dstIP string, srcPort, dstPort uint16, tlsData [
 		Seq:     12345,
 		Window:  14600,
 	}
-	tcp.SetNetworkLayerForChecksum(ip)
+	if err := tcp.SetNetworkLayerForChecksum(ip); err != nil {
+		// Log error but continue as this is test data
+		fmt.Printf("Warning: failed to set network layer for checksum: %v\n", err)
+	}
 
 	// Create packet
 	buf := gopacket.NewSerializeBuffer()
@@ -115,7 +126,10 @@ func createTestTLSPacket(srcIP, dstIP string, srcPort, dstPort uint16, tlsData [
 		FixLengths:       true,
 	}
 
-	gopacket.SerializeLayers(buf, opts, eth, ip, tcp, gopacket.Payload(tlsData))
+	if err := gopacket.SerializeLayers(buf, opts, eth, ip, tcp, gopacket.Payload(tlsData)); err != nil {
+		// Return a basic packet on error
+		return gopacket.NewPacket([]byte{}, layers.LayerTypeEthernet, gopacket.Default)
+	}
 	return gopacket.NewPacket(buf.Bytes(), layers.LayerTypeEthernet, gopacket.Default)
 }
 

@@ -151,7 +151,11 @@ func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 		log.Printf("WebSocket upgrade failed: %v", err)
 		return
 	}
-	defer conn.Close()
+	defer func() {
+		if err := conn.Close(); err != nil {
+			log.Printf("WebSocket close failed: %v", err)
+		}
+	}()
 
 	ticker := time.NewTicker(1 * time.Second)
 	defer ticker.Stop()

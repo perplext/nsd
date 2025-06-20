@@ -89,7 +89,11 @@ func translate(text, target string) string {
     fmt.Fprintf(os.Stderr, "Translation error [%s]: %v\n", target, err)
     return text
   }
-  defer resp.Body.Close()
+  defer func() {
+    if err := resp.Body.Close(); err != nil {
+      fmt.Fprintf(os.Stderr, "Failed to close response body: %v\n", err)
+    }
+  }()
   var res map[string]interface{}
   if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
     fmt.Fprintf(os.Stderr, "Decode error [%s]: %v\n", target, err)

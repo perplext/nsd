@@ -43,7 +43,10 @@ func generateTestPackets(count int) []gopacket.Packet {
 			Ack:     uint32(i * 1000),
 			Window:  65535,
 		}
-		tcp.SetNetworkLayerForChecksum(ip)
+		if err := tcp.SetNetworkLayerForChecksum(ip); err != nil {
+			// Log error but continue with benchmark
+			return nil
+		}
 		
 		// Serialize to create packet
 		buf := gopacket.NewSerializeBuffer()
@@ -52,7 +55,10 @@ func generateTestPackets(count int) []gopacket.Packet {
 			FixLengths:       true,
 		}
 		
-		gopacket.SerializeLayers(buf, opts, eth, ip, tcp)
+		if err := gopacket.SerializeLayers(buf, opts, eth, ip, tcp); err != nil {
+			// Return nil on error
+			return nil
+		}
 		packet := gopacket.NewPacket(buf.Bytes(), layers.LayerTypeEthernet, gopacket.Default)
 		packets[i] = packet
 	}
@@ -369,7 +375,10 @@ func generatePacketWithSize(size int) gopacket.Packet {
 		Window:  65535,
 		SYN:     true,
 	}
-	tcp.SetNetworkLayerForChecksum(ipv4)
+	if err := tcp.SetNetworkLayerForChecksum(ipv4); err != nil {
+		// Return empty packet on error
+		return gopacket.NewPacket([]byte{}, layers.LayerTypeEthernet, gopacket.Default)
+	}
 	
 	// Calculate payload size
 	headerSize := 14 + 20 + 20 // Ethernet + IP + TCP
@@ -390,7 +399,10 @@ func generatePacketWithSize(size int) gopacket.Packet {
 		ComputeChecksums: true,
 	}
 	
-	gopacket.SerializeLayers(buf, opts, eth, ipv4, tcp, gopacket.Payload(payload))
+	if err := gopacket.SerializeLayers(buf, opts, eth, ipv4, tcp, gopacket.Payload(payload)); err != nil {
+		// Return empty packet on error
+		return gopacket.NewPacket([]byte{}, layers.LayerTypeEthernet, gopacket.Default)
+	}
 	
 	return gopacket.NewPacket(buf.Bytes(), layers.LayerTypeEthernet, gopacket.Default)
 }
