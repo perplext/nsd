@@ -3,7 +3,6 @@ package protocols
 import (
 	"bufio"
 	"fmt"
-	"math"
 	"net"
 	"regexp"
 	"strconv"
@@ -12,6 +11,7 @@ import (
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/tcpassembly/tcpreader"
+	"github.com/perplext/nsd/pkg/security"
 )
 
 // FTPAnalyzer analyzes FTP protocol traffic
@@ -72,18 +72,6 @@ func NewFTPAnalyzer() ProtocolAnalyzer {
 	}
 }
 
-// safeUint64ToUint16 safely converts uint64 to uint16 with bounds checking
-func safeUint64ToUint16(value uint64) uint16 {
-	// Explicit bounds checking to prevent integer overflow
-	if value > math.MaxUint16 {
-		// Use modulo operation for hash values that exceed uint16 range
-		value = value % (math.MaxUint16 + 1)
-	}
-	
-	// At this point, value is guaranteed to be within uint16 range
-	return uint16(value)
-}
-
 // AnalyzeStream analyzes an FTP stream
 func (ftp *FTPAnalyzer) AnalyzeStream(flow gopacket.Flow, reader *tcpreader.ReaderStream) []ProtocolEvent {
 	var events []ProtocolEvent
@@ -100,9 +88,9 @@ func (ftp *FTPAnalyzer) AnalyzeStream(flow gopacket.Flow, reader *tcpreader.Read
 	srcHash := flow.Src().FastHash()
 	dstHash := flow.Dst().FastHash()
 	
-	// Safe conversion with explicit bounds checking
-	srcPort := safeUint64ToUint16(srcHash)
-	dstPort := safeUint64ToUint16(dstHash)
+	// Use secure conversion to ensure we stay within uint16 range
+	srcPort := security.SafeUint64ToUint16WithMod(srcHash)
+	dstPort := security.SafeUint64ToUint16WithMod(dstHash)
 	
 	if srcPort == 21 || dstPort == 21 {
 		// Control channel
@@ -145,7 +133,7 @@ func (ftp *FTPAnalyzer) getOrCreateSession(sessionKey string, flow gopacket.Flow
 		ID:           fmt.Sprintf("ftp_%d", time.Now().UnixNano()),
 		ClientIP:     net.ParseIP(flow.Src().String()),
 		ServerIP:     net.ParseIP(flow.Dst().String()),
-		ControlPort:  safeUint64ToUint16(flow.Dst().FastHash()),
+		ControlPort:  security.SafeUint64ToUint16WithMod(flow.Dst().FastHash()),
 		Commands:     make([]FTPCommand, 0),
 		Transfers:    make([]FileTransfer, 0),
 		StartTime:    time.Now(),

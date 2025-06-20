@@ -12,6 +12,7 @@ import (
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/tcpassembly"
 	"github.com/google/gopacket/tcpassembly/tcpreader"
+	"github.com/perplext/nsd/pkg/security"
 )
 
 // ProtocolAnalyzer defines the interface for protocol-specific analyzers
@@ -163,9 +164,9 @@ func (stream *protocolStream) run() {
 	srcHash := stream.transport.Src().FastHash()
 	dstHash := stream.transport.Dst().FastHash()
 	
-	// Safe conversion with overflow protection
-	srcPort := safeUint64ToUint16(srcHash)
-	dstPort := safeUint64ToUint16(dstHash)
+	// Use secure conversion to ensure we stay within uint16 range
+	srcPort := security.SafeUint64ToUint16WithMod(srcHash)
+	dstPort := security.SafeUint64ToUint16WithMod(dstHash)
 	
 	var analyzer ProtocolAnalyzer
 	
@@ -279,12 +280,4 @@ func ParseCommand(line string) (command string, args []string) {
 // GenerateEventID generates a unique event ID
 func GenerateEventID(protocol string) string {
 	return fmt.Sprintf("%s_%d_%d", protocol, time.Now().UnixNano(), rand.Intn(1000))
-}
-
-// safeUint64ToUint16 safely converts uint64 to uint16 with overflow protection
-func safeUint64ToUint16(value uint64) uint16 {
-	const maxUint16 = 65535
-	// Use bitwise AND to ensure we stay within uint16 range
-	// This is equivalent to modulo 65536 but more efficient
-	return uint16(value & maxUint16)
 }

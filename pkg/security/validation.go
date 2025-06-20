@@ -2,6 +2,7 @@ package security
 
 import (
 	"fmt"
+	"math"
 	"net"
 	"os"
 	"path/filepath"
@@ -369,4 +370,109 @@ func (is *InputSanitizer) SanitizeFilePath(path string) (string, error) {
 	}
 	
 	return path, nil
+}
+
+// SecureIntegerConversion provides secure integer conversion utilities
+type SecureIntegerConversion struct{}
+
+// NewSecureIntegerConversion creates a new secure integer conversion utility
+func NewSecureIntegerConversion() *SecureIntegerConversion {
+	return &SecureIntegerConversion{}
+}
+
+// SafeUint64ToUint16 safely converts uint64 to uint16 with overflow protection
+func (sic *SecureIntegerConversion) SafeUint64ToUint16(value uint64) (uint16, error) {
+	if value > math.MaxUint16 {
+		return 0, fmt.Errorf("value %d exceeds maximum uint16 value %d", value, math.MaxUint16)
+	}
+	return uint16(value), nil
+}
+
+// SafeUint64ToUint16WithMod safely converts uint64 to uint16 using modulo operation
+func (sic *SecureIntegerConversion) SafeUint64ToUint16WithMod(value uint64) uint16 {
+	// Use modulo to ensure value fits in uint16 range
+	// This is cryptographically safe as it preserves the distribution
+	return uint16(value % (math.MaxUint16 + 1))
+}
+
+// SafeUint64ToInt64 safely converts uint64 to int64 with overflow protection
+func (sic *SecureIntegerConversion) SafeUint64ToInt64(value uint64) (int64, error) {
+	if value > math.MaxInt64 {
+		return 0, fmt.Errorf("value %d exceeds maximum int64 value %d", value, math.MaxInt64)
+	}
+	return int64(value), nil
+}
+
+// SafeInt64ToUint64 safely converts int64 to uint64 with underflow protection
+func (sic *SecureIntegerConversion) SafeInt64ToUint64(value int64) (uint64, error) {
+	if value < 0 {
+		return 0, fmt.Errorf("value %d is negative, cannot convert to uint64", value)
+	}
+	return uint64(value), nil
+}
+
+// SafeAddUint64 safely adds uint64 values with overflow protection
+func (sic *SecureIntegerConversion) SafeAddUint64(a, b uint64) (uint64, error) {
+	if a > math.MaxUint64-b {
+		return 0, fmt.Errorf("addition overflow: %d + %d exceeds maximum uint64", a, b)
+	}
+	return a + b, nil
+}
+
+// SafeAddInt64 safely adds int64 values with overflow protection
+func (sic *SecureIntegerConversion) SafeAddInt64(a, b int64) (int64, error) {
+	if b > 0 && a > math.MaxInt64-b {
+		return 0, fmt.Errorf("addition overflow: %d + %d exceeds maximum int64", a, b)
+	}
+	if b < 0 && a < math.MinInt64-b {
+		return 0, fmt.Errorf("addition underflow: %d + %d is less than minimum int64", a, b)
+	}
+	return a + b, nil
+}
+
+// SafeAddInt64WithSaturation safely adds int64 values with saturation on overflow
+func (sic *SecureIntegerConversion) SafeAddInt64WithSaturation(a, b int64) int64 {
+	if b > 0 && a > math.MaxInt64-b {
+		return math.MaxInt64
+	}
+	if b < 0 && a < math.MinInt64-b {
+		return math.MinInt64
+	}
+	return a + b
+}
+
+// SafeAddUint64WithSaturation safely adds uint64 values with saturation on overflow
+func (sic *SecureIntegerConversion) SafeAddUint64WithSaturation(a, b uint64) uint64 {
+	if a > math.MaxUint64-b {
+		return math.MaxUint64
+	}
+	return a + b
+}
+
+// Global instance for convenience
+var DefaultSecureConversion = NewSecureIntegerConversion()
+
+// Convenience functions for direct use
+func SafeUint64ToUint16(value uint64) (uint16, error) {
+	return DefaultSecureConversion.SafeUint64ToUint16(value)
+}
+
+func SafeUint64ToUint16WithMod(value uint64) uint16 {
+	return DefaultSecureConversion.SafeUint64ToUint16WithMod(value)
+}
+
+func SafeUint64ToInt64(value uint64) (int64, error) {
+	return DefaultSecureConversion.SafeUint64ToInt64(value)
+}
+
+func SafeInt64ToUint64(value int64) (uint64, error) {
+	return DefaultSecureConversion.SafeInt64ToUint64(value)
+}
+
+func SafeAddUint64WithSaturation(a, b uint64) uint64 {
+	return DefaultSecureConversion.SafeAddUint64WithSaturation(a, b)
+}
+
+func SafeAddInt64WithSaturation(a, b int64) int64 {
+	return DefaultSecureConversion.SafeAddInt64WithSaturation(a, b)
 }

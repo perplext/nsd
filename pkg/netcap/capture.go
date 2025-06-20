@@ -11,6 +11,7 @@ import (
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcap"
+	"github.com/perplext/nsd/pkg/security"
 )
 
 // Connection represents a network connection
@@ -469,27 +470,19 @@ func (nm *NetworkMonitor) GetStats() map[string]interface{} {
 	byteRate := float64(0)
 	
 	for _, iface := range nm.Interfaces {
-		// Check for overflow before conversion
-		packetSum := iface.PacketsIn + iface.PacketsOut
-		if packetSum < iface.PacketsIn { // Overflow check
-			totalPackets = math.MaxInt64
-		} else if packetSum > uint64(math.MaxInt64) { // Check if uint64 value exceeds int64 max
-			totalPackets = math.MaxInt64
-		} else if packetSum > uint64(math.MaxInt64-totalPackets) {
-			totalPackets = math.MaxInt64
+		// Use secure addition to prevent overflow
+		packetSum := security.SafeAddUint64WithSaturation(iface.PacketsIn, iface.PacketsOut)
+		if safePackets, err := security.SafeUint64ToInt64(packetSum); err == nil {
+			totalPackets = security.SafeAddInt64WithSaturation(totalPackets, safePackets)
 		} else {
-			totalPackets += int64(packetSum)
+			totalPackets = math.MaxInt64
 		}
 		
-		byteSum := iface.BytesIn + iface.BytesOut
-		if byteSum < iface.BytesIn { // Overflow check
-			totalBytes = math.MaxInt64
-		} else if byteSum > uint64(math.MaxInt64) { // Check if uint64 value exceeds int64 max
-			totalBytes = math.MaxInt64
-		} else if byteSum > uint64(math.MaxInt64-totalBytes) {
-			totalBytes = math.MaxInt64
+		byteSum := security.SafeAddUint64WithSaturation(iface.BytesIn, iface.BytesOut)
+		if safeBytes, err := security.SafeUint64ToInt64(byteSum); err == nil {
+			totalBytes = security.SafeAddInt64WithSaturation(totalBytes, safeBytes)
 		} else {
-			totalBytes += int64(byteSum)
+			totalBytes = math.MaxInt64
 		}
 	}
 	
