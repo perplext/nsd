@@ -7,6 +7,7 @@ import (
 	"os"
 	"runtime"
 	"runtime/debug"
+	"time"
 	
 	pkgerrors "github.com/perplext/nsd/pkg/errors"
 )
@@ -107,7 +108,7 @@ func saveEmergencyState() {
 	
 	// Write crash information
 	fmt.Fprintf(f, "NetMon Crash Report\n")
-	fmt.Fprintf(f, "Time: %s\n", log.Flags())
+	fmt.Fprintf(f, "Time: %s\n", time.Now().Format(time.RFC3339))
 	fmt.Fprintf(f, "Stack:\n%s\n", debug.Stack())
 	
 	log.Printf("Crash information saved to %s", crashFile)
