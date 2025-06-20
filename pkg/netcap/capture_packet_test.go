@@ -373,7 +373,7 @@ func TestIPv6Packet(t *testing.T) {
 		SYN:     true,
 	}
 	if err := tcp.SetNetworkLayerForChecksum(ipv6); err != nil {
-		return nil
+		t.Fatalf("Failed to set network layer for checksum: %v", err)
 	}
 	
 	buffer := gopacket.NewSerializeBuffer()
@@ -383,7 +383,7 @@ func TestIPv6Packet(t *testing.T) {
 	}
 	
 	if err := gopacket.SerializeLayers(buffer, opts, eth, ipv6, tcp); err != nil {
-		return nil
+		t.Fatalf("Failed to serialize layers: %v", err)
 	}
 	packet := gopacket.NewPacket(buffer.Bytes(), layers.LayerTypeEthernet, gopacket.Default)
 	

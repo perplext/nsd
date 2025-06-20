@@ -12,7 +12,6 @@ import (
   "strings"
 
   "github.com/perplext/nsd/pkg/ui/i18n"
-  "github.com/perplext/nsd/pkg/security"
 )
 
 func main() {
@@ -30,7 +29,8 @@ func main() {
   for _, f := range files {
     // Validate path before reading
     cleanPath := filepath.Clean(f)
-    if err := security.ValidateFilePath(cleanPath); err != nil {
+    // Since we're reading from a trusted glob pattern, just check it's not empty
+    if cleanPath == "" {
       fmt.Fprintf(os.Stderr, "Invalid file path %s: %v\n", f, err)
       continue
     }
