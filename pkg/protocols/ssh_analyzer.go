@@ -212,7 +212,6 @@ func (ssh *SSHAnalyzer) analyzeVersionExchange(session *SSHSession, reader *bufi
 				
 				// Extract client information
 				ssh.parseClientVersion(session, line)
-				
 			} else if session.ServerVersion == "" {
 				session.ServerVersion = line
 				event.Data["role"] = "server"

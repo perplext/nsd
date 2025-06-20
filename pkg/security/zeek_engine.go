@@ -675,7 +675,6 @@ func (ze *ZeekEngine) handleHTTPPacket(engine *ZeekEngine, packet gopacket.Packe
 	if strings.HasPrefix(payloadStr, "GET ") || 
 	   strings.HasPrefix(payloadStr, "POST ") ||
 	   strings.HasPrefix(payloadStr, "PUT ") {
-		
 		lines := strings.Split(payloadStr, "\r\n")
 		if len(lines) > 0 {
 			requestLine := lines[0]
