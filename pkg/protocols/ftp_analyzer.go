@@ -14,24 +14,6 @@ import (
 	"github.com/google/gopacket/tcpassembly/tcpreader"
 )
 
-// safeHashToPort safely converts a uint64 hash to a uint16 port number
-// It ensures no integer overflow and provides a secure fallback
-func safeHashToPort(hash uint64) uint16 {
-	// Ensure the value is within valid uint16 range
-	if hash > math.MaxUint16 {
-		// Use modulo to ensure we stay within valid range
-		hash = hash % (math.MaxUint16 + 1)
-	}
-	
-	// Double-check bounds before conversion
-	if hash <= math.MaxUint16 {
-		return uint16(hash)
-	}
-	
-	// Fallback to a safe default port if something goes wrong
-	return 1024
-}
-
 // FTPAnalyzer analyzes FTP protocol traffic
 type FTPAnalyzer struct {
 	BaseAnalyzer
@@ -90,6 +72,18 @@ func NewFTPAnalyzer() ProtocolAnalyzer {
 	}
 }
 
+// safeUint64ToUint16 safely converts uint64 to uint16 with bounds checking
+func safeUint64ToUint16(value uint64) uint16 {
+	// Explicit bounds checking to prevent integer overflow
+	if value > math.MaxUint16 {
+		// Use modulo operation for hash values that exceed uint16 range
+		value = value % (math.MaxUint16 + 1)
+	}
+	
+	// At this point, value is guaranteed to be within uint16 range
+	return uint16(value)
+}
+
 // AnalyzeStream analyzes an FTP stream
 func (ftp *FTPAnalyzer) AnalyzeStream(flow gopacket.Flow, reader *tcpreader.ReaderStream) []ProtocolEvent {
 	var events []ProtocolEvent
@@ -106,9 +100,9 @@ func (ftp *FTPAnalyzer) AnalyzeStream(flow gopacket.Flow, reader *tcpreader.Read
 	srcHash := flow.Src().FastHash()
 	dstHash := flow.Dst().FastHash()
 	
-	// Use secure conversion to prevent integer overflow
-	srcPort := safeHashToPort(srcHash)
-	dstPort := safeHashToPort(dstHash)
+	// Safe conversion with explicit bounds checking
+	srcPort := safeUint64ToUint16(srcHash)
+	dstPort := safeUint64ToUint16(dstHash)
 	
 	if srcPort == 21 || dstPort == 21 {
 		// Control channel
@@ -151,7 +145,7 @@ func (ftp *FTPAnalyzer) getOrCreateSession(sessionKey string, flow gopacket.Flow
 		ID:           fmt.Sprintf("ftp_%d", time.Now().UnixNano()),
 		ClientIP:     net.ParseIP(flow.Src().String()),
 		ServerIP:     net.ParseIP(flow.Dst().String()),
-		ControlPort:  safeHashToPort(flow.Dst().FastHash()),
+		ControlPort:  safeUint64ToUint16(flow.Dst().FastHash()),
 		Commands:     make([]FTPCommand, 0),
 		Transfers:    make([]FileTransfer, 0),
 		StartTime:    time.Now(),
