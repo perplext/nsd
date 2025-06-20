@@ -14,17 +14,6 @@ import (
 	"syscall"
 )
 
-// safeIntToUint32 safely converts an int to uint32 with bounds checking
-func safeIntToUint32(value int) (uint32, error) {
-	if value < 0 {
-		return 0, fmt.Errorf("cannot convert negative value %d to uint32", value)
-	}
-	if value > math.MaxUint32 {
-		return 0, fmt.Errorf("value %d exceeds uint32 maximum (%d)", value, math.MaxUint32)
-	}
-	return uint32(value), nil
-}
-
 // DropPrivileges drops root privileges after setup (Unix implementation)
 func (pm *PrivilegeManager) DropPrivileges(username string) error {
 	// Check if we're running as root
@@ -165,7 +154,7 @@ func (se *SecureExec) Execute(cmdName string, args ...string) ([]byte, error) {
 	cmd := exec.Command(cmdName, args...)
 	cmd.Env = se.environmentVars
 	
-	// Set security attributes
+	// Set security attributes with safe conversion
 	uid, err := safeIntToUint32(os.Getuid())
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert UID: %w", err)
@@ -186,6 +175,17 @@ func (se *SecureExec) Execute(cmdName string, args ...string) ([]byte, error) {
 	
 	// Execute with timeout
 	return cmd.Output()
+}
+
+// safeIntToUint32 safely converts an int to uint32, returning an error if overflow would occur
+func safeIntToUint32(val int) (uint32, error) {
+	if val < 0 {
+		return 0, fmt.Errorf("cannot convert negative value %d to uint32", val)
+	}
+	if val > math.MaxUint32 {
+		return 0, fmt.Errorf("value %d exceeds uint32 maximum (%d)", val, math.MaxUint32)
+	}
+	return uint32(val), nil
 }
 
 // containsCapability checks if output contains a capability
