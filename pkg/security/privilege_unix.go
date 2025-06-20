@@ -4,7 +4,6 @@ package security
 
 import (
 	"fmt"
-	"math"
 	"os"
 	"os/exec"
 	"os/user"
@@ -82,12 +81,24 @@ func (pm *PrivilegeManager) CheckPrivileges() error {
 
 // checkLinuxCapabilities checks for Linux capabilities
 func (pm *PrivilegeManager) checkLinuxCapabilities() error {
+	// Get the current executable path securely
+	execPath, err := os.Executable()
+	if err != nil {
+		return fmt.Errorf("failed to get executable path: %w", err)
+	}
+	
+	// Validate the executable path to prevent injection
+	validator := NewValidator()
+	if err := validator.ValidateFilePath(execPath); err != nil {
+		return fmt.Errorf("invalid executable path: %w", err)
+	}
+	
 	// Try to execute a capability check
 	// This is a simplified check - real implementation would use libcap
-	cmd := exec.Command("getcap", os.Args[0])
+	cmd := exec.Command("getcap", execPath)
 	output, err := cmd.Output()
 	if err != nil {
-		return fmt.Errorf("no capabilities set (run: sudo setcap cap_net_raw,cap_net_admin+eip %s)", os.Args[0])
+		return fmt.Errorf("no capabilities set (run: sudo setcap cap_net_raw,cap_net_admin+eip %s)", execPath)
 	}
 	
 	outputStr := string(output)
@@ -154,38 +165,28 @@ func (se *SecureExec) Execute(cmdName string, args ...string) ([]byte, error) {
 	cmd := exec.Command(cmdName, args...)
 	cmd.Env = se.environmentVars
 	
-	// Set security attributes with safe conversion
-	uid, err := safeIntToUint32(os.Getuid())
-	if err != nil {
-		return nil, fmt.Errorf("failed to convert UID: %w", err)
-	}
+	// Set security attributes with overflow protection
+	uid := os.Getuid()
+	gid := os.Getgid()
 	
-	gid, err := safeIntToUint32(os.Getgid())
-	if err != nil {
-		return nil, fmt.Errorf("failed to convert GID: %w", err)
+	// Check for integer overflow before converting to uint32
+	if uid < 0 || uid > 0xFFFFFFFF {
+		return nil, fmt.Errorf("UID value %d cannot be safely converted to uint32", uid)
+	}
+	if gid < 0 || gid > 0xFFFFFFFF {
+		return nil, fmt.Errorf("GID value %d cannot be safely converted to uint32", gid)
 	}
 	
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		// Drop supplementary groups
 		Credential: &syscall.Credential{
-			Uid: uid,
-			Gid: gid,
+			Uid: uint32(uid),
+			Gid: uint32(gid),
 		},
 	}
 	
 	// Execute with timeout
 	return cmd.Output()
-}
-
-// safeIntToUint32 safely converts an int to uint32, returning an error if overflow would occur
-func safeIntToUint32(val int) (uint32, error) {
-	if val < 0 {
-		return 0, fmt.Errorf("cannot convert negative value %d to uint32", val)
-	}
-	if val > math.MaxUint32 {
-		return 0, fmt.Errorf("value %d exceeds uint32 maximum (%d)", val, math.MaxUint32)
-	}
-	return uint32(val), nil
 }
 
 // containsCapability checks if output contains a capability
