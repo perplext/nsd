@@ -436,6 +436,10 @@ func (ftp *FTPAnalyzer) parsePortCommand(portStr string) *net.TCPAddr {
 		if err != nil {
 			return nil
 		}
+		// Validate IP octets (0-255) and port parts (0-255)
+		if num < 0 || num > 255 {
+			return nil
+		}
 		nums[i] = num
 	}
 	
@@ -461,6 +465,10 @@ func (ftp *FTPAnalyzer) parsePassiveResponse(response string) *net.TCPAddr {
 	for i := 1; i < 7; i++ {
 		num, err := strconv.Atoi(matches[i])
 		if err != nil {
+			return nil
+		}
+		// Validate IP octets (0-255) and port parts (0-255)
+		if num < 0 || num > 255 {
 			return nil
 		}
 		nums[i-1] = num

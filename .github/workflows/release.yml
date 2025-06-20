@@ -18,6 +18,8 @@ jobs:
   create-release:
     name: Create Release
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     outputs:
       upload_url: ${{ steps.create_release.outputs.upload_url }}
       version: ${{ steps.get_version.outputs.version }}
@@ -93,6 +95,8 @@ jobs:
   build-release:
     name: Build Release Assets
     needs: create-release
+    permissions:
+      contents: write
     strategy:
       matrix:
         include:
@@ -168,6 +172,8 @@ jobs:
     name: Build Distribution Packages
     needs: create-release
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -259,6 +265,9 @@ jobs:
     name: Docker Release
     needs: create-release
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -312,6 +321,8 @@ jobs:
     name: Generate Checksums
     needs: [create-release, build-release]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
@@ -337,6 +348,8 @@ jobs:
     needs: [create-release, checksums]
     runs-on: ubuntu-latest
     if: "!contains(github.ref, '-rc') && !contains(github.ref, '-beta')"
+    permissions:
+      contents: read
     steps:
       - name: Update Homebrew formula
         uses: dawidd6/action-homebrew-bump-formula@v5
@@ -349,6 +362,8 @@ jobs:
     name: Announce Release
     needs: [create-release, build-release, docker-release]
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Send notification
         run: |
