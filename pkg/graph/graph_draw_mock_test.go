@@ -23,7 +23,12 @@ func (s *SimpleScreen) Fill(rune, tcell.Style)                              {}
 func (s *SimpleScreen) SetStyle(tcell.Style)                                {}
 func (s *SimpleScreen) ShowCursor(int, int)                                 {}
 func (s *SimpleScreen) HideCursor()                                         {}
-func (s *SimpleScreen) SetCursorStyle(tcell.CursorStyle)                    {}
+func (s *SimpleScreen) SetCursorStyle(tcell.CursorStyle, ...tcell.Color)    {}
+func (s *SimpleScreen) SetCell(x, y int, style tcell.Style, ch ...rune)     {}
+func (s *SimpleScreen) GetContent(x, y int) (mainc rune, combc []rune, style tcell.Style, width int) {
+	return ' ', nil, tcell.StyleDefault, 1
+}
+func (s *SimpleScreen) SetContent(x, y int, mainc rune, combc []rune, style tcell.Style) {}
 func (s *SimpleScreen) GetCursorStyle() tcell.CursorStyle                   { return tcell.CursorStyleDefault }
 func (s *SimpleScreen) CanDisplay(rune, bool) bool                          { return true }
 func (s *SimpleScreen) CharacterSet() string                                { return "UTF-8" }
@@ -56,6 +61,7 @@ func (s *SimpleScreen) Tty() (tcell.Tty, bool)                             { ret
 func (s *SimpleScreen) Colors() int                                         { return 256 }
 func (s *SimpleScreen) GetClipboard()                                       {}
 func (s *SimpleScreen) SetClipboard([]byte)                                 {}
+func (s *SimpleScreen) SetTitle(string)                                     {}
 
 // Test Draw method paths
 func TestGraph_DrawPaths(t *testing.T) {
