@@ -47,7 +47,7 @@ All plugins must implement the `Plugin` interface:
 ```go
 package main
 
-import "github.com/user/nsd/pkg/netcap"
+import "github.com/perplext/nsd/pkg/netcap"
 
 type Plugin interface {
     // Init is called once when the plugin is loaded
@@ -144,7 +144,7 @@ cd my-nsd-plugin
 go mod init my-nsd-plugin
 
 # Add NSD dependency
-go mod edit -require github.com/user/nsd@latest
+go mod edit -require github.com/perplext/nsd@latest
 go mod tidy
 ```
 
@@ -163,8 +163,8 @@ import (
     "sync"
     "time"
 
-    "github.com/user/nsd/pkg/netcap"
-    "github.com/user/nsd/pkg/plugin"
+    "github.com/perplext/nsd/pkg/netcap"
+    "github.com/perplext/nsd/pkg/plugin"
 )
 
 // MyPlugin implements the Plugin interface
@@ -321,8 +321,8 @@ import (
 
     "github.com/google/gopacket"
     "github.com/google/gopacket/layers"
-    "github.com/user/nsd/pkg/netcap"
-    "github.com/user/nsd/pkg/plugin"
+    "github.com/perplext/nsd/pkg/netcap"
+    "github.com/perplext/nsd/pkg/plugin"
 )
 
 type PacketAnalyzerPlugin struct {
@@ -436,9 +436,9 @@ import (
     "strings"
     "time"
 
-    "github.com/user/nsd/pkg/alerts"
-    "github.com/user/nsd/pkg/netcap"
-    "github.com/user/nsd/pkg/plugin"
+    "github.com/perplext/nsd/pkg/alerts"
+    "github.com/perplext/nsd/pkg/netcap"
+    "github.com/perplext/nsd/pkg/plugin"
 )
 
 type AlertPlugin struct {
@@ -623,7 +623,7 @@ var Plugin plugin.Plugin = &AlertPlugin{}
 
 2. **Log Errors Appropriately:**
    ```go
-   import "github.com/user/nsd/pkg/logging"
+   import "github.com/perplext/nsd/pkg/logging"
    
    func (p *MyPlugin) processData() {
        if err := p.doSomething(); err != nil {
@@ -669,7 +669,7 @@ import (
     "testing"
     "time"
 
-    "github.com/user/nsd/pkg/netcap"
+    "github.com/perplext/nsd/pkg/netcap"
 )
 
 func TestPluginInit(t *testing.T) {

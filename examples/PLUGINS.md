@@ -4,7 +4,7 @@ NSD supports a plugin system that allows you to extend its functionality with cu
 
 ## Plugin Interface
 
-Plugins must implement the `Plugin` interface from `github.com/user/netmon/pkg/plugin`:
+Plugins must implement the `Plugin` interface from `github.com/perplext/nsd/pkg/plugin`:
 
 ```go
 type Plugin interface {

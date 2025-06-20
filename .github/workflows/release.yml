@@ -12,7 +12,7 @@ on:
         type: string
 
 env:
-  GO_VERSION: '1.21'
+  GO_VERSION: '1.24'
 
 jobs:
   create-release:
@@ -67,12 +67,12 @@ jobs:
             ### Linux
             ```bash
             # AMD64
-            wget https://github.com/user/nsd/releases/download/${{ steps.get_version.outputs.version }}/nsd-linux-amd64
+            wget https://github.com/perplext/nsd/releases/download/${{ steps.get_version.outputs.version }}/nsd-linux-amd64
             chmod +x nsd-linux-amd64
             sudo mv nsd-linux-amd64 /usr/local/bin/nsd
             
             # ARM64
-            wget https://github.com/user/nsd/releases/download/${{ steps.get_version.outputs.version }}/nsd-linux-arm64
+            wget https://github.com/perplext/nsd/releases/download/${{ steps.get_version.outputs.version }}/nsd-linux-arm64
             chmod +x nsd-linux-arm64
             sudo mv nsd-linux-arm64 /usr/local/bin/nsd
             ```
@@ -212,7 +212,7 @@ jobs:
             -n nsd \
             -v ${VERSION_NUM} \
             --description "Network Sniffing Dashboard" \
-            --url "https://github.com/user/nsd" \
+            --url "https://github.com/perplext/nsd" \
             --maintainer "NSD Team <nsd@example.com>" \
             --license "MIT" \
             --depends libpcap0.8 \
@@ -226,7 +226,7 @@ jobs:
             -n nsd \
             -v ${VERSION_NUM} \
             --description "Network Sniffing Dashboard" \
-            --url "https://github.com/user/nsd" \
+            --url "https://github.com/perplext/nsd" \
             --maintainer "NSD Team <nsd@example.com>" \
             --license "MIT" \
             --depends libpcap \
@@ -288,7 +288,7 @@ jobs:
         with:
           images: |
             nsd/nsd
-            ghcr.io/user/nsd
+            ghcr.io/perplext/nsd
           tags: |
             type=semver,pattern={{version}},value=${{ needs.create-release.outputs.version }}
             type=semver,pattern={{major}}.{{minor}},value=${{ needs.create-release.outputs.version }}

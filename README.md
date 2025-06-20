@@ -1,5 +1,5 @@
 # NSD - Network Sniffing Dashboard
-[![CI](https://github.com/user/nsd/actions/workflows/ci.yml/badge.svg)](https://github.com/user/nsd/actions/workflows/ci.yml)
+[![CI](https://github.com/perplext/nsd/actions/workflows/ci.yml/badge.svg)](https://github.com/perplext/nsd/actions/workflows/ci.yml)
 
 A cross-platform network sniffing dashboard with a terminal UI similar to btop. NSD allows users to view network statistics and drill down into individual connections.
 
@@ -30,7 +30,7 @@ Check out the `docs/ui_preview.txt` file for a preview of the terminal UI, inclu
 
 ```bash
 # Clone the repository
-git clone https://github.com/user/nsd.git
+git clone https://github.com/perplext/nsd.git
 cd nsd
 
 # Build the application

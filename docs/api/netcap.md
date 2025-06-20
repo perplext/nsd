@@ -1,6 +1,6 @@
 # Network Capture API Reference
 
-## Package: `github.com/user/nsd/pkg/netcap`
+## Package: `github.com/perplext/nsd/pkg/netcap`
 
 The netcap package provides low-level network packet capture and analysis functionality using libpcap.
 
@@ -420,7 +420,7 @@ import (
     "log"
     "time"
     
-    "github.com/user/nsd/pkg/netcap"
+    "github.com/perplext/nsd/pkg/netcap"
 )
 
 func main() {

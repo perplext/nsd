@@ -17,7 +17,7 @@ NSD provides a comprehensive API for network traffic monitoring, packet capture,
 
 ## Network Capture API
 
-### Package: `github.com/user/nsd/pkg/netcap`
+### Package: `github.com/perplext/nsd/pkg/netcap`
 
 The netcap package provides network packet capture and monitoring functionality.
 
@@ -171,7 +171,7 @@ Returns a list of available network interfaces.
 
 ## UI API
 
-### Package: `github.com/user/nsd/pkg/ui`
+### Package: `github.com/perplext/nsd/pkg/ui`
 
 The ui package provides terminal user interface components and visualization.
 
@@ -299,7 +299,7 @@ Exports a theme to a file.
 
 ## Graph API
 
-### Package: `github.com/user/nsd/pkg/graph`
+### Package: `github.com/perplext/nsd/pkg/graph`
 
 The graph package provides data visualization components.
 
@@ -368,7 +368,7 @@ const (
 
 ## Plugin API
 
-### Package: `github.com/user/nsd/pkg/plugin`
+### Package: `github.com/perplext/nsd/pkg/plugin`
 
 The plugin package provides interfaces for extending NSD functionality.
 
@@ -446,7 +446,7 @@ Loads a plugin from a .so file.
 
 ## Security API
 
-### Package: `github.com/user/nsd/pkg/security`
+### Package: `github.com/perplext/nsd/pkg/security`
 
 The security package provides input validation and security controls.
 
@@ -542,7 +542,7 @@ Drops root privileges to the specified user.
 
 ## Error Handling API
 
-### Package: `github.com/user/nsd/pkg/errors`
+### Package: `github.com/perplext/nsd/pkg/errors`
 
 The errors package provides custom error types and error handling utilities.
 
@@ -612,7 +612,7 @@ Determines if an error is retryable.
 
 ## Rate Limiting API
 
-### Package: `github.com/user/nsd/pkg/ratelimit`
+### Package: `github.com/perplext/nsd/pkg/ratelimit`
 
 The ratelimit package provides rate limiting functionality.
 
@@ -676,7 +676,7 @@ Enables or disables adaptive rate limiting.
 
 ## Resource Control API
 
-### Package: `github.com/user/nsd/pkg/resource`
+### Package: `github.com/perplext/nsd/pkg/resource`
 
 The resource package provides system resource monitoring and control.
 
@@ -760,8 +760,8 @@ import (
     "log"
     "time"
     
-    "github.com/user/nsd/pkg/netcap"
-    "github.com/user/nsd/pkg/ui"
+    "github.com/perplext/nsd/pkg/netcap"
+    "github.com/perplext/nsd/pkg/ui"
 )
 
 func main() {
@@ -802,8 +802,8 @@ func main() {
 package main
 
 import (
-    "github.com/user/nsd/pkg/netcap"
-    "github.com/user/nsd/pkg/plugin"
+    "github.com/perplext/nsd/pkg/netcap"
+    "github.com/perplext/nsd/pkg/plugin"
 )
 
 type MyPlugin struct {
@@ -846,8 +846,8 @@ package main
 import (
     "log"
     
-    "github.com/user/nsd/pkg/netcap"
-    "github.com/user/nsd/pkg/security"
+    "github.com/perplext/nsd/pkg/netcap"
+    "github.com/perplext/nsd/pkg/security"
 )
 
 func main() {
@@ -940,6 +940,6 @@ Current version: 1.0.0
 ## Support
 
 For API support and questions:
-- GitHub Issues: https://github.com/user/nsd/issues
+- GitHub Issues: https://github.com/perplext/nsd/issues
 - Documentation: https://nsd.example.com/docs
 - Examples: See `/examples` directory in the repository

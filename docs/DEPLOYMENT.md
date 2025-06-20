@@ -51,17 +51,17 @@ This guide covers deploying NSD in production environments, including security h
 
 ```bash
 # Linux AMD64
-wget https://github.com/user/nsd/releases/latest/download/nsd-linux-amd64
+wget https://github.com/perplext/nsd/releases/latest/download/nsd-linux-amd64
 chmod +x nsd-linux-amd64
 sudo mv nsd-linux-amd64 /usr/local/bin/nsd
 
 # Linux ARM64
-wget https://github.com/user/nsd/releases/latest/download/nsd-linux-arm64
+wget https://github.com/perplext/nsd/releases/latest/download/nsd-linux-arm64
 chmod +x nsd-linux-arm64
 sudo mv nsd-linux-arm64 /usr/local/bin/nsd
 
 # macOS
-wget https://github.com/user/nsd/releases/latest/download/nsd-darwin-amd64
+wget https://github.com/perplext/nsd/releases/latest/download/nsd-darwin-amd64
 chmod +x nsd-darwin-amd64
 sudo mv nsd-darwin-amd64 /usr/local/bin/nsd
 ```
@@ -70,7 +70,7 @@ sudo mv nsd-darwin-amd64 /usr/local/bin/nsd
 
 ```bash
 # Clone repository
-git clone https://github.com/user/nsd.git
+git clone https://github.com/perplext/nsd.git
 cd nsd
 
 # Install dependencies
@@ -215,7 +215,7 @@ Create `/etc/systemd/system/nsd.service`:
 ```ini
 [Unit]
 Description=NSD Network Sniffing Dashboard
-Documentation=https://github.com/user/nsd
+Documentation=https://github.com/perplext/nsd
 After=network.target
 
 [Service]
@@ -878,7 +878,7 @@ find /backup/nsd -mtime +30 -delete
 
 ```bash
 # 1. Download new version
-wget https://github.com/user/nsd/releases/latest/download/nsd-linux-amd64
+wget https://github.com/perplext/nsd/releases/latest/download/nsd-linux-amd64
 
 # 2. Verify checksum
 sha256sum -c nsd-linux-amd64.sha256
@@ -931,5 +931,5 @@ journalctl -u nsd -n 50
 
 For deployment support:
 - Documentation: https://nsd.example.com/docs
-- Issues: https://github.com/user/nsd/issues
+- Issues: https://github.com/perplext/nsd/issues
 - Community: https://forum.nsd.example.com

@@ -15,6 +15,20 @@ import (
 	"github.com/perplext/nsd/pkg/ui/i18n"
 )
 
+// Version information - these values are set by the build process via ldflags
+var (
+	version = "dev"
+	commit  = "unknown"
+	date    = "unknown"
+)
+
+// printVersion displays the version information
+func printVersion() {
+	fmt.Printf("NSD (Network Sniffing Dashboard) %s\n", version)
+	fmt.Printf("Commit: %s\n", commit)
+	fmt.Printf("Built: %s\n", date)
+}
+
 func main() {
 	// Parse command line flags
 	var interfaceName string
@@ -44,6 +58,7 @@ func main() {
 	var maxFileSize int64
 	var enableProtocolAnalysis bool
 	var protocolFilters string
+	var showVersion bool
 	flag.StringVar(&interfaceName, "i", "", i18n.T("flag_i_desc"))
 	flag.StringVar(&themeName, "theme", "Dark+", i18n.T("flag_theme_desc"))
 	flag.StringVar(&themeFile, "theme-file", "", i18n.T("flag_theme_file_desc"))
@@ -73,7 +88,14 @@ func main() {
 	flag.Int64Var(&maxFileSize, "max-file-size", 50*1024*1024, "Maximum file size for extraction (bytes)")
 	flag.BoolVar(&enableProtocolAnalysis, "protocol-analysis", false, "Enable deep protocol analysis for FTP, SSH, POP3, IMAP")
 	flag.StringVar(&protocolFilters, "protocol-filters", "ftp,ssh,pop3,imap", "Comma-separated list of protocols to analyze")
+	flag.BoolVar(&showVersion, "version", false, "Show version information and exit")
 	flag.Parse()
+
+	// Handle version flag
+	if showVersion {
+		printVersion()
+		os.Exit(0)
+	}
 
 	// Load translations if provided
 	if translationFile != "" {

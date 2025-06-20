@@ -1,6 +1,6 @@
 # UI API Reference
 
-## Package: `github.com/user/nsd/pkg/ui`
+## Package: `github.com/perplext/nsd/pkg/ui`
 
 The ui package provides terminal user interface components for NSD, including themes, visualizations, and interactive dashboards.
 
@@ -471,7 +471,7 @@ viz.Update(monitor)
 ### i18n Package
 
 ```go
-import "github.com/user/nsd/pkg/ui/i18n"
+import "github.com/perplext/nsd/pkg/ui/i18n"
 ```
 
 #### func LoadTranslations
@@ -551,9 +551,9 @@ import (
     "os/signal"
     "syscall"
     
-    "github.com/user/nsd/pkg/netcap"
-    "github.com/user/nsd/pkg/ui"
-    "github.com/user/nsd/pkg/ui/i18n"
+    "github.com/perplext/nsd/pkg/netcap"
+    "github.com/perplext/nsd/pkg/ui"
+    "github.com/perplext/nsd/pkg/ui/i18n"
 )
 
 func main() {

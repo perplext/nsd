@@ -5,7 +5,7 @@
 ### Network Monitoring
 
 ```go
-import "github.com/user/nsd/pkg/netcap"
+import "github.com/perplext/nsd/pkg/netcap"
 
 // Create monitor
 monitor := netcap.NewNetworkMonitor()
@@ -25,7 +25,7 @@ connections := monitor.GetConnections()
 ### User Interface
 
 ```go
-import "github.com/user/nsd/pkg/ui"
+import "github.com/perplext/nsd/pkg/ui"
 
 // Create UI
 ui := ui.NewUI(monitor).
@@ -39,7 +39,7 @@ err := ui.Run()
 ### Security
 
 ```go
-import "github.com/user/nsd/pkg/security"
+import "github.com/perplext/nsd/pkg/security"
 
 // Validate inputs
 validator := security.NewValidator()
@@ -54,7 +54,7 @@ err := pm.DropPrivileges("nobody")
 ### Error Handling
 
 ```go
-import "github.com/user/nsd/pkg/errors"
+import "github.com/perplext/nsd/pkg/errors"
 
 // Create errors
 err := errors.NewNetworkError("eth0", "capture", err)
@@ -68,7 +68,7 @@ if errors.IsRetryable(err) {
 ### Rate Limiting
 
 ```go
-import "github.com/user/nsd/pkg/ratelimit"
+import "github.com/perplext/nsd/pkg/ratelimit"
 
 // Create limiter
 limiter := ratelimit.NewRateLimiter(config)
@@ -82,7 +82,7 @@ if limiter.AllowPacket(size) {
 ### Resource Control
 
 ```go
-import "github.com/user/nsd/pkg/resource"
+import "github.com/perplext/nsd/pkg/resource"
 
 // Create controller
 controller := resource.NewController(512, 50.0)
@@ -150,7 +150,7 @@ func main() {
 ```go
 package main
 
-import "github.com/user/nsd/pkg/plugin"
+import "github.com/perplext/nsd/pkg/plugin"
 
 type MyPlugin struct {
     monitor *netcap.NetworkMonitor

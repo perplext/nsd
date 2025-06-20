@@ -31,13 +31,13 @@ brew install nsd
 **Linux:**
 ```bash
 # Download latest release
-wget https://github.com/user/nsd/releases/latest/download/nsd-linux-amd64
+wget https://github.com/perplext/nsd/releases/latest/download/nsd-linux-amd64
 chmod +x nsd-linux-amd64
 sudo mv nsd-linux-amd64 /usr/local/bin/nsd
 ```
 
 **Windows:**
-1. Download the Windows installer from [releases](https://github.com/user/nsd/releases)
+1. Download the Windows installer from [releases](https://github.com/perplext/nsd/releases)
 2. Install Npcap from https://npcap.com
 3. Run the NSD installer
 
@@ -488,7 +488,7 @@ nsd -i eth0 -auto-export json -interval 3600 -output-dir /var/log/nsd/
 
 ### Available Plugins
 
-Official plugins available at https://github.com/user/nsd-plugins:
+Official plugins available at https://github.com/perplext/nsd-plugins:
 
 - **nsd-geoip**: Enhanced geolocation features
 - **nsd-ml**: Machine learning traffic analysis
