@@ -14,6 +14,7 @@ import (
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/pcapgo"
+	"github.com/perplext/nsd/pkg/security"
 )
 
 type RecordingMode int
@@ -197,7 +198,7 @@ func (r *Recorder) StopRecording() error {
 
 	// Save metadata
 	metadataPath := r.recording.FilePath + ".meta"
-	if metadataFile, err := os.Create(metadataPath); err == nil { // #nosec G304 - derived from validated path
+	if metadataFile, err := security.SafeCreateFile(metadataPath, r.outputDir); err == nil {
 		if err := json.NewEncoder(metadataFile).Encode(r.recording); err != nil {
 			log.Printf("Failed to encode metadata: %v", err)
 		}
@@ -281,7 +282,7 @@ func (p *Player) LoadRecording(recordingPath string) error {
 	
 	// Load metadata
 	metadataPath := recordingPath + ".meta"
-	metadataFile, err := os.Open(metadataPath) // #nosec G304 - derived from validated path
+	metadataFile, err := security.SafeOpenFile(metadataPath, filepath.Dir(recordingPath))
 	if err != nil {
 		return fmt.Errorf("failed to open metadata file: %v", err)
 	}
@@ -488,7 +489,7 @@ func ListRecordings(recordingDir string) ([]Recording, error) {
 	}
 
 	for _, metaFile := range files {
-		file, err := os.Open(metaFile)
+		file, err := security.SafeOpenFile(metaFile, recordingDir)
 		if err != nil {
 			continue
 		}
