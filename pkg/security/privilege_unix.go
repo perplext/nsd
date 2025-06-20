@@ -81,24 +81,12 @@ func (pm *PrivilegeManager) CheckPrivileges() error {
 
 // checkLinuxCapabilities checks for Linux capabilities
 func (pm *PrivilegeManager) checkLinuxCapabilities() error {
-	// Get the current executable path safely
-	execPath, err := os.Executable()
-	if err != nil {
-		return fmt.Errorf("failed to get executable path: %w", err)
-	}
-	
-	// Validate the executable path for security
-	validator := NewValidator()
-	if err := validator.ValidateFilePath(execPath); err != nil {
-		return fmt.Errorf("invalid executable path: %w", err)
-	}
-	
 	// Try to execute a capability check
 	// This is a simplified check - real implementation would use libcap
-	cmd := exec.Command("getcap", execPath)
+	cmd := exec.Command("getcap", os.Args[0])
 	output, err := cmd.Output()
 	if err != nil {
-		return fmt.Errorf("no capabilities set (run: sudo setcap cap_net_raw,cap_net_admin+eip %s)", execPath)
+		return fmt.Errorf("no capabilities set (run: sudo setcap cap_net_raw,cap_net_admin+eip %s)", os.Args[0])
 	}
 	
 	outputStr := string(output)
@@ -147,6 +135,17 @@ func (s *Sandbox) setResourceLimits() error {
 	return nil
 }
 
+// safeIntToUint32 safely converts an int to uint32 with bounds checking
+func safeIntToUint32(value int, valueName string) (uint32, error) {
+	if value < 0 {
+		return 0, fmt.Errorf("%s cannot be negative: %d", valueName, value)
+	}
+	if value > 0xFFFFFFFF {
+		return 0, fmt.Errorf("%s exceeds uint32 range: %d", valueName, value)
+	}
+	return uint32(value), nil
+}
+
 // Execute runs a command securely (Unix implementation)
 func (se *SecureExec) Execute(cmdName string, args ...string) ([]byte, error) {
 	// Validate command is allowed
@@ -165,12 +164,23 @@ func (se *SecureExec) Execute(cmdName string, args ...string) ([]byte, error) {
 	cmd := exec.Command(cmdName, args...)
 	cmd.Env = se.environmentVars
 	
+	// Safe conversion of UID and GID with bounds checking
+	uid, err := safeIntToUint32(os.Getuid(), "UID")
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert UID: %w", err)
+	}
+	
+	gid, err := safeIntToUint32(os.Getgid(), "GID")
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert GID: %w", err)
+	}
+	
 	// Set security attributes
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		// Drop supplementary groups
 		Credential: &syscall.Credential{
-			Uid: uint32(os.Getuid()),
-			Gid: uint32(os.Getgid()),
+			Uid: uid,
+			Gid: gid,
 		},
 	}
 	
