@@ -81,12 +81,24 @@ func (pm *PrivilegeManager) CheckPrivileges() error {
 
 // checkLinuxCapabilities checks for Linux capabilities
 func (pm *PrivilegeManager) checkLinuxCapabilities() error {
+	// Get the current executable path safely
+	execPath, err := os.Executable()
+	if err != nil {
+		return fmt.Errorf("failed to get executable path: %w", err)
+	}
+	
+	// Validate the executable path for security
+	validator := NewValidator()
+	if err := validator.ValidateFilePath(execPath); err != nil {
+		return fmt.Errorf("invalid executable path: %w", err)
+	}
+	
 	// Try to execute a capability check
 	// This is a simplified check - real implementation would use libcap
-	cmd := exec.Command("getcap", os.Args[0])
+	cmd := exec.Command("getcap", execPath)
 	output, err := cmd.Output()
 	if err != nil {
-		return fmt.Errorf("no capabilities set (run: sudo setcap cap_net_raw,cap_net_admin+eip %s)", os.Args[0])
+		return fmt.Errorf("no capabilities set (run: sudo setcap cap_net_raw,cap_net_admin+eip %s)", execPath)
 	}
 	
 	outputStr := string(output)
