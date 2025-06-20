@@ -53,8 +53,8 @@ func (s *SimpleScreen) Resume() error                                       { re
 func (s *SimpleScreen) LockRegion(x, y, width, height int, lock bool)       {}
 func (s *SimpleScreen) Tty() (tcell.Tty, bool)                             { return nil, false }
 func (s *SimpleScreen) Colors() int                                         { return 256 }
-func (s *SimpleScreen) GetClipboard() ([]byte, error)                       { return nil, nil }
-func (s *SimpleScreen) SetClipboard([]byte) error                           { return nil }
+func (s *SimpleScreen) GetClipboard()                                       {}
+func (s *SimpleScreen) SetClipboard([]byte)                                 {}
 
 // Test Draw method paths
 func TestGraph_DrawPaths(t *testing.T) {

@@ -41,7 +41,7 @@ func (ms *MockScreen) SetStyle(tcell.Style)                {}
 func (ms *MockScreen) ShowCursor(int, int)                 {}
 func (ms *MockScreen) HideCursor()                         {}
 func (ms *MockScreen) Size() (int, int)                    { return ms.width, ms.height }
-func (ms *MockScreen) ChannelEvents(chan tcell.Event, chan struct{}) {}
+func (ms *MockScreen) ChannelEvents(ch chan<- tcell.Event, quit <-chan struct{}) {}
 func (ms *MockScreen) PollEvent() tcell.Event              { return nil }
 func (ms *MockScreen) HasPendingEvent() bool               { return false }
 func (ms *MockScreen) PostEvent(tcell.Event) error         { return nil }
@@ -63,3 +63,12 @@ func (ms *MockScreen) SetSize(int, int)                    {}
 func (ms *MockScreen) Suspend() error                      { return nil }
 func (ms *MockScreen) Resume() error                       { return nil }
 func (ms *MockScreen) Beep() error                         { return nil }
+func (ms *MockScreen) DisableFocus()                       {}
+func (ms *MockScreen) EnableFocus()                        {}
+func (ms *MockScreen) GetClipboard()                       {}
+func (ms *MockScreen) HasKey(tcell.Key) bool               { return true }
+func (ms *MockScreen) LockRegion(x, y, width, height int, lock bool) {}
+func (ms *MockScreen) Tty() (tcell.Tty, bool)              { return nil, false }
+func (ms *MockScreen) SetClipboard([]byte)                 {}
+func (ms *MockScreen) SetCursorStyle(tcell.CursorStyle, ...tcell.Color) {}
+func (ms *MockScreen) SetTitle(string)                     {}
