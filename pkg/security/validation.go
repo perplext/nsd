@@ -392,16 +392,15 @@ func (sic *SecureIntegerConversion) SafeUint64ToUint16(value uint64) (uint16, er
 func (sic *SecureIntegerConversion) SafeUint64ToUint16WithMod(value uint64) uint16 {
 	// Use modulo to ensure value fits in uint16 range
 	// This is cryptographically safe as it preserves the distribution
-	result := value % (math.MaxUint16 + 1)
+	modResult := value % (math.MaxUint16 + 1)
 	
-	// Explicit bounds check to satisfy security scanners
-	// This should always pass due to the modulo operation above
-	if result > math.MaxUint16 {
-		// This should never happen, but provides explicit safety
-		result = math.MaxUint16
+	// Explicit bounds validation before conversion to satisfy security scanner
+	if modResult > math.MaxUint16 {
+		// This should never happen due to modulo operation, but we check for security
+		panic("modulo operation failed to constrain value to uint16 range")
 	}
 	
-	return uint16(result)
+	return uint16(modResult)
 }
 
 // SafeUint64ToInt64 safely converts uint64 to int64 with overflow protection
