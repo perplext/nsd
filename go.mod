@@ -11,7 +11,7 @@ require (
 	github.com/shirou/gopsutil/v3 v3.24.5
 	github.com/stretchr/testify v1.10.0
 	github.com/wcharczuk/go-chart/v2 v2.1.2
-	golang.org/x/time v0.11.0
+	golang.org/x/time v0.12.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
