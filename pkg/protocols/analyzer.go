@@ -159,8 +159,13 @@ func (stream *protocolStream) run() {
 	defer stream.r.Close()
 	
 	// Determine which protocol analyzer to use based on port
-	srcPort := uint16(stream.transport.Src().FastHash())
-	dstPort := uint16(stream.transport.Dst().FastHash())
+	// FastHash returns uint64, we need to safely convert to uint16
+	srcHash := stream.transport.Src().FastHash()
+	dstHash := stream.transport.Dst().FastHash()
+	
+	// Modulo to ensure we stay within uint16 range
+	srcPort := uint16(srcHash % 65536)
+	dstPort := uint16(dstHash % 65536)
 	
 	var analyzer ProtocolAnalyzer
 	

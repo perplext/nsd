@@ -37,10 +37,10 @@ func generateTestPackets(count int) []gopacket.Packet {
 		}
 		
 		tcp := &layers.TCP{
-			SrcPort: layers.TCPPort(1000 + i%1000),
+			SrcPort: layers.TCPPort(1000 + (i%1000)),
 			DstPort: layers.TCPPort(80),
-			Seq:     uint32(i * 1000),
-			Ack:     uint32(i * 1000),
+			Seq:     uint32((i % 4294967) * 1000), // Prevent overflow
+			Ack:     uint32((i % 4294967) * 1000), // Prevent overflow
 			Window:  65535,
 		}
 		if err := tcp.SetNetworkLayerForChecksum(ip); err != nil {
@@ -216,7 +216,11 @@ func BenchmarkControlledCapture(b *testing.B) {
 			if err != nil {
 				b.Fatal(err)
 			}
-			defer cm.StopGracefully(5 * time.Second)
+			defer func() {
+				if err := cm.StopGracefully(5 * time.Second); err != nil {
+					b.Errorf("Failed to stop gracefully: %v", err)
+				}
+			}()
 			
 			packets := generateTestPackets(1000)
 			
@@ -289,7 +293,11 @@ func BenchmarkConcurrentPacketProcessing(b *testing.B) {
 			if err != nil {
 				b.Fatal(err)
 			}
-			defer cm.StopGracefully(5 * time.Second)
+			defer func() {
+				if err := cm.StopGracefully(5 * time.Second); err != nil {
+					b.Errorf("Failed to stop gracefully: %v", err)
+				}
+			}()
 			
 			packets := generateTestPackets(10000)
 			
@@ -440,7 +448,11 @@ func BenchmarkMemoryUsage(b *testing.B) {
 		startAlloc := m.Alloc
 		
 		cm, _ := NewControlledMonitor(DefaultControlledConfig())
-		defer cm.StopGracefully(5 * time.Second)
+		defer func() {
+			if err := cm.StopGracefully(5 * time.Second); err != nil {
+				b.Errorf("Failed to stop gracefully: %v", err)
+			}
+		}()
 		
 		packets := generateTestPackets(10000)
 		

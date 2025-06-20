@@ -1,6 +1,7 @@
 package netcap
 
 import (
+	"math"
 	"net"
 	"sync"
 	"testing"
@@ -338,7 +339,9 @@ func TestInterfaceStatsThreadSafety(t *testing.T) {
 		defer wg.Done()
 		for i := 0; i < 100; i++ {
 			stats.mutex.Lock()
-			stats.BytesIn += uint64(i)
+			if i >= 0 && uint64(i) <= (math.MaxUint64 - stats.BytesIn) {
+				stats.BytesIn += uint64(i)
+			}
 			stats.PacketsIn++
 			stats.mutex.Unlock()
 		}
@@ -384,7 +387,7 @@ func TestPacketProcessingHelpers(t *testing.T) {
 			SrcIP:     net.ParseIP("192.168.1.100"),
 			DstIP:     net.ParseIP("8.8.8.8"),
 			Protocol:  "TCP",
-			Length:    uint64(100 + i),
+			Length:    uint64(100 + (i % 1000)), // Prevent overflow
 		}
 		
 		nm.bufferMutex.Lock()

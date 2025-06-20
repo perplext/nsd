@@ -12,6 +12,7 @@ import (
   "strings"
 
   "github.com/perplext/nsd/pkg/ui/i18n"
+  "github.com/perplext/nsd/pkg/security"
 )
 
 func main() {
@@ -27,9 +28,16 @@ func main() {
     os.Exit(1)
   }
   for _, f := range files {
-    data, err := ioutil.ReadFile(f)
+    // Validate path before reading
+    cleanPath := filepath.Clean(f)
+    if err := security.ValidateFilePath(cleanPath); err != nil {
+      fmt.Fprintf(os.Stderr, "Invalid file path %s: %v\n", f, err)
+      continue
+    }
+    
+    data, err := ioutil.ReadFile(cleanPath)
     if err != nil {
-      fmt.Fprintf(os.Stderr, "Failed to read %s: %v\n", f, err)
+      fmt.Fprintf(os.Stderr, "Failed to read %s: %v\n", cleanPath, err)
       continue
     }
     var m map[string]string

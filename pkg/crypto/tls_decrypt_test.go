@@ -296,7 +296,9 @@ func TestProcessHandshake(t *testing.T) {
 		0x00, 0x2f, // Cipher suite: TLS_RSA_WITH_AES_128_CBC_SHA
 		0x00, // Compression method: none
 	}
-	td.processHandshake(session, serverHello, time.Now().Unix())
+	if err := td.processHandshake(session, serverHello, time.Now().Unix()); err != nil {
+		t.Errorf("Failed to process server hello: %v", err)
+	}
 	assert.Equal(t, uint16(0x002f), session.CipherSuite)
 
 	// Test certificate
@@ -305,7 +307,9 @@ func TestProcessHandshake(t *testing.T) {
 		0x00, 0x00, 0x03, // Length: 3 bytes
 		0x00, 0x00, 0x00, // Certificate list length: 0 (simplified)
 	}
-	td.processHandshake(session, certificate, time.Now().Unix())
+	if err := td.processHandshake(session, certificate, time.Now().Unix()); err != nil {
+		t.Errorf("Failed to process certificate: %v", err)
+	}
 	// No assertions as it's a simplified test
 
 	// Test client key exchange
@@ -314,7 +318,9 @@ func TestProcessHandshake(t *testing.T) {
 		0x00, 0x00, 0x02, // Length: 2 bytes
 		0x00, 0x00, // Encrypted pre-master secret (simplified)
 	}
-	td.processHandshake(session, clientKeyExchange, time.Now().Unix())
+	if err := td.processHandshake(session, clientKeyExchange, time.Now().Unix()); err != nil {
+		t.Errorf("Failed to process client key exchange: %v", err)
+	}
 	// Check state after key exchange
 	assert.Equal(t, TLSStateEstablished, session.State)
 }
@@ -340,7 +346,9 @@ func TestProcessClientHello(t *testing.T) {
 		// Extensions would go here for SNI
 	}
 
-	td.processClientHello(session, clientHello, time.Now().Unix())
+	if err := td.processClientHello(session, clientHello, time.Now().Unix()); err != nil {
+		t.Errorf("Failed to process client hello: %v", err)
+	}
 	// Basic test without SNI extension
 }
 
@@ -363,7 +371,9 @@ func TestProcessAlert(t *testing.T) {
 
 	for _, alert := range alerts {
 		alertData := []byte{alert.level, alert.description}
-		td.processAlert(session, alertData, time.Now().Unix())
+		if err := td.processAlert(session, alertData, time.Now().Unix()); err != nil {
+			t.Errorf("Failed to process alert: %v", err)
+		}
 		if alert.expectError {
 			assert.Equal(t, TLSStateClosed, session.State)
 		}
@@ -463,7 +473,7 @@ func TestSessionManagement(t *testing.T) {
 		td.sessions[sessionID] = &TLSSession{
 			ClientIP:   net.ParseIP(fmt.Sprintf("192.168.1.%d", i+1)),
 			ServerIP:   net.ParseIP("192.168.1.200"),
-			ClientPort: uint16(50000 + i),
+			ClientPort: uint16(50000 + (i % 15535)), // Prevent overflow
 			ServerPort: 443,
 			State:      TLSStateEstablished,
 			ServerName: fmt.Sprintf("server%d.example.com", i),
@@ -505,11 +515,13 @@ func TestConcurrentAccess(t *testing.T) {
 			packet := createTestTLSPacket(
 				fmt.Sprintf("192.168.1.%d", id),
 				"192.168.1.200",
-				uint16(50000+id),
+				uint16(50000+(id%15535)), // Prevent overflow
 				443,
 				clientHello,
 			)
-			td.ProcessTLSPacket(packet)
+			if _, err := td.ProcessTLSPacket(packet); err != nil {
+				t.Errorf("Failed to process TLS packet: %v", err)
+			}
 			done <- true
 		}(i)
 	}

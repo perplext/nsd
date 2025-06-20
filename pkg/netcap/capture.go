@@ -3,6 +3,7 @@ package netcap
 import (
 	"fmt"
 	"log"
+	"math"
 	"net"
 	"sync"
 	"time"
@@ -468,10 +469,24 @@ func (nm *NetworkMonitor) GetStats() map[string]interface{} {
 	byteRate := float64(0)
 	
 	for _, iface := range nm.Interfaces {
-		totalPackets += int64(iface.PacketsIn + iface.PacketsOut)
-		totalBytes += int64(iface.BytesIn + iface.BytesOut)
-		// PacketRate and ByteRate would need to be calculated separately
-		// For now, we'll just use the raw counts
+		// Check for overflow before conversion
+		packetSum := iface.PacketsIn + iface.PacketsOut
+		if packetSum < iface.PacketsIn { // Overflow check
+			totalPackets = math.MaxInt64
+		} else if packetSum > uint64(math.MaxInt64-totalPackets) {
+			totalPackets = math.MaxInt64
+		} else {
+			totalPackets += int64(packetSum)
+		}
+		
+		byteSum := iface.BytesIn + iface.BytesOut
+		if byteSum < iface.BytesIn { // Overflow check
+			totalBytes = math.MaxInt64
+		} else if byteSum > uint64(math.MaxInt64-totalBytes) {
+			totalBytes = math.MaxInt64
+		} else {
+			totalBytes += int64(byteSum)
+		}
 	}
 	
 	return map[string]interface{}{

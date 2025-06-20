@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"runtime"
 	"runtime/debug"
 	"time"
@@ -120,10 +121,11 @@ func suggestRecovery(phase string, err error) {
 
 // saveEmergencyState tries to save application state during a crash
 func saveEmergencyState() {
-	// Try to create crash dump file
-	crashFile := fmt.Sprintf("nsd_crash_%d.log", os.Getpid())
+	// Try to create crash dump file in temp directory
+	crashFile := filepath.Join(os.TempDir(), fmt.Sprintf("nsd_crash_%d.log", os.Getpid()))
 	
-	f, err := os.Create(crashFile)
+	// Use OpenFile with secure permissions
+	f, err := os.OpenFile(crashFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600)
 	if err != nil {
 		log.Printf("Failed to create crash file: %v", err)
 		return
