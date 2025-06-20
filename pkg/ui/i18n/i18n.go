@@ -3,9 +3,10 @@ package i18n
 import (
     "encoding/json"
     "fmt"
-    "os"
     "path/filepath"
     "strings"
+    
+    "github.com/perplext/nsd/pkg/security"
 )
 
 // Translations holds the message mapping for localization.
@@ -69,25 +70,24 @@ var Translations = map[string]string{
 
 // LoadTranslations loads a JSON translation file and merges into Translations.
 func LoadTranslations(path string) error {
-    // Validate path to prevent directory traversal
-    if err := validateI18nPath(path); err != nil {
-        return err
-    }
-    
-    data, err := os.ReadFile(path)
-    if err != nil {
-        return err
-    }
+    // Validate file extension before processing
     ext := strings.ToLower(filepath.Ext(path))
-    var raw map[string]string
-    switch ext {
-    case ".json":
-        if err := json.Unmarshal(data, &raw); err != nil {
-            return err
-        }
-    default:
+    if ext != ".json" {
         return fmt.Errorf("unsupported translation file: %s", ext)
     }
+    
+    // Use secure file reading with current working directory as allowed base
+    // This allows both relative paths (./examples/i18n/en.json) and validates absolute paths
+    data, err := security.SafeReadFile(path, ".")
+    if err != nil {
+        return fmt.Errorf("failed to read translation file: %w", err)
+    }
+    
+    var raw map[string]string
+    if err := json.Unmarshal(data, &raw); err != nil {
+        return fmt.Errorf("failed to parse JSON translation file: %w", err)
+    }
+    
     for k, v := range raw {
         Translations[k] = v
     }
@@ -102,27 +102,3 @@ func T(key string) string {
     return key
 }
 
-// validateI18nPath validates an i18n file path to prevent directory traversal
-func validateI18nPath(path string) error {
-    // Clean the path to remove any ../ or ./ elements
-    cleanPath := filepath.Clean(path)
-    
-    // Get absolute path
-    absPath, err := filepath.Abs(cleanPath)
-    if err != nil {
-        return fmt.Errorf("invalid i18n path: %v", err)
-    }
-    
-    // Check if path contains suspicious patterns
-    if strings.Contains(path, "..") {
-        return fmt.Errorf("i18n path contains directory traversal pattern")
-    }
-    
-    // Ensure the file has .json extension
-    ext := strings.ToLower(filepath.Ext(absPath))
-    if ext != ".json" {
-        return fmt.Errorf("invalid i18n file extension: %s", ext)
-    }
-    
-    return nil
-}
