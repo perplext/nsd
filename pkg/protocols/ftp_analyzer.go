@@ -3,6 +3,7 @@ package protocols
 import (
 	"bufio"
 	"fmt"
+	"math"
 	"net"
 	"regexp"
 	"strconv"
@@ -12,6 +13,24 @@ import (
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/tcpassembly/tcpreader"
 )
+
+// safeHashToPort safely converts a uint64 hash to a uint16 port number
+// It ensures no integer overflow and provides a secure fallback
+func safeHashToPort(hash uint64) uint16 {
+	// Ensure the value is within valid uint16 range
+	if hash > math.MaxUint16 {
+		// Use modulo to ensure we stay within valid range
+		hash = hash % (math.MaxUint16 + 1)
+	}
+	
+	// Double-check bounds before conversion
+	if hash <= math.MaxUint16 {
+		return uint16(hash)
+	}
+	
+	// Fallback to a safe default port if something goes wrong
+	return 1024
+}
 
 // FTPAnalyzer analyzes FTP protocol traffic
 type FTPAnalyzer struct {
@@ -87,9 +106,9 @@ func (ftp *FTPAnalyzer) AnalyzeStream(flow gopacket.Flow, reader *tcpreader.Read
 	srcHash := flow.Src().FastHash()
 	dstHash := flow.Dst().FastHash()
 	
-	// Modulo to ensure we stay within uint16 range
-	srcPort := uint16(srcHash % 65536)
-	dstPort := uint16(dstHash % 65536)
+	// Use secure conversion to prevent integer overflow
+	srcPort := safeHashToPort(srcHash)
+	dstPort := safeHashToPort(dstHash)
 	
 	if srcPort == 21 || dstPort == 21 {
 		// Control channel
@@ -132,7 +151,7 @@ func (ftp *FTPAnalyzer) getOrCreateSession(sessionKey string, flow gopacket.Flow
 		ID:           fmt.Sprintf("ftp_%d", time.Now().UnixNano()),
 		ClientIP:     net.ParseIP(flow.Src().String()),
 		ServerIP:     net.ParseIP(flow.Dst().String()),
-		ControlPort:  uint16(flow.Dst().FastHash() % 65536),
+		ControlPort:  safeHashToPort(flow.Dst().FastHash()),
 		Commands:     make([]FTPCommand, 0),
 		Transfers:    make([]FileTransfer, 0),
 		StartTime:    time.Now(),
