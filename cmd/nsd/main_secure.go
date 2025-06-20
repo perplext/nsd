@@ -1,3 +1,6 @@
+//go:build secure
+// +build secure
+
 package main
 
 import (

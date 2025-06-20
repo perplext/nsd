@@ -1,3 +1,6 @@
+//go:build improved
+// +build improved
+
 package main
 
 import (

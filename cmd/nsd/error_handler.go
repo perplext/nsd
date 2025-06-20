@@ -1,12 +1,14 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
+	"runtime"
 	"runtime/debug"
 	
-	"github.com/perplext/nsd/pkg/errors"
+	pkgerrors "github.com/perplext/nsd/pkg/errors"
 )
 
 // setupErrorHandling configures global error handling
@@ -47,13 +49,13 @@ func handleStartupError(phase string, err error) {
 	// Format error message based on type
 	var message string
 	switch {
-	case errors.Is(err, errors.ErrPermissionDenied):
+	case errors.Is(err, pkgerrors.ErrPermissionDenied):
 		message = fmt.Sprintf("Permission denied during %s. Please run as root/administrator.", phase)
-	case errors.Is(err, errors.ErrInterfaceNotFound):
+	case errors.Is(err, pkgerrors.ErrInterfaceNotFound):
 		message = fmt.Sprintf("Network interface not found during %s. Please check the interface name.", phase)
-	case errors.Is(err, errors.ErrInvalidConfig):
+	case errors.Is(err, pkgerrors.ErrInvalidConfig):
 		message = fmt.Sprintf("Invalid configuration during %s: %v", phase, err)
-	case errors.Is(err, errors.ErrPluginLoadFailed):
+	case errors.Is(err, pkgerrors.ErrPluginLoadFailed):
 		message = fmt.Sprintf("Failed to load plugin during %s: %v", phase, err)
 	default:
 		message = fmt.Sprintf("Error during %s: %v", phase, err)
@@ -72,19 +74,19 @@ func suggestRecovery(phase string, err error) {
 	fmt.Fprintln(os.Stderr, "\nSuggestions:")
 	
 	switch {
-	case errors.Is(err, errors.ErrPermissionDenied):
+	case errors.Is(err, pkgerrors.ErrPermissionDenied):
 		fmt.Fprintln(os.Stderr, "  - Run with sudo or as administrator")
 		fmt.Fprintln(os.Stderr, "  - Check if the binary has the necessary capabilities")
 		
-	case errors.Is(err, errors.ErrInterfaceNotFound):
+	case errors.Is(err, pkgerrors.ErrInterfaceNotFound):
 		fmt.Fprintln(os.Stderr, "  - List available interfaces with: nsd --list-interfaces")
 		fmt.Fprintln(os.Stderr, "  - Use -i flag to specify an interface")
 		
-	case errors.Is(err, errors.ErrInvalidConfig):
+	case errors.Is(err, pkgerrors.ErrInvalidConfig):
 		fmt.Fprintln(os.Stderr, "  - Check your configuration file syntax")
 		fmt.Fprintln(os.Stderr, "  - Run with --validate-config to check configuration")
 		
-	case errors.Is(err, errors.ErrPluginLoadFailed):
+	case errors.Is(err, pkgerrors.ErrPluginLoadFailed):
 		fmt.Fprintln(os.Stderr, "  - Verify the plugin file exists and is readable")
 		fmt.Fprintln(os.Stderr, "  - Ensure the plugin was compiled with the same Go version")
 		fmt.Fprintln(os.Stderr, "  - Check plugin compatibility with --plugin-info")
@@ -126,7 +128,7 @@ func validateEnvironment() error {
 		if os.Geteuid() != 0 {
 			// Check for CAP_NET_RAW capability
 			// This is a simplified check - real implementation would use libcap
-			return errors.ErrPermissionDenied
+			return pkgerrors.ErrPermissionDenied
 		}
 	}
 	
