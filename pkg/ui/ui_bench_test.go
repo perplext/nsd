@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"net"
 	"testing"
 	"time"
 	
@@ -50,7 +51,7 @@ func (ms *MockScreen) SetStyle(tcell.Style)                {}
 func (ms *MockScreen) ShowCursor(int, int)                 {}
 func (ms *MockScreen) HideCursor()                         {}
 func (ms *MockScreen) Size() (int, int)                    { return ms.width, ms.height }
-func (ms *MockScreen) ChannelEvents(chan tcell.Event, chan struct{}) {}
+func (ms *MockScreen) ChannelEvents(ch chan<- tcell.Event, quit <-chan struct{}) {}
 func (ms *MockScreen) PollEvent() tcell.Event              { return nil }
 func (ms *MockScreen) HasPendingEvent() bool               { return false }
 func (ms *MockScreen) PostEvent(tcell.Event) error         { return nil }
@@ -72,10 +73,26 @@ func (ms *MockScreen) SetSize(int, int)                    {}
 func (ms *MockScreen) Suspend() error                      { return nil }
 func (ms *MockScreen) Resume() error                       { return nil }
 func (ms *MockScreen) Beep() error                         { return nil }
+func (ms *MockScreen) DisableFocus()                       {}
+func (ms *MockScreen) EnableFocus()                        {}
+func (ms *MockScreen) GetClipboard()                       {}
+func (ms *MockScreen) HasKey(tcell.Key) bool               { return true }
+func (ms *MockScreen) LockRegion(x, y, width, height int, lock bool) {}
+func (ms *MockScreen) Tty() (tcell.Tty, bool)              { return nil, false }
+func (ms *MockScreen) SetClipboard([]byte)                 {}
+func (ms *MockScreen) SetCursorStyle(tcell.CursorStyle, ...tcell.Color) {}
+func (ms *MockScreen) SetTitle(string)                     {}
 
 // BenchmarkGraphRendering benchmarks graph rendering performance
 func BenchmarkGraphRendering(b *testing.B) {
-	styles := []string{"Braille", "Block", "TTY"}
+	styles := []struct {
+		style graph.GraphStyle
+		name  string
+	}{
+		{graph.StyleBraille, "Braille"},
+		{graph.StyleBlock, "Block"},
+		{graph.StyleTTY, "TTY"},
+	}
 	sizes := []struct {
 		width, height int
 		name          string
@@ -85,16 +102,16 @@ func BenchmarkGraphRendering(b *testing.B) {
 		{200, 60, "Large"},
 	}
 	
-	for _, style := range styles {
+	for _, styleInfo := range styles {
 		for _, size := range sizes {
-			b.Run(fmt.Sprintf("%s-%s", style, size.name), func(b *testing.B) {
+			b.Run(fmt.Sprintf("%s-%s", styleInfo.name, size.name), func(b *testing.B) {
 				screen := NewMockScreen(size.width, size.height)
 				g := graph.NewGraph()
-				g.SetStyle(style)
+				g.SetStyle(styleInfo.style)
 				
 				// Add test data
 				for i := 0; i < 100; i++ {
-					g.AddDataPoint(float64(i*10), float64(i*5))
+					g.AddPoint(float64(i*10))
 				}
 				
 				b.ResetTimer()
@@ -126,18 +143,19 @@ func BenchmarkVisualizationUpdate(b *testing.B) {
 	// Add test connections
 	for i := 0; i < 100; i++ {
 		conn := &netcap.Connection{
-			SrcIP:    fmt.Sprintf("192.168.1.%d", i%256),
-			DstIP:    fmt.Sprintf("10.0.0.%d", i%256),
+			SrcIP:    net.ParseIP(fmt.Sprintf("192.168.1.%d", i%256)),
+			DstIP:    net.ParseIP(fmt.Sprintf("10.0.0.%d", i%256)),
 			SrcPort:  uint16(1000 + i),
 			DstPort:  uint16(80),
 			Protocol: "TCP",
-			BytesIn:  uint64(i * 1000),
-			BytesOut: uint64(i * 500),
+			Service:  "HTTP",
+			Size:     uint64(i * 1000),
+			Packets:  uint64(i * 10),
 			LastSeen: time.Now(),
 		}
 		key := netcap.ConnectionKey{
-			SrcIP:    conn.SrcIP,
-			DstIP:    conn.DstIP,
+			SrcIP:    conn.SrcIP.String(),
+			DstIP:    conn.DstIP.String(),
 			SrcPort:  conn.SrcPort,
 			DstPort:  conn.DstPort,
 			Protocol: conn.Protocol,
@@ -311,13 +329,13 @@ func BenchmarkDashboardLayout(b *testing.B) {
 			dashboard := NewDashboard(registry, monitor)
 			
 			// Create layout
-			items := make([]DashboardItem, 0)
+			items := make([]DashboardVisualization, 0)
 			vizTypes := []string{"matrix", "heatmap", "speedometer", "sankey"}
 			
 			for row := 0; row < layout.rows; row++ {
 				for col := 0; col < layout.cols; col++ {
-					items = append(items, DashboardItem{
-						Type:    vizTypes[(row*layout.cols+col)%len(vizTypes)],
+					items = append(items, DashboardVisualization{
+						ID:      vizTypes[(row*layout.cols+col)%len(vizTypes)],
 						Row:     row,
 						Col:     col,
 						RowSpan: 1,
@@ -327,10 +345,11 @@ func BenchmarkDashboardLayout(b *testing.B) {
 			}
 			
 			dashLayout := DashboardLayout{
-				Name:  layout.name,
-				Rows:  layout.rows,
-				Cols:  layout.cols,
-				Items: items,
+				Name:           layout.name,
+				Description:    "Benchmark layout",
+				GridRows:       layout.rows,
+				GridCols:       layout.cols,
+				Visualizations: items,
 			}
 			
 			b.ResetTimer()

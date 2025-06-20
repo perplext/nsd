@@ -15,6 +15,7 @@ import (
 // ErrorDisplay handles error display in the UI
 type ErrorDisplay struct {
 	app         *tview.Application
+	pages       *tview.Pages
 	errorModal  *tview.Modal
 	errorLog    []ErrorEntry
 	maxErrors   int
@@ -30,9 +31,10 @@ type ErrorEntry struct {
 }
 
 // NewErrorDisplay creates a new error display handler
-func NewErrorDisplay(app *tview.Application) *ErrorDisplay {
+func NewErrorDisplay(app *tview.Application, pages *tview.Pages) *ErrorDisplay {
 	return &ErrorDisplay{
 		app:       app,
+		pages:     pages,
 		errorLog:  make([]ErrorEntry, 0),
 		maxErrors: 100,
 		showErrors: true,
@@ -103,20 +105,23 @@ func (ed *ErrorDisplay) showErrorModal(entry ErrorEntry) {
 		SetDoneFunc(func(buttonIndex int, buttonLabel string) {
 			switch buttonIndex {
 			case 0: // OK
-				ed.app.SetRoot(ed.app.GetFocus(), true)
+				if ed.pages != nil {
+					ed.pages.RemovePage("error")
+				}
 			case 1: // Details
 				ed.showErrorDetails(entry)
 			case 2: // Disable
 				ed.showErrors = false
-				ed.app.SetRoot(ed.app.GetFocus(), true)
+				if ed.pages != nil {
+					ed.pages.RemovePage("error")
+				}
 			}
 		})
 	
 	// Show modal
 	ed.app.QueueUpdateDraw(func() {
-		pages, ok := ed.app.GetRoot().(*tview.Pages)
-		if ok {
-			pages.AddPage("error", modal, true, true)
+		if ed.pages != nil {
+			ed.pages.AddPage("error", modal, true, true)
 		}
 	})
 }
@@ -139,13 +144,17 @@ func (ed *ErrorDisplay) showErrorDetails(entry ErrorEntry) {
 	// Add close handler
 	textView.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		if event.Key() == tcell.KeyEscape || event.Rune() == 'q' {
-			ed.app.SetRoot(ed.app.GetFocus(), true)
+			if ed.pages != nil {
+				ed.pages.RemovePage("error-details")
+			}
 			return nil
 		}
 		return event
 	})
 	
-	ed.app.SetRoot(textView, true)
+	if ed.pages != nil {
+		ed.pages.AddPage("error-details", textView, true, true)
+	}
 }
 
 // GetErrorLog returns the error log
@@ -182,9 +191,9 @@ type UIErrorHandler struct {
 }
 
 // NewUIErrorHandler creates a new UI error handler
-func NewUIErrorHandler(app *tview.Application) *UIErrorHandler {
+func NewUIErrorHandler(app *tview.Application, pages *tview.Pages) *UIErrorHandler {
 	return &UIErrorHandler{
-		display:      NewErrorDisplay(app),
+		display:      NewErrorDisplay(app, pages),
 		maxRetries:   3,
 		retryDelay:   time.Second,
 	}

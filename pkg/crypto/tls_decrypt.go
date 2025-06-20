@@ -330,9 +330,15 @@ func (t *TLSDecryptor) processClientHello(session *TLSSession, data []byte, time
 
 // processServerHello processes Server Hello message
 func (t *TLSDecryptor) processServerHello(session *TLSSession, data []byte, timestamp int64) (*DecryptedData, error) {
-	// Extract cipher suite and session ID
-	if len(data) >= 38 {
-		session.CipherSuite = uint16(data[37])<<8 | uint16(data[38])
+	// data includes handshake header
+	// Skip handshake type (1) + length (3) + version (2) + random (32) = 38 bytes
+	if len(data) >= 39 {
+		// Skip session ID
+		sessionIDLen := data[38]
+		cipherSuiteOffset := 39 + int(sessionIDLen)
+		if len(data) >= cipherSuiteOffset+2 {
+			session.CipherSuite = uint16(data[cipherSuiteOffset])<<8 | uint16(data[cipherSuiteOffset+1])
+		}
 	}
 
 	return &DecryptedData{
@@ -382,6 +388,12 @@ func (t *TLSDecryptor) processClientKeyExchange(session *TLSSession, data []byte
 			}
 		}
 	}
+	
+	// Even without decryption capability, we've seen the key exchange
+	// so we can consider the handshake complete
+	if session.State != TLSStateEstablished {
+		session.State = TLSStateEstablished
+	}
 
 	return &DecryptedData{
 		Session:     session,
@@ -430,7 +442,7 @@ func (t *TLSDecryptor) processAlert(session *TLSSession, data []byte, timestamp 
 		description := data[1]
 		
 		if level == 2 { // Fatal alert
-			session.State = TLSStateClosing
+			session.State = TLSStateClosed
 		}
 		
 		_ = description // Suppress unused variable warning
@@ -501,7 +513,8 @@ func (t *TLSDecryptor) detectContentType(data []byte) ContentType {
 	if strings.HasPrefix(dataStr, "{") || strings.HasPrefix(dataStr, "[") {
 		return ContentTypeJSON
 	}
-	if strings.HasPrefix(dataStr, "<?xml") || strings.HasPrefix(dataStr, "<html") {
+	if strings.HasPrefix(dataStr, "<?xml") || strings.HasPrefix(dataStr, "<html") || 
+	   (strings.HasPrefix(dataStr, "<") && strings.Contains(dataStr, ">")) {
 		return ContentTypeXML
 	}
 	return ContentTypeBinary

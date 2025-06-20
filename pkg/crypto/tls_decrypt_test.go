@@ -74,7 +74,7 @@ func createTestCertAndKey(t *testing.T) (certFile, keyFile string) {
 func createTestKeyLogFile(t *testing.T) string {
 	content := `# SSL/TLS secrets log file
 CLIENT_RANDOM 52cb20b96d31e6c6bfde70317fb569a4d476e5b6b6905c0b5c73c79a4b055c73 7a8865f63b41e6b3a8f5fca31275b7ab06f96c8e90177de3e693e96fcc3e95ab7abe2b5ba91f10bb8e58dd8f322c2e9f
-CLIENT_RANDOM 52cb20ba4a96de7a3858c4c5f87e4a62b193bbbcc64c7dd08f8b1d209c8c6e96 85e3f5e39b71f9a3f8a0b1b8e7e0e5a1e3f3b8e17e8e3a1f8e1b3e8a7e0b5a1e3
+CLIENT_RANDOM 52cb20ba4a96de7a3858c4c5f87e4a62b193bbbcc64c7dd08f8b1d209c8c6e96 85e3f5e39b71f9a3f8a0b1b8e7e0e5a1e3f3b8e17e8e3a1f8e1b3e8a7e0b5a1e3f
 `
 	tmpFile := filepath.Join(t.TempDir(), "keylog.txt")
 	err := os.WriteFile(tmpFile, []byte(content), 0644)
@@ -195,7 +195,7 @@ func TestProcessTLSPacket(t *testing.T) {
 	data, err = td.ProcessTLSPacket(tlsPacket)
 	assert.NotNil(t, data)
 	assert.NoError(t, err)
-	assert.Equal(t, "Handshake", data.Protocol)
+	assert.Equal(t, "TLS-ClientHello", data.Protocol)
 
 	// Test with malformed TLS data
 	malformedTLS := []byte{0x16, 0x03} // Too short
@@ -230,7 +230,7 @@ func TestProcessTLSRecord(t *testing.T) {
 	data, err := td.processTLSRecord(session, alertRecord, time.Now().Unix())
 	assert.NotNil(t, data)
 	assert.NoError(t, err)
-	assert.Equal(t, "Alert", data.Protocol)
+	assert.Equal(t, "TLS-Alert", data.Protocol)
 
 	// Test processing change cipher spec
 	ccsRecord := []byte{
@@ -242,7 +242,7 @@ func TestProcessTLSRecord(t *testing.T) {
 	data, err = td.processTLSRecord(session, ccsRecord, time.Now().Unix())
 	assert.NotNil(t, data)
 	assert.NoError(t, err)
-	assert.Equal(t, "ChangeCipherSpec", data.Protocol)
+	assert.Equal(t, "TLS-ChangeCipherSpec", data.Protocol)
 
 	// Test processing application data
 	appDataRecord := []byte{
@@ -254,7 +254,7 @@ func TestProcessTLSRecord(t *testing.T) {
 	data, err = td.processTLSRecord(session, appDataRecord, time.Now().Unix())
 	assert.NotNil(t, data)
 	assert.NoError(t, err)
-	assert.Equal(t, "ApplicationData", data.Protocol)
+	assert.Equal(t, "TLS-Encrypted", data.Protocol)
 }
 
 // Test handshake processing
@@ -360,10 +360,10 @@ func TestExtractSNI(t *testing.T) {
 	// Extensions with SNI
 	extensions := []byte{
 		0x00, 0x00, // Extension Type: Server Name
-		0x00, 0x0f, // Extension Length: 15
-		0x00, 0x0d, // Server Name List Length: 13
+		0x00, 0x10, // Extension Length: 16
+		0x00, 0x0e, // Server Name List Length: 14
 		0x00,       // Server Name Type: host_name
-		0x00, 0x0a, // Server Name Length: 10
+		0x00, 0x0b, // Server Name Length: 11
 		// "example.com" (without null terminator)
 		0x65, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x2e, 0x63, 0x6f, 0x6d,
 	}

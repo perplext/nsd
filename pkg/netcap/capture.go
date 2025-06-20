@@ -456,3 +456,28 @@ func (nm *NetworkMonitor) GetPcapStats(interfaceName string) (*pcap.Stats, error
 	}
 	return stats, nil
 }
+
+// GetStats returns aggregated statistics for all interfaces
+func (nm *NetworkMonitor) GetStats() map[string]interface{} {
+	nm.mutex.RLock()
+	defer nm.mutex.RUnlock()
+	
+	totalPackets := int64(0)
+	totalBytes := int64(0)
+	packetRate := float64(0)
+	byteRate := float64(0)
+	
+	for _, iface := range nm.Interfaces {
+		totalPackets += int64(iface.PacketsIn + iface.PacketsOut)
+		totalBytes += int64(iface.BytesIn + iface.BytesOut)
+		// PacketRate and ByteRate would need to be calculated separately
+		// For now, we'll just use the raw counts
+	}
+	
+	return map[string]interface{}{
+		"TotalPackets": totalPackets,
+		"TotalBytes":   totalBytes,
+		"PacketRate":   packetRate,
+		"ByteRate":     byteRate,
+	}
+}

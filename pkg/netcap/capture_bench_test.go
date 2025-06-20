@@ -14,6 +14,53 @@ import (
 	"github.com/perplext/nsd/pkg/resource"
 )
 
+// generateTestPackets creates test packets for benchmarking
+func generateTestPackets(count int) []gopacket.Packet {
+	packets := make([]gopacket.Packet, count)
+	
+	for i := 0; i < count; i++ {
+		// Create a simple TCP packet
+		eth := &layers.Ethernet{
+			SrcMAC:       []byte{0x00, 0x01, 0x02, 0x03, 0x04, 0x05},
+			DstMAC:       []byte{0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b},
+			EthernetType: layers.EthernetTypeIPv4,
+		}
+		
+		ip := &layers.IPv4{
+			Version:  4,
+			IHL:      5,
+			TOS:      0,
+			Length:   40,
+			TTL:      64,
+			Protocol: layers.IPProtocolTCP,
+			SrcIP:    []byte{192, 168, 1, byte(i % 256)},
+			DstIP:    []byte{10, 0, 0, byte(i % 256)},
+		}
+		
+		tcp := &layers.TCP{
+			SrcPort: layers.TCPPort(1000 + i%1000),
+			DstPort: layers.TCPPort(80),
+			Seq:     uint32(i * 1000),
+			Ack:     uint32(i * 1000),
+			Window:  65535,
+		}
+		tcp.SetNetworkLayerForChecksum(ip)
+		
+		// Serialize to create packet
+		buf := gopacket.NewSerializeBuffer()
+		opts := gopacket.SerializeOptions{
+			ComputeChecksums: true,
+			FixLengths:       true,
+		}
+		
+		gopacket.SerializeLayers(buf, opts, eth, ip, tcp)
+		packet := gopacket.NewPacket(buf.Bytes(), layers.LayerTypeEthernet, gopacket.Default)
+		packets[i] = packet
+	}
+	
+	return packets
+}
+
 // BenchmarkPacketProcessing benchmarks packet processing performance
 func BenchmarkPacketProcessing(b *testing.B) {
 	nm := NewNetworkMonitor()
