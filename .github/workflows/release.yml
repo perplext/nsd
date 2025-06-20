@@ -339,7 +339,7 @@ jobs:
     if: "!contains(github.ref, '-rc') && !contains(github.ref, '-beta')"
     steps:
       - name: Update Homebrew formula
-        uses: dawidd6/action-homebrew-bump-formula@v3
+        uses: dawidd6/action-homebrew-bump-formula@v5
         with:
           token: ${{ secrets.HOMEBREW_GITHUB_TOKEN }}
           formula: nsd
