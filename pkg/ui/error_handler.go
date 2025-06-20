@@ -16,7 +16,6 @@ import (
 type ErrorDisplay struct {
 	app         *tview.Application
 	pages       *tview.Pages
-	errorModal  *tview.Modal
 	errorLog    []ErrorEntry
 	maxErrors   int
 	showErrors  bool
