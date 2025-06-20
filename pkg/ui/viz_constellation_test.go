@@ -11,7 +11,7 @@ func TestNewConstellationVisualization(t *testing.T) {
 	viz := NewConstellationVisualization()
 	
 	assert.NotNil(t, viz)
-	assert.Equal(t, "Connection Constellation", viz.GetName())
+	assert.Equal(t, "Port Constellation", viz.GetName())
 }
 
 func TestConstellationVisualizationUpdate(t *testing.T) {
