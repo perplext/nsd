@@ -59,7 +59,9 @@ func main() {
 	var enableProtocolAnalysis bool
 	var protocolFilters string
 	var showVersion bool
+	var listInterfaces bool
 	flag.StringVar(&interfaceName, "i", "", i18n.T("flag_i_desc"))
+	flag.BoolVar(&listInterfaces, "list-interfaces", false, "List available network interfaces and exit")
 	flag.StringVar(&themeName, "theme", "Dark+", i18n.T("flag_theme_desc"))
 	flag.StringVar(&themeFile, "theme-file", "", i18n.T("flag_theme_file_desc"))
 	flag.BoolVar(&autoTheme, "auto-theme", false, i18n.T("flag_auto_theme_desc"))
@@ -97,6 +99,20 @@ func main() {
 		os.Exit(0)
 	}
 
+	// Handle list interfaces flag
+	if listInterfaces {
+		interfaces, err := netcap.ListWindowsInterfaces()
+		if err != nil {
+			fmt.Printf("Error listing network interfaces: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Println("Available network interfaces:")
+		for _, iface := range interfaces {
+			fmt.Println("  " + iface)
+		}
+		os.Exit(0)
+	}
+
 	// Load translations if provided
 	if translationFile != "" {
 		if err := i18n.LoadTranslations(translationFile); err != nil {
@@ -111,7 +127,7 @@ func main() {
 	}
 
 	// Check for root/admin privileges
-	if os.Geteuid() != 0 {
+	if !checkPrivileges() {
 		fmt.Println(i18n.T("requires_root"))
 		fmt.Println(i18n.T("run_as_root"))
 		os.Exit(1)

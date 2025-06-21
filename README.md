@@ -16,16 +16,15 @@ Check out the `docs/ui_preview.txt` file for a preview of the terminal UI, inclu
 - Detailed connection information (source, destination, protocol, etc.)
 - Interactive terminal UI with btop-like look and feel
 - Promiscuous mode for capturing all network traffic
-- Cross-platform support (Linux, macOS - Windows support coming soon)
+- Cross-platform support (Linux, macOS, Windows)
 
 ## Requirements
 
-- Go 1.23 or higher
+- Go 1.24 or higher
 - libpcap development files (for packet capture)
   - On Ubuntu/Debian: `sudo apt-get install libpcap-dev`
   - On macOS: Included with the OS or install via Homebrew: `brew install libpcap`
-
-**Note**: Windows support is under development and will be available in a future release.
+  - On Windows: Install [Npcap](https://npcap.com/#download) (see [Windows Installation Guide](docs/WINDOWS.md))
 
 ## Installation
 
