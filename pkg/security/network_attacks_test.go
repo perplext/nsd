@@ -33,7 +33,7 @@ func createARPPacket(operation uint16, senderMAC, targetMAC net.HardwareAddr, se
 
 	buf := gopacket.NewSerializeBuffer()
 	opts := gopacket.SerializeOptions{FixLengths: true, ComputeChecksums: true}
-	gopacket.SerializeLayers(buf, opts, &eth, &arp)
+	_ = gopacket.SerializeLayers(buf, opts, &eth, &arp)
 
 	return gopacket.NewPacket(buf.Bytes(), layers.LayerTypeEthernet, gopacket.Default)
 }
@@ -76,8 +76,8 @@ func createDHCPPacket(msgType layers.DHCPMsgType, clientMAC net.HardwareAddr) go
 
 	buf := gopacket.NewSerializeBuffer()
 	opts := gopacket.SerializeOptions{FixLengths: true, ComputeChecksums: true}
-	udp.SetNetworkLayerForChecksum(&ip)
-	gopacket.SerializeLayers(buf, opts, &eth, &ip, &udp, &dhcp)
+	_ = udp.SetNetworkLayerForChecksum(&ip)
+	_ = gopacket.SerializeLayers(buf, opts, &eth, &ip, &udp, &dhcp)
 
 	return gopacket.NewPacket(buf.Bytes(), layers.LayerTypeEthernet, gopacket.Default)
 }
@@ -119,8 +119,8 @@ func createDNSPacket(query string, qtype layers.DNSType) gopacket.Packet {
 
 	buf := gopacket.NewSerializeBuffer()
 	opts := gopacket.SerializeOptions{FixLengths: true, ComputeChecksums: true}
-	udp.SetNetworkLayerForChecksum(&ip)
-	gopacket.SerializeLayers(buf, opts, &eth, &ip, &udp, &dns)
+	_ = udp.SetNetworkLayerForChecksum(&ip)
+	_ = gopacket.SerializeLayers(buf, opts, &eth, &ip, &udp, &dns)
 
 	return gopacket.NewPacket(buf.Bytes(), layers.LayerTypeEthernet, gopacket.Default)
 }
@@ -272,8 +272,8 @@ func TestNetworkAttackDetector_DNSSpoofing(t *testing.T) {
 
 		buf := gopacket.NewSerializeBuffer()
 		opts := gopacket.SerializeOptions{FixLengths: true, ComputeChecksums: true}
-		udp.SetNetworkLayerForChecksum(&ip)
-		gopacket.SerializeLayers(buf, opts, &eth, &ip, &udp, &dns)
+		_ = udp.SetNetworkLayerForChecksum(&ip)
+		_ = gopacket.SerializeLayers(buf, opts, &eth, &ip, &udp, &dns)
 
 		packet := gopacket.NewPacket(buf.Bytes(), layers.LayerTypeEthernet, gopacket.Default)
 		detector.ProcessPacket(packet)
@@ -347,7 +347,7 @@ func TestNetworkAttackDetector_VLANHopping(t *testing.T) {
 
 	buf := gopacket.NewSerializeBuffer()
 	opts := gopacket.SerializeOptions{FixLengths: true, ComputeChecksums: true}
-	gopacket.SerializeLayers(buf, opts, &eth, &vlan, &ip, &tcp)
+	_ = gopacket.SerializeLayers(buf, opts, &eth, &vlan, &ip, &tcp)
 
 	packet := gopacket.NewPacket(buf.Bytes(), layers.LayerTypeEthernet, gopacket.Default)
 	detector.ProcessPacket(packet)
@@ -378,7 +378,7 @@ func TestNetworkAttackDetector_MACFlooding(t *testing.T) {
 
 		buf := gopacket.NewSerializeBuffer()
 		opts := gopacket.SerializeOptions{FixLengths: true, ComputeChecksums: true}
-		gopacket.SerializeLayers(buf, opts, &eth, &ip)
+		_ = gopacket.SerializeLayers(buf, opts, &eth, &ip)
 
 		packet := gopacket.NewPacket(buf.Bytes(), layers.LayerTypeEthernet, gopacket.Default)
 		detector.ProcessPacket(packet)

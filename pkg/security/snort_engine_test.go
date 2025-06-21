@@ -52,7 +52,7 @@ func TestSnortEngine_ProcessPacket(t *testing.T) {
 		
 		buf := gopacket.NewSerializeBuffer()
 		opts := gopacket.SerializeOptions{FixLengths: true, ComputeChecksums: true}
-		gopacket.SerializeLayers(buf, opts, &eth, &ip, &tcp)
+		_ = gopacket.SerializeLayers(buf, opts, &eth, &ip, &tcp)
 		
 		scanPacket := gopacket.NewPacket(buf.Bytes(), layers.LayerTypeEthernet, gopacket.Default)
 		_ = engine.ProcessPacket(scanPacket)
