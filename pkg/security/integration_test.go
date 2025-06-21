@@ -72,7 +72,7 @@ func TestSecurityIntegration(t *testing.T) {
 		tmpFile, err := os.CreateTemp("", "nsd-security-*.json")
 		require.NoError(t, err)
 		defer os.Remove(tmpFile.Name())
-		tmpFile.Close()
+		_ = tmpFile.Close()
 		
 		// Save config
 		config := DefaultConfig()

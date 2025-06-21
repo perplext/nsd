@@ -365,7 +365,7 @@ func (se *SigmaEngine) loadDefaultRules() {
 	
 	// Compile rules
 	for i := range defaultRules {
-		se.compileRule(&defaultRules[i])
+		_ = se.compileRule(&defaultRules[i])
 		se.rules = append(se.rules, defaultRules[i])
 	}
 }

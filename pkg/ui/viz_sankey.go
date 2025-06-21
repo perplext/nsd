@@ -154,10 +154,10 @@ func (s *SankeyVisualization) Update(monitor *netcap.NetworkMonitor) {
 				line = fmt.Sprintf("%-15s ═══╗", srcDisplay)
 			} else if j == len(dests)-1 && i < len(sources)-1 {
 				// Last destination - prepare for next source
-				line = fmt.Sprintf("                ═╦═╝")
+				line = "                ═╦═╝"
 			} else {
 				// Middle destinations
-				line = fmt.Sprintf("                ═╬══")
+				line = "                ═╬══"
 			}
 			
 			// Add destination and traffic bar

@@ -2,7 +2,6 @@ package protocols
 
 import (
 	"bufio"
-	"io"
 	"strings"
 	"testing"
 
@@ -147,25 +146,6 @@ func TestGenerateEventID(t *testing.T) {
 	assert.NotEqual(t, id1, id2) // Should be unique
 }
 
-// Mock reader stream for testing
-type mockReaderStream struct {
-	data   []byte
-	closed bool
-}
-
-func (m *mockReaderStream) Read(p []byte) (n int, err error) {
-	if m.closed || len(m.data) == 0 {
-		return 0, io.EOF
-	}
-	n = copy(p, m.data)
-	m.data = m.data[n:]
-	return n, nil
-}
-
-func (m *mockReaderStream) Close() error {
-	m.closed = true
-	return nil
-}
 
 // Test stream analysis with mock data
 func TestFTPStreamAnalysis(t *testing.T) {

@@ -83,7 +83,7 @@ func (w *WeatherMapVisualization) Update(monitor *netcap.NetworkMonitor) {
 	var output strings.Builder
 	
 	// Weather header
-	output.WriteString(fmt.Sprintf("┌─────────────────────────────────┐\n"))
+	output.WriteString("┌─────────────────────────────────┐\n")
 	output.WriteString(fmt.Sprintf("│ Network Weather: %s  %-11s│\n", emoji, weather))
 	output.WriteString(fmt.Sprintf("├─────────────────────────────────┤\n"))
 	
