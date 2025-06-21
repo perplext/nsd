@@ -8,7 +8,6 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -79,7 +78,6 @@ type UI struct {
 	plugins           []PluginInfo
 	pluginView        *tview.TextView
 	selectedPlugin    int
-	uiMutex           sync.Mutex   // Protect UI operations
 	borderStyle       string       // Current border style
 	borderAnimation   string       // Border animation type
 	animationTicker   *time.Ticker // Animation update ticker
@@ -96,8 +94,6 @@ type panel struct {
 	primitive tview.Primitive
 	visible   bool
 	row, col, rowSpan, colSpan int
-	borderStyle string // Custom border style for this panel
-	borderAnimation string // Custom animation for this panel
 }
 
 // PluginInfo stores information about a loaded plugin
@@ -1073,79 +1069,6 @@ func (ui *UI) showIfaceStatsPage() {
     })
     ui.pages.AddPage("ifaceStats", table, true, true)
     ui.app.SetFocus(table)
-}
-
-// showHistPage displays a packet-size histogram
-func (ui *UI) showHistPage() {
-    ui.pages.RemovePage("hist")
-    buf := ui.networkMonitor.GetPacketBuffer()
-    var sb strings.Builder
-    if len(buf) == 0 {
-        sb.WriteString("[yellow]" + i18n.T("no_packets_captured") + "\n")
-    } else {
-        buckets := []int{64, 128, 256, 512, 1024, 1500}
-        labels := []string{i18n.T("lt_64"), i18n.T("64_127"), i18n.T("128_255"), i18n.T("256_511"), i18n.T("512_1023"), i18n.T("gte_1024")}
-        counts := make([]int, len(buckets))
-        for _, p := range buf {
-            l := int(p.Length)
-            idx := len(buckets) - 1
-            for i, th := range buckets {
-                if l < th { idx = i; break }
-            }
-            counts[idx]++
-        }
-        maxCount := 0
-        for _, c := range counts { if c > maxCount { maxCount = c } }
-        barWidth := 50
-        for i, label := range labels {
-            bar := ""
-            if maxCount > 0 {
-                w := int(math.Round(float64(counts[i]) * float64(barWidth) / float64(maxCount)))
-                bar = strings.Repeat("█", w)
-            }
-            sb.WriteString(fmt.Sprintf("%-10s |%s (%d)\n", label, bar, counts[i]))
-        }
-    }
-    ui.histView.SetText(sb.String())
-    ui.histView.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-        if event.Key() == tcell.KeyEscape {
-            ui.pages.SwitchToPage("main")
-            return nil
-        }
-        return event
-    })
-    ui.pages.AddPage("hist", ui.histView, true, true)
-    ui.app.SetFocus(ui.histView)
-}
-
-// showDnsHttpPage displays HTTP and DNS packet counts
-func (ui *UI) showDnsHttpPage() {
-    ui.pages.RemovePage("dnsHttp")
-    buf := ui.networkMonitor.GetPacketBuffer()
-    httpCount, httpsCount, dnsCount := 0, 0, 0
-    for _, p := range buf {
-        switch p.Service {
-        case "HTTP": httpCount++
-        case "HTTPS": httpsCount++
-        case "DNS": dnsCount++
-        }
-    }
-    text := fmt.Sprintf(
-        "[green]" + i18n.T("http") + ":[white] %d\n"+
-        "[green]" + i18n.T("https") + ":[white] %d\n"+
-        "[green]" + i18n.T("dns") + ":[white] %d\n",
-        httpCount, httpsCount, dnsCount,
-    )
-    ui.dnsHttpView.SetText(text)
-    ui.dnsHttpView.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-        if event.Key() == tcell.KeyEscape {
-            ui.pages.SwitchToPage("main")
-            return nil
-        }
-        return event
-    })
-    ui.pages.AddPage("dnsHttp", ui.dnsHttpView, true, true)
-    ui.app.SetFocus(ui.dnsHttpView)
 }
 
 // showGeoPage displays enhanced geographic visualization
@@ -3217,97 +3140,6 @@ func (ui *UI) buildAdvancedFilter(srcIP, dstIP, port, protocol, service, minSize
     }
     
     return strings.Join(filters, " ")
-}
-
-// matchesAdvancedFilter checks if a connection matches the advanced filter
-func (ui *UI) matchesAdvancedFilter(conn *netcap.Connection, filter string) bool {
-    if filter == "" {
-        return true
-    }
-    
-    // Parse filter components
-    parts := strings.Fields(filter)
-    for _, part := range parts {
-        if !ui.matchesFilterPart(conn, part) {
-            return false
-        }
-    }
-    
-    return true
-}
-
-// matchesFilterPart checks if a connection matches a single filter part
-func (ui *UI) matchesFilterPart(conn *netcap.Connection, part string) bool {
-    // Handle key:value filters
-    if strings.Contains(part, ":") {
-        kv := strings.SplitN(part, ":", 2)
-        if len(kv) != 2 {
-            return true
-        }
-        
-        key, value := kv[0], kv[1]
-        switch key {
-        case "src":
-            return ui.matchesIPPattern(conn.SrcIP.String(), value)
-        case "dst":
-            return ui.matchesIPPattern(conn.DstIP.String(), value)
-        case "port":
-            ports := strings.Split(value, ",")
-            for _, p := range ports {
-                if fmt.Sprintf("%d", conn.SrcPort) == p || fmt.Sprintf("%d", conn.DstPort) == p {
-                    return true
-                }
-            }
-            return false
-        case "proto":
-            return strings.EqualFold(conn.Protocol, value)
-        case "svc":
-            services := strings.Split(value, ",")
-            for _, s := range services {
-                if strings.EqualFold(conn.Service, s) {
-                    return true
-                }
-            }
-            return false
-        }
-    }
-    
-    // Handle size comparisons
-    if strings.HasPrefix(part, "size>") {
-        size, err := strconv.ParseUint(part[5:], 10, 64)
-        if err == nil {
-            return conn.Size > size
-        }
-    }
-    if strings.HasPrefix(part, "size<") {
-        size, err := strconv.ParseUint(part[5:], 10, 64)
-        if err == nil {
-            return conn.Size < size
-        }
-    }
-    
-    // Default text search (legacy)
-    return strings.Contains(strings.ToLower(conn.SrcIP.String()), strings.ToLower(part)) ||
-           strings.Contains(strings.ToLower(conn.DstIP.String()), strings.ToLower(part)) ||
-           strings.Contains(strings.ToLower(conn.Service), strings.ToLower(part))
-}
-
-// matchesIPPattern checks if an IP matches a pattern (supports wildcards)
-func (ui *UI) matchesIPPattern(ip, pattern string) bool {
-    patterns := strings.Split(pattern, ",")
-    for _, p := range patterns {
-        p = strings.TrimSpace(p)
-        if strings.Contains(p, "*") {
-            // Convert wildcard to simple prefix match
-            prefix := strings.TrimSuffix(p, "*")
-            if strings.HasPrefix(ip, prefix) {
-                return true
-            }
-        } else if ip == p {
-            return true
-        }
-    }
-    return false
 }
 
 // getProfilesDir returns the directory for storing UI profiles
