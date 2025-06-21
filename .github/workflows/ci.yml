@@ -190,23 +190,27 @@ jobs:
 
   build:
     name: Build
-    runs-on: ubuntu-latest
     needs: [lint, test]
     permissions:
       contents: read
     strategy:
       matrix:
         include:
-          - goos: linux
+          # Native builds only - CGO doesn't support cross-compilation easily
+          - os: ubuntu-latest
+            goos: linux
             goarch: amd64
-          - goos: linux
+          - os: macos-latest
+            goos: darwin
+            goarch: amd64
+          - os: macos-13
+            goos: darwin
+            goarch: amd64
+          # For arm64, we need to use macos-latest which runs on M1
+          - os: macos-latest
+            goos: darwin
             goarch: arm64
-          - goos: darwin
-            goarch: amd64
-          - goos: darwin
-            goarch: arm64
-          - goos: windows
-            goarch: amd64
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -217,21 +221,25 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
           cache: true
 
-      - name: Install dependencies
+      - name: Install libpcap (Linux)
+        if: startsWith(matrix.os, 'ubuntu')
         run: |
           sudo apt-get update
           sudo apt-get install -y libpcap-dev
 
+      - name: Install libpcap (macOS)
+        if: startsWith(matrix.os, 'macos')
+        run: |
+          brew install libpcap
+          # Set pkg-config path for libpcap
+          echo "PKG_CONFIG_PATH=/opt/homebrew/opt/libpcap/lib/pkgconfig:/usr/local/opt/libpcap/lib/pkgconfig:$PKG_CONFIG_PATH" >> $GITHUB_ENV
+
       - name: Build binary
         env:
-          GOOS: ${{ matrix.goos }}
-          GOARCH: ${{ matrix.goarch }}
-          CGO_ENABLED: 0
+          CGO_ENABLED: 1
         run: |
+          # Build native binary only
           output_name="nsd-${{ matrix.goos }}-${{ matrix.goarch }}"
-          if [ "${{ matrix.goos }}" = "windows" ]; then
-            output_name="${output_name}.exe"
-          fi
           go build -ldflags="-s -w -X main.version=${{ github.sha }}" -o "bin/${output_name}" ./cmd/nsd
 
       - name: Upload artifacts

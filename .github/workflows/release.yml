@@ -12,7 +12,7 @@ on:
         type: string
 
 env:
-  GO_VERSION: '1.21'
+  GO_VERSION: '1.24'
 
 jobs:
   create-release:
@@ -165,6 +165,7 @@ jobs:
       - name: Build binary
         env:
           GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: 1
         run: |
           VERSION=${{ needs.create-release.outputs.version }}
           output_name="nsd-${{ matrix.goos }}-${{ matrix.goarch }}"
