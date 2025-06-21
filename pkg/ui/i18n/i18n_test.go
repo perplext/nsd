@@ -6,9 +6,9 @@ import (
 )
 
 func TestLoadTranslations(t *testing.T) {
-    // prepare a temp JSON translation file
+    // prepare a temp JSON translation file in current directory for security validation
     jsonData := `{ "test_key": "translated", "requires_root": "Please run as root (translated)" }`
-    f, err := os.CreateTemp("", "trans_*.json")
+    f, err := os.CreateTemp(".", "trans_*.json")
     if err != nil {
         t.Fatalf("failed to create temp file: %v", err)
     }

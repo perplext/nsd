@@ -12,7 +12,7 @@ on:
         type: string
 
 env:
-  GO_VERSION: '1.24'
+  GO_VERSION: '1.21'
 
 jobs:
   create-release:
@@ -21,7 +21,7 @@ jobs:
     permissions:
       contents: write
     outputs:
-      upload_url: ${{ steps.create_release.outputs.upload_url }}
+      upload_url: ${{ steps.get_upload_url.outputs.upload_url }}
       version: ${{ steps.get_version.outputs.version }}
     steps:
       - name: Checkout code
@@ -47,8 +47,22 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Check if release exists
+        id: check_release
+        run: |
+          if gh release view "${{ steps.get_version.outputs.version }}" >/dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            UPLOAD_URL=$(gh release view "${{ steps.get_version.outputs.version }}" --json uploadUrl -q .uploadUrl)
+            echo "upload_url=${UPLOAD_URL}" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Create Release
         id: create_release
+        if: steps.check_release.outputs.exists != 'true'
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -69,12 +83,12 @@ jobs:
             ### Linux
             ```bash
             # AMD64
-            wget https://github.com/perplext/nsd/releases/download/${{ steps.get_version.outputs.version }}/nsd-linux-amd64
+            wget https://github.com/perplext/nsd/releases/download/${{ steps.get_version.outputs.version }}/nsd-linux-amd64.tar.gz
             chmod +x nsd-linux-amd64
             sudo mv nsd-linux-amd64 /usr/local/bin/nsd
             
             # ARM64
-            wget https://github.com/perplext/nsd/releases/download/${{ steps.get_version.outputs.version }}/nsd-linux-arm64
+            wget https://github.com/perplext/nsd/releases/download/${{ steps.get_version.outputs.version }}/nsd-linux-arm64.tar.gz
             chmod +x nsd-linux-arm64
             sudo mv nsd-linux-arm64 /usr/local/bin/nsd
             ```
@@ -91,6 +105,15 @@ jobs:
             See `checksums.txt` in the release assets.
           draft: false
           prerelease: false
+      
+      - name: Get release upload URL
+        id: get_upload_url
+        run: |
+          if [ "${{ steps.check_release.outputs.exists }}" = "true" ]; then
+            echo "upload_url=${{ steps.check_release.outputs.upload_url }}" >> $GITHUB_OUTPUT
+          else
+            echo "upload_url=${{ steps.create_release.outputs.upload_url }}" >> $GITHUB_OUTPUT
+          fi
 
   build-release:
     name: Build Release Assets
