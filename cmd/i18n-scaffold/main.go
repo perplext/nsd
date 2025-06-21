@@ -4,7 +4,6 @@ import (
   "bytes"
   "encoding/json"
   "fmt"
-  "io/ioutil"
   "net/http"
   "os"
   "path/filepath"
@@ -35,7 +34,7 @@ func main() {
       continue
     }
     
-    data, err := ioutil.ReadFile(cleanPath)
+    data, err := os.ReadFile(cleanPath)
     if err != nil {
       fmt.Fprintf(os.Stderr, "Failed to read %s: %v\n", cleanPath, err)
       continue
@@ -76,7 +75,7 @@ func main() {
       continue
     }
     // Use secure permissions for generated translation files
-    if err := ioutil.WriteFile(f, append(b, '\n'), 0600); err != nil {
+    if err := os.WriteFile(f, append(b, '\n'), 0600); err != nil {
       fmt.Fprintf(os.Stderr, "Failed to write %s: %v\n", f, err)
       continue
     }

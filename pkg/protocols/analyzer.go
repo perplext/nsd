@@ -157,7 +157,7 @@ type protocolStream struct {
 }
 
 func (stream *protocolStream) run() {
-	defer stream.r.Close()
+	defer func() { _ = stream.r.Close() }()
 	
 	// Determine which protocol analyzer to use based on port
 	// FastHash returns uint64, we need to safely convert to uint16

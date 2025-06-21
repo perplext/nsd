@@ -131,7 +131,7 @@ func TestSafeFileOperations(t *testing.T) {
 			t.Errorf("Unexpected error: %v", err)
 		}
 		if file != nil {
-			file.Close()
+			_ = file.Close()
 		}
 		
 		// Test opening file outside allowed directory
@@ -173,7 +173,7 @@ func TestSafeFileOperations(t *testing.T) {
 			t.Errorf("Unexpected error: %v", err)
 		}
 		if file != nil {
-			file.Close()
+			_ = file.Close()
 		}
 		
 		// Test creating file outside allowed directory

@@ -217,7 +217,7 @@ func (db *DashboardBuilder) addSelectedVisualization() {
 				layout.GridRows = db.gridRows
 				layout.GridCols = db.gridCols
 				
-				db.dashboard.SetLayout(layout)
+				_ = db.dashboard.SetLayout(layout)
 				db.updateDashboard()
 				return
 			}
@@ -245,7 +245,7 @@ func (db *DashboardBuilder) clearDashboard() {
 		GridCols: db.gridCols,
 		Visualizations: []DashboardVisualization{},
 	}
-	db.dashboard.SetLayout(layout)
+	_ = db.dashboard.SetLayout(layout)
 	db.updateDashboard()
 }
 
@@ -264,7 +264,7 @@ func (db *DashboardBuilder) applyGridConfiguration() {
 	}
 	layout.Visualizations = newVizs
 	
-	db.dashboard.SetLayout(layout)
+	_ = db.dashboard.SetLayout(layout)
 	db.updateDashboard()
 }
 

@@ -308,7 +308,7 @@ func ShadeBlock(ratio float64) rune {
 // Draw draws the graph
 func (g *Graph) Draw(screen tcell.Screen) {
 	// Draw the box
-	g.Box.DrawForSubclass(screen, g)
+	g.DrawForSubclass(screen, g)
 
 	g.mutex.RLock()
 	defer g.mutex.RUnlock()
@@ -966,7 +966,7 @@ func (mg *MultiGraph) SetGradientEnabled(enabled bool) *MultiGraph {
 
 // Draw draws the multi-graph
 func (mg *MultiGraph) Draw(screen tcell.Screen) {
-	mg.Box.DrawForSubclass(screen, mg)
+	mg.DrawForSubclass(screen, mg)
 	
 	x, y, width, height := mg.GetInnerRect()
 	

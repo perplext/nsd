@@ -54,11 +54,11 @@ func TestProcessPacket(t *testing.T) {
 		Window:  1024,
 	}
 	
-	tcp.SetNetworkLayerForChecksum(&ip)
+	_ = tcp.SetNetworkLayerForChecksum(&ip)
 	
 	buf := gopacket.NewSerializeBuffer()
 	opts := gopacket.SerializeOptions{FixLengths: true, ComputeChecksums: true}
-	gopacket.SerializeLayers(buf, opts, &eth, &ip, &tcp)
+	_ = gopacket.SerializeLayers(buf, opts, &eth, &ip, &tcp)
 	
 	packet := gopacket.NewPacket(buf.Bytes(), layers.LayerTypeEthernet, gopacket.Default)
 	
@@ -102,11 +102,11 @@ func TestProcessPacketNonTCP(t *testing.T) {
 		DstPort: 53,
 	}
 	
-	udp.SetNetworkLayerForChecksum(&ip)
+	_ = udp.SetNetworkLayerForChecksum(&ip)
 	
 	buf := gopacket.NewSerializeBuffer()
 	opts := gopacket.SerializeOptions{FixLengths: true, ComputeChecksums: true}
-	gopacket.SerializeLayers(buf, opts, &eth, &ip, &udp)
+	_ = gopacket.SerializeLayers(buf, opts, &eth, &ip, &udp)
 	
 	packet := gopacket.NewPacket(buf.Bytes(), layers.LayerTypeEthernet, gopacket.Default)
 	
@@ -188,11 +188,11 @@ func TestProtocolManagerConcurrency(t *testing.T) {
 				Window:  1024,
 			}
 			
-			tcp.SetNetworkLayerForChecksum(&ip)
+			_ = tcp.SetNetworkLayerForChecksum(&ip)
 			
 			buf := gopacket.NewSerializeBuffer()
 			opts := gopacket.SerializeOptions{FixLengths: true, ComputeChecksums: true}
-			gopacket.SerializeLayers(buf, opts, &eth, &ip, &tcp)
+			_ = gopacket.SerializeLayers(buf, opts, &eth, &ip, &tcp)
 			
 			packet := gopacket.NewPacket(buf.Bytes(), layers.LayerTypeEthernet, gopacket.Default)
 			pm.ProcessPacket(packet)
@@ -394,13 +394,13 @@ func BenchmarkProcessPacket(b *testing.B) {
 		Window:  1024,
 	}
 	
-	tcp.SetNetworkLayerForChecksum(&ip)
+	_ = tcp.SetNetworkLayerForChecksum(&ip)
 	
 	payload := []byte("USER anonymous\r\n")
 	
 	buf := gopacket.NewSerializeBuffer()
 	opts := gopacket.SerializeOptions{FixLengths: true, ComputeChecksums: true}
-	gopacket.SerializeLayers(buf, opts, &eth, &ip, &tcp, gopacket.Payload(payload))
+	_ = gopacket.SerializeLayers(buf, opts, &eth, &ip, &tcp, gopacket.Payload(payload))
 	
 	packet := gopacket.NewPacket(buf.Bytes(), layers.LayerTypeEthernet, gopacket.Default)
 	

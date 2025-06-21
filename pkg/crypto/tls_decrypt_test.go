@@ -555,7 +555,7 @@ func BenchmarkProcessTLSPacket(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		td.ProcessTLSPacket(packet)
+		_, _ = td.ProcessTLSPacket(packet)
 	}
 }
 

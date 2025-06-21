@@ -99,12 +99,12 @@ func TestUI_ExportEmptyData(t *testing.T) {
 	
 	// Test SVG export with no data
 	svgPath := filepath.Join(tmpDir, "empty.svg")
-	err = ui.ExportSVG(svgPath)
+	_ = ui.ExportSVG(svgPath)
 	// Should handle gracefully (might succeed with empty chart)
 	
 	// Test PNG export with no data
 	pngPath := filepath.Join(tmpDir, "empty.png")
-	err = ui.ExportPNG(pngPath)
+	_ = ui.ExportPNG(pngPath)
 	// Should handle gracefully
 }
 

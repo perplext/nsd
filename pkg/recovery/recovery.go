@@ -91,7 +91,7 @@ func (rm *RecoveryManager) cleanOldCheckpoints() {
 	if len(files) > rm.maxCheckpoints {
 		// Sort by name (timestamp)
 		for i := 0; i < len(files)-rm.maxCheckpoints; i++ {
-			os.Remove(files[i])
+			_ = os.Remove(files[i])
 		}
 	}
 }
@@ -166,19 +166,19 @@ func (rm *RecoveryManager) saveCrashReport(report CrashReport) {
 		log.Printf("Failed to save crash report: %v", err)
 		return
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 	
 	// Write crash report
-	fmt.Fprintf(file, "=== NSD Crash Report ===\n")
-	fmt.Fprintf(file, "Time: %s\n", report.Timestamp)
-	fmt.Fprintf(file, "Panic: %s\n", report.Panic)
-	fmt.Fprintf(file, "Goroutines: %d\n", report.Goroutines)
-	fmt.Fprintf(file, "\nMemory:\n")
-	fmt.Fprintf(file, "  Allocated: %d MB\n", report.Memory.Allocated/1024/1024)
-	fmt.Fprintf(file, "  Total: %d MB\n", report.Memory.TotalAllocated/1024/1024)
-	fmt.Fprintf(file, "  System: %d MB\n", report.Memory.System/1024/1024)
-	fmt.Fprintf(file, "  GC Runs: %d\n", report.Memory.NumGC)
-	fmt.Fprintf(file, "\nStack Trace:\n%s\n", report.Stack)
+	_, _ = fmt.Fprintf(file, "=== NSD Crash Report ===\n")
+	_, _ = fmt.Fprintf(file, "Time: %s\n", report.Timestamp)
+	_, _ = fmt.Fprintf(file, "Panic: %s\n", report.Panic)
+	_, _ = fmt.Fprintf(file, "Goroutines: %d\n", report.Goroutines)
+	_, _ = fmt.Fprintf(file, "\nMemory:\n")
+	_, _ = fmt.Fprintf(file, "  Allocated: %d MB\n", report.Memory.Allocated/1024/1024)
+	_, _ = fmt.Fprintf(file, "  Total: %d MB\n", report.Memory.TotalAllocated/1024/1024)
+	_, _ = fmt.Fprintf(file, "  System: %d MB\n", report.Memory.System/1024/1024)
+	_, _ = fmt.Fprintf(file, "  GC Runs: %d\n", report.Memory.NumGC)
+	_, _ = fmt.Fprintf(file, "\nStack Trace:\n%s\n", report.Stack)
 	
 	log.Printf("Crash report saved to %s", path)
 }
@@ -272,6 +272,6 @@ func (hc *HealthChecker) Start(ctx context.Context) {
 // runChecks runs all health checks
 func (hc *HealthChecker) runChecks() {
 	for _, check := range hc.checks {
-		check()
+		_ = check()
 	}
 }

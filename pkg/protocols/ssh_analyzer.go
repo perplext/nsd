@@ -493,26 +493,38 @@ func (ssh *SSHAnalyzer) parseAuthRequest(payload []byte) *AuthAttempt {
 	
 	// Read username length
 	var usernameLen uint32
-	binary.Read(reader, binary.BigEndian, &usernameLen)
+	if err := binary.Read(reader, binary.BigEndian, &usernameLen); err != nil {
+		return nil
+	}
 	
 	// Read username
 	username := make([]byte, usernameLen)
-	reader.Read(username)
+	if _, err := reader.Read(username); err != nil {
+		return nil
+	}
 	
 	// Read service name length
 	var serviceLen uint32
-	binary.Read(reader, binary.BigEndian, &serviceLen)
+	if err := binary.Read(reader, binary.BigEndian, &serviceLen); err != nil {
+		return nil
+	}
 	
 	// Skip service name
-	reader.Seek(int64(serviceLen), 1)
+	if _, err := reader.Seek(int64(serviceLen), 1); err != nil {
+		return nil
+	}
 	
 	// Read method name length
 	var methodLen uint32
-	binary.Read(reader, binary.BigEndian, &methodLen)
+	if err := binary.Read(reader, binary.BigEndian, &methodLen); err != nil {
+		return nil
+	}
 	
 	// Read method name
 	method := make([]byte, methodLen)
-	reader.Read(method)
+	if _, err := reader.Read(method); err != nil {
+		return nil
+	}
 	
 	return &AuthAttempt{
 		Username:  string(username),
