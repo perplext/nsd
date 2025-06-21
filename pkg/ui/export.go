@@ -51,7 +51,7 @@ func (ui *UI) ExportSVG(path string) error {
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	return chart.Chart{
 		Series: series,
@@ -98,7 +98,7 @@ func (ui *UI) ExportPNG(path string) error {
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	return chart.Chart{
 		Series: series,

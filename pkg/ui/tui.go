@@ -1202,7 +1202,7 @@ func (ui *UI) updateGeoData() {
     ui.geoMapView.Clear()
     
     if ui.selectedIface == "" {
-        fmt.Fprintf(ui.geoMapView, "[yellow]No interface selected[white]")
+        _, _ = fmt.Fprintf(ui.geoMapView, "[yellow]No interface selected[white]")
         return
     }
     
@@ -1258,8 +1258,8 @@ func (ui *UI) updateGeoData() {
     }
     
     mapStr := worldMap.RenderWithColors(countryCounts, maxCount)
-    fmt.Fprint(ui.geoMapView, mapStr)
-    fmt.Fprintf(ui.geoMapView, "\n%s", GetMapLegend())
+    _, _ = fmt.Fprint(ui.geoMapView, mapStr)
+    _, _ = fmt.Fprintf(ui.geoMapView, "\n%s", GetMapLegend())
     
     // Update table with detailed information
     headers := []string{"IP", "Country", "City", "Region", "ISP/Org", "Connections", "Traffic"}
@@ -1310,7 +1310,7 @@ func (ui *UI) updateGeoData() {
     }
     
     // Add summary at the bottom
-    fmt.Fprintf(ui.geoMapView, "\n\n[yellow]Summary:[white] %d unique IPs from %d countries", 
+    _, _ = fmt.Fprintf(ui.geoMapView, "\n\n[yellow]Summary:[white] %d unique IPs from %d countries", 
         len(ipConnections), len(countryCounts))
 }
 
@@ -1330,7 +1330,7 @@ func (ui *UI) getGeoLocation(ip string) *GeoLocation {
     if err != nil {
         return nil
     }
-    defer resp.Body.Close()
+    defer func() { _ = resp.Body.Close() }()
     
     var result struct {
         Status string `json:"status"`
@@ -1445,7 +1445,7 @@ func (ui *UI) updatePluginView() {
             }
         }
         
-        fmt.Fprintln(ui.pluginView)
+        _, _ = fmt.Fprintln(ui.pluginView)
     }
     
     // Footer

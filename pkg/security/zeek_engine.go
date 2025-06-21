@@ -375,9 +375,8 @@ func (ze *ZeekEngine) getConnectionID(packet gopacket.Packet) string {
 		srcPort = int(udp.SrcPort)
 		dstPort = int(udp.DstPort)
 		// proto = "udp"
-	} else {
-		// proto = "other"
 	}
+	// else: proto = "other" - no additional processing needed
 	
 	// Create Zeek-style UID
 	return fmt.Sprintf("C%s%d%s%d", 
@@ -773,7 +772,7 @@ func (ze *ZeekEngine) analyzeHTTP(packet gopacket.Packet, conn *ZeekConnection) 
 
 func (ze *ZeekEngine) analyzeSSL(packet gopacket.Packet, conn *ZeekConnection) {
 	payload := ze.getPayload(packet)
-	if payload == nil || len(payload) < 6 {
+	if len(payload) < 6 {
 		return
 	}
 	

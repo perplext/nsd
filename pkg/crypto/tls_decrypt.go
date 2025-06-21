@@ -5,8 +5,8 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	"io/ioutil"
 	"net"
+	"os"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -94,7 +94,7 @@ func (t *TLSDecryptor) LoadPrivateKey(domain, certPath, keyPath string) error {
 	}
 	
 	// Load certificate
-	certData, err := ioutil.ReadFile(certPath) // #nosec G304 - path already validated
+	certData, err := os.ReadFile(certPath) // #nosec G304 - path already validated
 	if err != nil {
 		return fmt.Errorf("failed to read certificate: %w", err)
 	}
@@ -114,7 +114,7 @@ func (t *TLSDecryptor) LoadPrivateKey(domain, certPath, keyPath string) error {
 		return fmt.Errorf("invalid key path: %w", err)
 	}
 	
-	keyData, err := ioutil.ReadFile(keyPath) // #nosec G304 - path already validated
+	keyData, err := os.ReadFile(keyPath) // #nosec G304 - path already validated
 	if err != nil {
 		return fmt.Errorf("failed to read private key: %w", err)
 	}
@@ -162,7 +162,7 @@ func (t *TLSDecryptor) LoadKeyLogFile(path string) error {
 		return fmt.Errorf("invalid key log path: %w", err)
 	}
 	
-	data, err := ioutil.ReadFile(path) // #nosec G304 - path already validated
+	data, err := os.ReadFile(path) // #nosec G304 - path already validated
 	if err != nil {
 		return fmt.Errorf("failed to read key log file: %w", err)
 	}

@@ -55,7 +55,7 @@ func TestSnortEngine_ProcessPacket(t *testing.T) {
 		gopacket.SerializeLayers(buf, opts, &eth, &ip, &tcp)
 		
 		scanPacket := gopacket.NewPacket(buf.Bytes(), layers.LayerTypeEthernet, gopacket.Default)
-		alerts = engine.ProcessPacket(scanPacket)
+		_ = engine.ProcessPacket(scanPacket)
 	}
 	
 	// Should have detected port scan
