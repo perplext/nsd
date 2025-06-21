@@ -241,10 +241,11 @@ func (se *SecureExec) Execute(cmdName string, args ...string) ([]byte, error) {
 	gid := os.Getgid()
 	
 	// Check for integer overflow before converting to uint32
-	if uid < 0 || uid > 0xFFFFFFFF {
+	const maxUint32 = 1<<32 - 1
+	if uid < 0 || uid > maxUint32 {
 		return nil, fmt.Errorf("UID value %d cannot be safely converted to uint32", uid)
 	}
-	if gid < 0 || gid > 0xFFFFFFFF {
+	if gid < 0 || gid > maxUint32 {
 		return nil, fmt.Errorf("GID value %d cannot be safely converted to uint32", gid)
 	}
 	

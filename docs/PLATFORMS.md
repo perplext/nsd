@@ -244,4 +244,6 @@ On devices like Raspberry Pi Zero or MIPS routers:
 | NetBSD | amd64/arm64/386 | - | ✓ | Limited |
 | DragonFlyBSD | amd64 | - | ✓ | Limited |
 
-**Note**: "Limited" functionality means the binary works but packet capture features may be restricted due to CGO being disabled in cross-compilation.
+**Note**: "Limited" functionality means the binary requires CGO for full packet capture support. Cross-compiled builds without CGO will not be able to capture packets. For full functionality, you must:
+1. Build from source on the target platform, OR
+2. Use one of the native builds (Linux amd64/386, macOS, Windows amd64/386)

@@ -406,7 +406,7 @@ func (sic *SecureIntegerConversion) SafeUint64ToUint16WithMod(value uint64) uint
 // SafeUint64ToInt64 safely converts uint64 to int64 with overflow protection
 func (sic *SecureIntegerConversion) SafeUint64ToInt64(value uint64) (int64, error) {
 	if value > math.MaxInt64 {
-		return 0, fmt.Errorf("value %d exceeds maximum int64 value %d", value, math.MaxInt64)
+		return 0, fmt.Errorf("value %d exceeds maximum int64 value", value)
 	}
 	return int64(value), nil
 }
