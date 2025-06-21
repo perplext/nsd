@@ -303,9 +303,69 @@ jobs:
             "nsd-${VERSION}-darwin-universal.tar.gz.sha256" \
             --clobber
 
+  build-windows:
+    name: Build Windows Package
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+      
+      - name: Install dependencies
+        run: |
+          # Note: Users need to install Npcap separately
+          # This is just for the build process
+          Write-Host "Building Windows package..."
+          Write-Host "Note: Npcap must be installed separately by end users"
+      
+      - name: Build
+        shell: pwsh
+        run: |
+          $VERSION = "${{ github.event.inputs.version }}"
+          $VERSION_NUM = $VERSION.TrimStart('v')
+          
+          # Build for Windows amd64
+          $env:CGO_ENABLED = "1"
+          go build -ldflags="-s -w -X main.version=$VERSION" `
+            -o nsd-windows-amd64.exe ./cmd/nsd
+          
+          # Create package directory
+          New-Item -ItemType Directory -Force -Path "nsd-$VERSION-windows-amd64"
+          Copy-Item nsd-windows-amd64.exe "nsd-$VERSION-windows-amd64/nsd.exe"
+          Copy-Item README.md, LICENSE "nsd-$VERSION-windows-amd64/"
+          
+          # Copy examples
+          New-Item -ItemType Directory -Force -Path "nsd-$VERSION-windows-amd64/examples"
+          Copy-Item -Recurse examples/i18n "nsd-$VERSION-windows-amd64/examples/"
+          Copy-Item examples/PLUGINS.md "nsd-$VERSION-windows-amd64/examples/"
+          
+          # Copy Windows documentation
+          Copy-Item docs/WINDOWS.md "nsd-$VERSION-windows-amd64/"
+          
+          # Create zip archive
+          Compress-Archive -Path "nsd-$VERSION-windows-amd64" -DestinationPath "nsd-$VERSION-windows-amd64.zip"
+          
+          # Create checksum
+          $hash = Get-FileHash "nsd-$VERSION-windows-amd64.zip" -Algorithm SHA256
+          "$($hash.Hash.ToLower())  nsd-$VERSION-windows-amd64.zip" | Out-File -Encoding ASCII "nsd-$VERSION-windows-amd64.zip.sha256"
+      
+      - name: Upload to release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          VERSION=${{ github.event.inputs.version }}
+          gh release upload ${VERSION} \
+            "nsd-${VERSION}-windows-amd64.zip" \
+            "nsd-${VERSION}-windows-amd64.zip.sha256" \
+            --clobber
+
   create-checksums:
     name: Create Combined Checksums
-    needs: [build-linux, build-macos-intel, build-macos-arm, build-deb, create-universal-macos]
+    needs: [build-linux, build-macos-intel, build-macos-arm, build-deb, create-universal-macos, build-windows]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -320,7 +380,7 @@ jobs:
           gh release download ${VERSION} -D .
           
           # Create combined checksums
-          sha256sum *.tar.gz *.deb 2>/dev/null > SHA256SUMS || true
+          sha256sum *.tar.gz *.deb *.zip 2>/dev/null > SHA256SUMS || true
           
           # Upload checksums
           gh release upload ${VERSION} SHA256SUMS --clobber

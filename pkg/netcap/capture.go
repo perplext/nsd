@@ -121,6 +121,11 @@ func GetInterfaces() ([]pcap.Interface, error) {
 
 // StartCapture starts capturing packets on the specified interface
 func (nm *NetworkMonitor) StartCapture(interfaceName string) error {
+	// Check Windows dependencies first
+	if err := checkWindowsDependencies(); err != nil {
+		return err
+	}
+
 	// Check if we're already capturing on this interface
 	nm.mutex.Lock()
 	if _, exists := nm.ActiveHandles[interfaceName]; exists {
@@ -142,10 +147,10 @@ func (nm *NetworkMonitor) StartCapture(interfaceName string) error {
 	// Get local addresses
 	nm.updateLocalAddresses()
 
-	// Open the device for capturing
-	handle, err := pcap.OpenLive(interfaceName, 1600, true, pcap.BlockForever)
+	// Open the device for capturing with Windows-specific error handling
+	handle, err := openWindowsLive(interfaceName, 1600, true, pcap.BlockForever)
 	if err != nil {
-		return fmt.Errorf("error opening interface %s: %v", interfaceName, err)
+		return err
 	}
 
 	// Apply BPF filter if set
