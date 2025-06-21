@@ -19,16 +19,62 @@ build:
 build-all: clean
 	@echo "Building for multiple platforms..."
 	@mkdir -p bin
+	
+	# Linux builds
 	@echo "Building for Linux AMD64..."
 	@GOOS=linux GOARCH=amd64 go build $(LDFLAGS) -o bin/$(BINARY_NAME)-linux-amd64 ./cmd/nsd
 	@echo "Building for Linux ARM64..."
 	@GOOS=linux GOARCH=arm64 go build $(LDFLAGS) -o bin/$(BINARY_NAME)-linux-arm64 ./cmd/nsd
+	@echo "Building for Linux 386..."
+	@GOOS=linux GOARCH=386 go build $(LDFLAGS) -o bin/$(BINARY_NAME)-linux-386 ./cmd/nsd
+	@echo "Building for Linux ARM (Raspberry Pi 2/3)..."
+	@GOOS=linux GOARCH=arm GOARM=7 go build $(LDFLAGS) -o bin/$(BINARY_NAME)-linux-armv7 ./cmd/nsd
+	@echo "Building for Linux ARM (Raspberry Pi Zero/1)..."
+	@GOOS=linux GOARCH=arm GOARM=6 go build $(LDFLAGS) -o bin/$(BINARY_NAME)-linux-armv6 ./cmd/nsd
+	@echo "Building for Linux MIPS..."
+	@GOOS=linux GOARCH=mips go build $(LDFLAGS) -o bin/$(BINARY_NAME)-linux-mips ./cmd/nsd
+	@echo "Building for Linux MIPSLE..."
+	@GOOS=linux GOARCH=mipsle go build $(LDFLAGS) -o bin/$(BINARY_NAME)-linux-mipsle ./cmd/nsd
+	@echo "Building for Linux PPC64LE..."
+	@GOOS=linux GOARCH=ppc64le go build $(LDFLAGS) -o bin/$(BINARY_NAME)-linux-ppc64le ./cmd/nsd
+	@echo "Building for Linux s390x..."
+	@GOOS=linux GOARCH=s390x go build $(LDFLAGS) -o bin/$(BINARY_NAME)-linux-s390x ./cmd/nsd
+	
+	# macOS builds
 	@echo "Building for macOS AMD64..."
 	@GOOS=darwin GOARCH=amd64 go build $(LDFLAGS) -o bin/$(BINARY_NAME)-darwin-amd64 ./cmd/nsd
 	@echo "Building for macOS ARM64..."
 	@GOOS=darwin GOARCH=arm64 go build $(LDFLAGS) -o bin/$(BINARY_NAME)-darwin-arm64 ./cmd/nsd
+	
+	# Windows builds
 	@echo "Building for Windows AMD64..."
 	@GOOS=windows GOARCH=amd64 go build $(LDFLAGS) -o bin/$(BINARY_NAME)-windows-amd64.exe ./cmd/nsd
+	@echo "Building for Windows 386..."
+	@GOOS=windows GOARCH=386 go build $(LDFLAGS) -o bin/$(BINARY_NAME)-windows-386.exe ./cmd/nsd
+	@echo "Building for Windows ARM64..."
+	@GOOS=windows GOARCH=arm64 go build $(LDFLAGS) -o bin/$(BINARY_NAME)-windows-arm64.exe ./cmd/nsd
+	
+	# BSD builds
+	@echo "Building for FreeBSD AMD64..."
+	@GOOS=freebsd GOARCH=amd64 go build $(LDFLAGS) -o bin/$(BINARY_NAME)-freebsd-amd64 ./cmd/nsd
+	@echo "Building for FreeBSD ARM64..."
+	@GOOS=freebsd GOARCH=arm64 go build $(LDFLAGS) -o bin/$(BINARY_NAME)-freebsd-arm64 ./cmd/nsd
+	@echo "Building for FreeBSD 386..."
+	@GOOS=freebsd GOARCH=386 go build $(LDFLAGS) -o bin/$(BINARY_NAME)-freebsd-386 ./cmd/nsd
+	@echo "Building for OpenBSD AMD64..."
+	@GOOS=openbsd GOARCH=amd64 go build $(LDFLAGS) -o bin/$(BINARY_NAME)-openbsd-amd64 ./cmd/nsd
+	@echo "Building for OpenBSD ARM64..."
+	@GOOS=openbsd GOARCH=arm64 go build $(LDFLAGS) -o bin/$(BINARY_NAME)-openbsd-arm64 ./cmd/nsd
+	@echo "Building for OpenBSD 386..."
+	@GOOS=openbsd GOARCH=386 go build $(LDFLAGS) -o bin/$(BINARY_NAME)-openbsd-386 ./cmd/nsd
+	@echo "Building for NetBSD AMD64..."
+	@GOOS=netbsd GOARCH=amd64 go build $(LDFLAGS) -o bin/$(BINARY_NAME)-netbsd-amd64 ./cmd/nsd
+	@echo "Building for NetBSD ARM64..."
+	@GOOS=netbsd GOARCH=arm64 go build $(LDFLAGS) -o bin/$(BINARY_NAME)-netbsd-arm64 ./cmd/nsd
+	@echo "Building for NetBSD 386..."
+	@GOOS=netbsd GOARCH=386 go build $(LDFLAGS) -o bin/$(BINARY_NAME)-netbsd-386 ./cmd/nsd
+	@echo "Building for DragonFlyBSD AMD64..."
+	@GOOS=dragonfly GOARCH=amd64 go build $(LDFLAGS) -o bin/$(BINARY_NAME)-dragonfly-amd64 ./cmd/nsd
 
 # Run the application
 run: build

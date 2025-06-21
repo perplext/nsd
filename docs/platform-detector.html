@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NSD Platform Detector</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .detection-result {
+            background: #e8f5e9;
+            border: 1px solid #4caf50;
+            border-radius: 5px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .platform-info {
+            font-size: 18px;
+            margin: 10px 0;
+        }
+        .download-button {
+            display: inline-block;
+            background: #4caf50;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 10px 0;
+            transition: background 0.3s;
+        }
+        .download-button:hover {
+            background: #45a049;
+        }
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .command {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        .unsupported {
+            background: #ffebee;
+            border: 1px solid #f44336;
+            color: #d32f2f;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 NSD Platform Detector</h1>
+        <p>This tool helps you determine which NSD build to download for your system.</p>
+        
+        <div id="detection-result" class="detection-result">
+            <h2>Detecting your platform...</h2>
+        </div>
+
+        <div id="additional-info" style="display: none;">
+            <h3>Installation Instructions</h3>
+            <div id="install-commands"></div>
+        </div>
+
+        <div style="text-align: center; margin-top: 30px;">
+            <a href="https://github.com/perplext/nsd/releases/latest" target="_blank">View All Releases</a> |
+            <a href="https://github.com/perplext/nsd/blob/main/docs/PLATFORMS.md" target="_blank">Platform Guide</a>
+        </div>
+    </div>
+
+    <script>
+        function detectPlatform() {
+            const result = document.getElementById('detection-result');
+            const additionalInfo = document.getElementById('additional-info');
+            const installCommands = document.getElementById('install-commands');
+            
+            // Detect platform
+            const platform = navigator.platform.toLowerCase();
+            const userAgent = navigator.userAgent.toLowerCase();
+            
+            let os = 'unknown';
+            let arch = 'unknown';
+            let buildName = '';
+            let downloadUrl = '';
+            let instructions = '';
+            
+            // Detect OS
+            if (platform.includes('win')) {
+                os = 'windows';
+                
+                // Detect Windows architecture
+                if (userAgent.includes('wow64') || userAgent.includes('win64') || userAgent.includes('x64')) {
+                    arch = 'amd64';
+                } else if (userAgent.includes('arm')) {
+                    arch = 'arm64';
+                } else {
+                    arch = '386';
+                }
+                
+                buildName = `nsd-windows-${arch}`;
+                downloadUrl = `https://github.com/perplext/nsd/releases/latest/download/${buildName}.zip`;
+                
+                instructions = `
+                    <div class="warning">
+                        <strong>⚠️ Npcap Required:</strong> You must install Npcap before using NSD on Windows.
+                        <br><a href="https://npcap.com/#download" target="_blank">Download Npcap</a>
+                    </div>
+                    <p>After installing Npcap:</p>
+                    <ol>
+                        <li>Download the ZIP file using the button above</li>
+                        <li>Extract the contents</li>
+                        <li>Run <code>install.ps1</code> as Administrator</li>
+                        <li>Or run <code>nsd.exe</code> directly as Administrator</li>
+                    </ol>
+                `;
+            } else if (platform.includes('mac')) {
+                os = 'macos';
+                
+                // Detect Mac architecture
+                if (userAgent.includes('arm') || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) {
+                    arch = 'arm64';
+                    instructions = '<p>Detected: Apple Silicon Mac (M1/M2/M3)</p>';
+                } else {
+                    arch = 'amd64';
+                    instructions = '<p>Detected: Intel Mac</p>';
+                }
+                
+                buildName = `nsd-darwin-${arch}`;
+                downloadUrl = `https://github.com/perplext/nsd/releases/latest/download/${buildName}.tar.gz`;
+                
+                instructions += `
+                    <p>Download and install:</p>
+                    <div class="command">curl -L ${downloadUrl} | tar xz<br>sudo ./nsd</div>
+                    <p>Or install with Homebrew (coming soon).</p>
+                `;
+            } else if (platform.includes('linux')) {
+                os = 'linux';
+                
+                // Try to detect architecture from user agent
+                if (userAgent.includes('x86_64') || userAgent.includes('x64')) {
+                    arch = 'amd64';
+                } else if (userAgent.includes('arm64') || userAgent.includes('aarch64')) {
+                    arch = 'arm64';
+                } else if (userAgent.includes('armv7')) {
+                    arch = 'armv7';
+                } else if (userAgent.includes('armv6')) {
+                    arch = 'armv6';
+                } else if (userAgent.includes('i686') || userAgent.includes('i386')) {
+                    arch = '386';
+                } else {
+                    arch = 'amd64'; // Default assumption
+                }
+                
+                buildName = `nsd-linux-${arch}`;
+                downloadUrl = `https://github.com/perplext/nsd/releases/latest/download/${buildName}.tar.gz`;
+                
+                instructions = `
+                    <p>Install libpcap first:</p>
+                    <div class="command">
+                        # Debian/Ubuntu<br>
+                        sudo apt-get install libpcap0.8<br><br>
+                        # Fedora/RHEL<br>
+                        sudo yum install libpcap<br><br>
+                        # Arch Linux<br>
+                        sudo pacman -S libpcap
+                    </div>
+                    <p>Then download and run:</p>
+                    <div class="command">curl -L ${downloadUrl} | tar xz<br>sudo ./nsd</div>
+                `;
+                
+                // Special note for Raspberry Pi
+                if (arch === 'armv7' || arch === 'armv6') {
+                    instructions = `
+                        <div class="warning">
+                            <strong>Raspberry Pi Detected</strong><br>
+                            ${arch === 'armv6' ? 'Use this build for Pi Zero/1' : 'Use this build for Pi 2/3'}
+                        </div>
+                    ` + instructions;
+                }
+            } else {
+                // Try to detect BSD
+                if (userAgent.includes('freebsd')) {
+                    os = 'freebsd';
+                    arch = 'amd64';
+                } else if (userAgent.includes('openbsd')) {
+                    os = 'openbsd';
+                    arch = 'amd64';
+                } else if (userAgent.includes('netbsd')) {
+                    os = 'netbsd';
+                    arch = 'amd64';
+                }
+                
+                if (os !== 'unknown') {
+                    buildName = `nsd-${os}-${arch}`;
+                    downloadUrl = `https://github.com/perplext/nsd/releases/latest/download/${buildName}.tar.gz`;
+                    
+                    instructions = `
+                        <div class="warning">
+                            <strong>Note:</strong> Pre-built BSD binaries have limited functionality due to cross-compilation.
+                            For full features, build from source on your system.
+                        </div>
+                        <p>Build from source (recommended):</p>
+                        <div class="command">
+                            # Install dependencies<br>
+                            ${os === 'freebsd' ? 'sudo pkg install libpcap go' : ''}
+                            ${os === 'openbsd' ? 'doas pkg_add libpcap go' : ''}
+                            ${os === 'netbsd' ? 'sudo pkgin install libpcap go' : ''}<br><br>
+                            # Build NSD<br>
+                            git clone https://github.com/perplext/nsd.git<br>
+                            cd nsd<br>
+                            go build -o nsd ./cmd/nsd
+                        </div>
+                    `;
+                }
+            }
+            
+            // Display results
+            if (buildName) {
+                result.innerHTML = `
+                    <h2>✅ Platform Detected</h2>
+                    <div class="platform-info">
+                        <strong>Operating System:</strong> ${os.charAt(0).toUpperCase() + os.slice(1)}<br>
+                        <strong>Architecture:</strong> ${arch}<br>
+                        <strong>Recommended Build:</strong> ${buildName}
+                    </div>
+                    <a href="${downloadUrl}" class="download-button" target="_blank">
+                        Download ${buildName}
+                    </a>
+                `;
+                
+                installCommands.innerHTML = instructions;
+                additionalInfo.style.display = 'block';
+            } else {
+                result.className = 'detection-result unsupported';
+                result.innerHTML = `
+                    <h2>❌ Platform Not Detected</h2>
+                    <p>Unable to automatically detect your platform. Please check the 
+                    <a href="https://github.com/perplext/nsd/releases/latest" target="_blank">releases page</a>
+                    manually or refer to the 
+                    <a href="https://github.com/perplext/nsd/blob/main/docs/PLATFORMS.md" target="_blank">platform guide</a>.</p>
+                    <p>You can also run this command on Linux/macOS to detect your platform:</p>
+                    <div class="command">curl -sSL https://raw.githubusercontent.com/perplext/nsd/main/scripts/detect-platform.sh | bash</div>
+                `;
+            }
+        }
+        
+        // Run detection on page load
+        window.onload = detectPlatform;
+    </script>
+</body>
+</html>

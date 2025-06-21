@@ -16,7 +16,11 @@ Check out the `docs/ui_preview.txt` file for a preview of the terminal UI, inclu
 - Detailed connection information (source, destination, protocol, etc.)
 - Interactive terminal UI with btop-like look and feel
 - Promiscuous mode for capturing all network traffic
-- Cross-platform support (Linux, macOS, Windows)
+- Extensive cross-platform support:
+  - **Linux**: amd64, 386, arm64, armv7, armv6 (Raspberry Pi), mips/mipsle, ppc64le, s390x
+  - **macOS**: Intel and Apple Silicon
+  - **Windows**: amd64, 386, arm64
+  - **BSD**: FreeBSD, OpenBSD, NetBSD, DragonFlyBSD
 
 ## Requirements
 
@@ -25,6 +29,7 @@ Check out the `docs/ui_preview.txt` file for a preview of the terminal UI, inclu
   - On Ubuntu/Debian: `sudo apt-get install libpcap-dev`
   - On macOS: Included with the OS or install via Homebrew: `brew install libpcap`
   - On Windows: Install [Npcap](https://npcap.com/#download) (see [Windows Installation Guide](docs/WINDOWS.md))
+  - For other platforms: See [Platform-Specific Installation Guide](docs/PLATFORMS.md)
 
 ## Installation
 

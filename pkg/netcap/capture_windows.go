@@ -142,7 +142,7 @@ func openWindowsLive(device string, snaplen int32, promisc bool, timeout pcap.Du
 // init performs Windows-specific initialization
 func init() {
 	// On Windows, we need to ensure we're running on a supported architecture
-	if runtime.GOARCH != "amd64" && runtime.GOARCH != "386" {
+	if runtime.GOARCH != "amd64" && runtime.GOARCH != "386" && runtime.GOARCH != "arm64" {
 		panic(fmt.Sprintf("unsupported Windows architecture: %s", runtime.GOARCH))
 	}
 }
