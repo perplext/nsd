@@ -48,7 +48,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.21'
+          go-version: '1.24'
       
       - name: Install dependencies (Linux)
         if: matrix.goos == 'linux'
@@ -154,9 +154,12 @@ jobs:
           VERSION_NUM=${VERSION#v}
           
           # Create source package for BSD systems
-          mkdir -p "nsd-${VERSION}-source-bsd"
-          cp -r . "nsd-${VERSION}-source-bsd/"
-          rm -rf "nsd-${VERSION}-source-bsd/.git"
+          PKG_DIR="nsd-${VERSION}-source-bsd"
+          mkdir -p "${PKG_DIR}"
+          
+          # Copy all files except .git and the package directory itself
+          find . -name ".git" -prune -o -name "${PKG_DIR}" -prune -o -type f -print0 | \
+            xargs -0 -I {} cp --parents {} "${PKG_DIR}/"
           
           # Add BSD-specific instructions
           cat > "nsd-${VERSION}-source-bsd/BUILD-BSD.md" << 'EOF'
@@ -198,9 +201,12 @@ jobs:
           sha256sum "nsd-${VERSION}-source-bsd.tar.gz" > "nsd-${VERSION}-source-bsd.tar.gz.sha256"
           
           # Create source package for ARM/embedded systems
-          mkdir -p "nsd-${VERSION}-source-arm"
-          cp -r . "nsd-${VERSION}-source-arm/"
-          rm -rf "nsd-${VERSION}-source-arm/.git"
+          PKG_DIR_ARM="nsd-${VERSION}-source-arm"
+          mkdir -p "${PKG_DIR_ARM}"
+          
+          # Copy all files except .git and package directories
+          find . -name ".git" -prune -o -name "${PKG_DIR}" -prune -o -name "${PKG_DIR_ARM}" -prune -o -type f -print0 | \
+            xargs -0 -I {} cp --parents {} "${PKG_DIR_ARM}/"
           
           cat > "nsd-${VERSION}-source-arm/BUILD-ARM.md" << 'EOF'
           # Building NSD on ARM Systems
