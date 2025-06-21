@@ -249,16 +249,12 @@ jobs:
         run: |
           Write-Host "Note: Npcap must be installed by end users"
           Write-Host "Building with stub support for CI"
-
       - name: Build binary
         env:
           CGO_ENABLED: 1
         run: |
           # Build native binary only
           output_name="nsd-${{ matrix.goos }}-${{ matrix.goarch }}"
-          if [ "${{ matrix.goos }}" = "windows" ]; then
-            output_name="${output_name}.exe"
-          fi
           go build -ldflags="-s -w -X main.version=${{ github.sha }}" -o "bin/${output_name}" ./cmd/nsd
         shell: bash
 
