@@ -1,0 +1,453 @@
+name: Build All Platform Releases
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., v0.8.0)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  # Native builds for platforms that require CGO
+  build-linux-native:
+    name: Build Linux Native
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - arch: amd64
+            goarch: amd64
+          - arch: i386
+            goarch: 386
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+      
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          if [ "${{ matrix.arch }}" = "i386" ]; then
+            sudo dpkg --add-architecture i386
+            sudo apt-get update
+            sudo apt-get install -y gcc-multilib libpcap-dev:i386
+          else
+            sudo apt-get install -y libpcap-dev
+          fi
+      
+      - name: Build
+        run: |
+          VERSION=${{ github.event.inputs.version }}
+          VERSION_NUM=${VERSION#v}
+          
+          # Set architecture-specific flags
+          if [ "${{ matrix.goarch }}" = "386" ]; then
+            export CGO_ENABLED=1
+            export GOARCH=386
+            export CC="gcc -m32"
+          fi
+          
+          go build -ldflags="-s -w -X main.version=${VERSION}" \
+            -o nsd-linux-${{ matrix.goarch }} ./cmd/nsd
+          
+          # Create package
+          mkdir -p "nsd-${VERSION}-linux-${{ matrix.goarch }}"
+          cp nsd-linux-${{ matrix.goarch }} "nsd-${VERSION}-linux-${{ matrix.goarch }}/nsd"
+          cp README.md LICENSE "nsd-${VERSION}-linux-${{ matrix.goarch }}/"
+          
+          # Copy examples
+          mkdir -p "nsd-${VERSION}-linux-${{ matrix.goarch }}/examples"
+          cp -r examples/i18n "nsd-${VERSION}-linux-${{ matrix.goarch }}/examples/"
+          cp examples/PLUGINS.md "nsd-${VERSION}-linux-${{ matrix.goarch }}/examples/"
+          
+          # Create tar.gz
+          tar -czf "nsd-${VERSION}-linux-${{ matrix.goarch }}.tar.gz" "nsd-${VERSION}-linux-${{ matrix.goarch }}"
+          
+          # Create checksum
+          sha256sum "nsd-${VERSION}-linux-${{ matrix.goarch }}.tar.gz" > "nsd-${VERSION}-linux-${{ matrix.goarch }}.tar.gz.sha256"
+      
+      - name: Upload to release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=${{ github.event.inputs.version }}
+          gh release upload ${VERSION} \
+            "nsd-${VERSION}-linux-${{ matrix.goarch }}.tar.gz" \
+            "nsd-${VERSION}-linux-${{ matrix.goarch }}.tar.gz.sha256" \
+            --clobber
+
+  # Cross-compiled builds for Linux architectures
+  build-linux-cross:
+    name: Build Linux Cross-Compiled
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - goarch: arm64
+            cc: aarch64-linux-gnu-gcc
+            pkg: gcc-aarch64-linux-gnu
+          - goarch: arm
+            goarm: 7
+            cc: arm-linux-gnueabihf-gcc
+            pkg: gcc-arm-linux-gnueabihf
+          - goarch: arm
+            goarm: 6
+            cc: arm-linux-gnueabi-gcc
+            pkg: gcc-arm-linux-gnueabi
+          - goarch: ppc64le
+            cc: powerpc64le-linux-gnu-gcc
+            pkg: gcc-powerpc64le-linux-gnu
+          - goarch: s390x
+            cc: s390x-linux-gnu-gcc
+            pkg: gcc-s390x-linux-gnu
+          - goarch: mips
+            cc: mips-linux-gnu-gcc
+            pkg: gcc-mips-linux-gnu
+          - goarch: mipsle
+            cc: mipsel-linux-gnu-gcc
+            pkg: gcc-mipsel-linux-gnu
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+      
+      - name: Install cross-compilation tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ${{ matrix.pkg }} libpcap-dev
+      
+      - name: Build
+        run: |
+          VERSION=${{ github.event.inputs.version }}
+          VERSION_NUM=${VERSION#v}
+          
+          # Set environment for cross-compilation
+          export CGO_ENABLED=0
+          export GOARCH=${{ matrix.goarch }}
+          if [ -n "${{ matrix.goarm }}" ]; then
+            export GOARM=${{ matrix.goarm }}
+            ARCH_SUFFIX="${{ matrix.goarch }}v${{ matrix.goarm }}"
+          else
+            ARCH_SUFFIX="${{ matrix.goarch }}"
+          fi
+          
+          # Build without CGO (limited functionality)
+          go build -ldflags="-s -w -X main.version=${VERSION}" \
+            -o nsd-linux-${ARCH_SUFFIX} ./cmd/nsd
+          
+          # Create package
+          mkdir -p "nsd-${VERSION}-linux-${ARCH_SUFFIX}"
+          cp nsd-linux-${ARCH_SUFFIX} "nsd-${VERSION}-linux-${ARCH_SUFFIX}/nsd"
+          cp README.md LICENSE "nsd-${VERSION}-linux-${ARCH_SUFFIX}/"
+          
+          # Add note about CGO limitations
+          cat > "nsd-${VERSION}-linux-${ARCH_SUFFIX}/IMPORTANT.txt" << EOF
+          This is a cross-compiled build with CGO_ENABLED=0.
+          Some features that depend on libpcap may be limited.
+          For full functionality, consider building from source on your target platform.
+          EOF
+          
+          # Copy examples
+          mkdir -p "nsd-${VERSION}-linux-${ARCH_SUFFIX}/examples"
+          cp -r examples/i18n "nsd-${VERSION}-linux-${ARCH_SUFFIX}/examples/"
+          cp examples/PLUGINS.md "nsd-${VERSION}-linux-${ARCH_SUFFIX}/examples/"
+          
+          # Create tar.gz
+          tar -czf "nsd-${VERSION}-linux-${ARCH_SUFFIX}.tar.gz" "nsd-${VERSION}-linux-${ARCH_SUFFIX}"
+          
+          # Create checksum
+          sha256sum "nsd-${VERSION}-linux-${ARCH_SUFFIX}.tar.gz" > "nsd-${VERSION}-linux-${ARCH_SUFFIX}.tar.gz.sha256"
+      
+      - name: Upload to release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=${{ github.event.inputs.version }}
+          if [ -n "${{ matrix.goarm }}" ]; then
+            ARCH_SUFFIX="${{ matrix.goarch }}v${{ matrix.goarm }}"
+          else
+            ARCH_SUFFIX="${{ matrix.goarch }}"
+          fi
+          gh release upload ${VERSION} \
+            "nsd-${VERSION}-linux-${ARCH_SUFFIX}.tar.gz" \
+            "nsd-${VERSION}-linux-${ARCH_SUFFIX}.tar.gz.sha256" \
+            --clobber
+
+  # BSD builds (cross-compiled, CGO disabled)
+  build-bsd:
+    name: Build BSD Variants
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - os: freebsd
+            arch: amd64
+          - os: freebsd
+            arch: arm64
+          - os: freebsd
+            arch: 386
+          - os: openbsd
+            arch: amd64
+          - os: openbsd
+            arch: arm64
+          - os: openbsd
+            arch: 386
+          - os: netbsd
+            arch: amd64
+          - os: netbsd
+            arch: arm64
+          - os: netbsd
+            arch: 386
+          - os: dragonfly
+            arch: amd64
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+      
+      - name: Build
+        run: |
+          VERSION=${{ github.event.inputs.version }}
+          VERSION_NUM=${VERSION#v}
+          
+          # Build without CGO
+          CGO_ENABLED=0 GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} \
+            go build -ldflags="-s -w -X main.version=${VERSION}" \
+            -o nsd-${{ matrix.os }}-${{ matrix.arch }} ./cmd/nsd
+          
+          # Create package
+          mkdir -p "nsd-${VERSION}-${{ matrix.os }}-${{ matrix.arch }}"
+          cp nsd-${{ matrix.os }}-${{ matrix.arch }} "nsd-${VERSION}-${{ matrix.os }}-${{ matrix.arch }}/nsd"
+          cp README.md LICENSE "nsd-${VERSION}-${{ matrix.os }}-${{ matrix.arch }}/"
+          
+          # Add BSD-specific notes
+          cat > "nsd-${VERSION}-${{ matrix.os }}-${{ matrix.arch }}/INSTALL.txt" << EOF
+          NSD for ${{ matrix.os }}
+          
+          This is a cross-compiled build. For best results, consider building from source:
+          
+          1. Install dependencies:
+             - FreeBSD: pkg install libpcap go
+             - OpenBSD: pkg_add libpcap go
+             - NetBSD: pkgin install libpcap go
+          
+          2. Build from source:
+             git clone https://github.com/perplext/nsd.git
+             cd nsd
+             go build -o nsd ./cmd/nsd
+          
+          3. Run with root privileges:
+             doas ./nsd  # OpenBSD
+             sudo ./nsd  # FreeBSD/NetBSD
+          EOF
+          
+          # Copy examples
+          mkdir -p "nsd-${VERSION}-${{ matrix.os }}-${{ matrix.arch }}/examples"
+          cp -r examples/i18n "nsd-${VERSION}-${{ matrix.os }}-${{ matrix.arch }}/examples/"
+          cp examples/PLUGINS.md "nsd-${VERSION}-${{ matrix.os }}-${{ matrix.arch }}/examples/"
+          
+          # Create tar.gz
+          tar -czf "nsd-${VERSION}-${{ matrix.os }}-${{ matrix.arch }}.tar.gz" "nsd-${VERSION}-${{ matrix.os }}-${{ matrix.arch }}"
+          
+          # Create checksum
+          sha256sum "nsd-${VERSION}-${{ matrix.os }}-${{ matrix.arch }}.tar.gz" > "nsd-${VERSION}-${{ matrix.os }}-${{ matrix.arch }}.tar.gz.sha256"
+      
+      - name: Upload to release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=${{ github.event.inputs.version }}
+          gh release upload ${VERSION} \
+            "nsd-${VERSION}-${{ matrix.os }}-${{ matrix.arch }}.tar.gz" \
+            "nsd-${VERSION}-${{ matrix.os }}-${{ matrix.arch }}.tar.gz.sha256" \
+            --clobber
+
+  # Keep existing native builds for primary platforms
+  build-macos-intel:
+    name: Build macOS Intel Package
+    runs-on: macos-13
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+      
+      - name: Install dependencies
+        run: |
+          brew install libpcap
+          echo "PKG_CONFIG_PATH=/usr/local/opt/libpcap/lib/pkgconfig:$PKG_CONFIG_PATH" >> $GITHUB_ENV
+      
+      - name: Build
+        run: |
+          VERSION=${{ github.event.inputs.version }}
+          VERSION_NUM=${VERSION#v}
+          
+          go build -ldflags="-s -w -X main.version=${VERSION}" \
+            -o nsd-darwin-amd64 ./cmd/nsd
+          
+          mkdir -p "nsd-${VERSION}-darwin-amd64"
+          cp nsd-darwin-amd64 "nsd-${VERSION}-darwin-amd64/nsd"
+          cp README.md LICENSE "nsd-${VERSION}-darwin-amd64/"
+          
+          mkdir -p "nsd-${VERSION}-darwin-amd64/examples"
+          cp -r examples/i18n "nsd-${VERSION}-darwin-amd64/examples/"
+          cp examples/PLUGINS.md "nsd-${VERSION}-darwin-amd64/examples/"
+          
+          tar -czf "nsd-${VERSION}-darwin-amd64.tar.gz" "nsd-${VERSION}-darwin-amd64"
+          shasum -a 256 "nsd-${VERSION}-darwin-amd64.tar.gz" > "nsd-${VERSION}-darwin-amd64.tar.gz.sha256"
+      
+      - name: Upload to release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=${{ github.event.inputs.version }}
+          gh release upload ${VERSION} \
+            "nsd-${VERSION}-darwin-amd64.tar.gz" \
+            "nsd-${VERSION}-darwin-amd64.tar.gz.sha256" \
+            --clobber
+
+  build-macos-arm:
+    name: Build macOS ARM Package
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+      
+      - name: Install dependencies
+        run: |
+          brew install libpcap
+          echo "PKG_CONFIG_PATH=/opt/homebrew/opt/libpcap/lib/pkgconfig:$PKG_CONFIG_PATH" >> $GITHUB_ENV
+      
+      - name: Build
+        run: |
+          VERSION=${{ github.event.inputs.version }}
+          VERSION_NUM=${VERSION#v}
+          
+          go build -ldflags="-s -w -X main.version=${VERSION}" \
+            -o nsd-darwin-arm64 ./cmd/nsd
+          
+          mkdir -p "nsd-${VERSION}-darwin-arm64"
+          cp nsd-darwin-arm64 "nsd-${VERSION}-darwin-arm64/nsd"
+          cp README.md LICENSE "nsd-${VERSION}-darwin-arm64/"
+          
+          mkdir -p "nsd-${VERSION}-darwin-arm64/examples"
+          cp -r examples/i18n "nsd-${VERSION}-darwin-arm64/examples/"
+          cp examples/PLUGINS.md "nsd-${VERSION}-darwin-arm64/examples/"
+          
+          tar -czf "nsd-${VERSION}-darwin-arm64.tar.gz" "nsd-${VERSION}-darwin-arm64"
+          shasum -a 256 "nsd-${VERSION}-darwin-arm64.tar.gz" > "nsd-${VERSION}-darwin-arm64.tar.gz.sha256"
+      
+      - name: Upload to release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=${{ github.event.inputs.version }}
+          gh release upload ${VERSION} \
+            "nsd-${VERSION}-darwin-arm64.tar.gz" \
+            "nsd-${VERSION}-darwin-arm64.tar.gz.sha256" \
+            --clobber
+
+  build-windows:
+    name: Build Windows Packages
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        include:
+          - arch: amd64
+            goarch: amd64
+          - arch: i386
+            goarch: 386
+          - arch: arm64
+            goarch: arm64
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+      
+      - name: Build
+        shell: pwsh
+        run: |
+          $VERSION = "${{ github.event.inputs.version }}"
+          $VERSION_NUM = $VERSION.TrimStart('v')
+          
+          # Note: Windows ARM64 will be cross-compiled without CGO
+          if ("${{ matrix.goarch }}" -eq "arm64") {
+            $env:CGO_ENABLED = "0"
+          } else {
+            $env:CGO_ENABLED = "1"
+          }
+          
+          $env:GOARCH = "${{ matrix.goarch }}"
+          go build -ldflags="-s -w -X main.version=$VERSION" `
+            -o nsd-windows-${{ matrix.goarch }}.exe ./cmd/nsd
+          
+          New-Item -ItemType Directory -Force -Path "nsd-$VERSION-windows-${{ matrix.goarch }}"
+          Copy-Item nsd-windows-${{ matrix.goarch }}.exe "nsd-$VERSION-windows-${{ matrix.goarch }}/nsd.exe"
+          Copy-Item README.md, LICENSE "nsd-$VERSION-windows-${{ matrix.goarch }}/"
+          
+          New-Item -ItemType Directory -Force -Path "nsd-$VERSION-windows-${{ matrix.goarch }}/examples"
+          Copy-Item -Recurse examples/i18n "nsd-$VERSION-windows-${{ matrix.goarch }}/examples/"
+          Copy-Item examples/PLUGINS.md "nsd-$VERSION-windows-${{ matrix.goarch }}/examples/"
+          
+          Copy-Item docs/WINDOWS.md "nsd-$VERSION-windows-${{ matrix.goarch }}/"
+          Copy-Item build/windows/*.ps1 "nsd-$VERSION-windows-${{ matrix.goarch }}/"
+          
+          Compress-Archive -Path "nsd-$VERSION-windows-${{ matrix.goarch }}" -DestinationPath "nsd-$VERSION-windows-${{ matrix.goarch }}.zip"
+          
+          $hash = Get-FileHash "nsd-$VERSION-windows-${{ matrix.goarch }}.zip" -Algorithm SHA256
+          "$($hash.Hash.ToLower())  nsd-$VERSION-windows-${{ matrix.goarch }}.zip" | Out-File -Encoding ASCII "nsd-$VERSION-windows-${{ matrix.goarch }}.zip.sha256"
+      
+      - name: Upload to release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          VERSION=${{ github.event.inputs.version }}
+          gh release upload ${VERSION} \
+            "nsd-${VERSION}-windows-${{ matrix.goarch }}.zip" \
+            "nsd-${VERSION}-windows-${{ matrix.goarch }}.zip.sha256" \
+            --clobber
+
+  create-combined-checksums:
+    name: Create Combined Checksums
+    needs: [build-linux-native, build-linux-cross, build-bsd, build-macos-intel, build-macos-arm, build-windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Download and create checksums
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=${{ github.event.inputs.version }}
+          
+          # Download all assets
+          gh release download ${VERSION} -D .
+          
+          # Create combined checksums
+          sha256sum *.tar.gz *.zip 2>/dev/null > SHA256SUMS || true
+          
+          # Upload checksums
+          gh release upload ${VERSION} SHA256SUMS --clobber
