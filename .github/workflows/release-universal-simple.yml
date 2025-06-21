@@ -80,6 +80,7 @@ jobs:
             
             # Create package directory
             PKG_DIR="nsd-${VERSION}-${{ matrix.goos }}-${{ matrix.goarch }}"
+            rm -rf "${PKG_DIR}"  # Remove if exists
             mkdir -p "${PKG_DIR}"
             cp "${OUTPUT_NAME}" "${PKG_DIR}/nsd.exe"
             cp README.md LICENSE "${PKG_DIR}/"
@@ -107,6 +108,7 @@ jobs:
             
             # Create package directory
             PKG_DIR="nsd-${VERSION}-${{ matrix.goos }}-${{ matrix.goarch }}"
+            rm -rf "${PKG_DIR}"  # Remove if exists
             mkdir -p "${PKG_DIR}"
             cp "${OUTPUT_NAME}" "${PKG_DIR}/nsd"
             cp README.md LICENSE "${PKG_DIR}/"
