@@ -34,7 +34,9 @@ func createTCPPacket(srcIP, dstIP string, srcPort, dstPort uint16, payload []byt
 		SYN:     true,
 		Window:  65535,
 	}
-	tcp.SetNetworkLayerForChecksum(ipv4)
+	if err := tcp.SetNetworkLayerForChecksum(ipv4); err != nil {
+		return nil
+	}
 	
 	// Serialize layers
 	buffer := gopacket.NewSerializeBuffer()
@@ -43,7 +45,9 @@ func createTCPPacket(srcIP, dstIP string, srcPort, dstPort uint16, payload []byt
 		ComputeChecksums: true,
 	}
 	
-	gopacket.SerializeLayers(buffer, opts, eth, ipv4, tcp, gopacket.Payload(payload))
+	if err := gopacket.SerializeLayers(buffer, opts, eth, ipv4, tcp, gopacket.Payload(payload)); err != nil {
+		return nil
+	}
 	
 	// Create packet
 	return gopacket.NewPacket(buffer.Bytes(), layers.LayerTypeEthernet, gopacket.Default)
@@ -69,7 +73,9 @@ func createUDPPacket(srcIP, dstIP string, srcPort, dstPort uint16, payload []byt
 		SrcPort: layers.UDPPort(srcPort),
 		DstPort: layers.UDPPort(dstPort),
 	}
-	udp.SetNetworkLayerForChecksum(ipv4)
+	if err := udp.SetNetworkLayerForChecksum(ipv4); err != nil {
+		return nil
+	}
 	
 	buffer := gopacket.NewSerializeBuffer()
 	opts := gopacket.SerializeOptions{
@@ -77,7 +83,9 @@ func createUDPPacket(srcIP, dstIP string, srcPort, dstPort uint16, payload []byt
 		ComputeChecksums: true,
 	}
 	
-	gopacket.SerializeLayers(buffer, opts, eth, ipv4, udp, gopacket.Payload(payload))
+	if err := gopacket.SerializeLayers(buffer, opts, eth, ipv4, udp, gopacket.Payload(payload)); err != nil {
+		return nil
+	}
 	
 	return gopacket.NewPacket(buffer.Bytes(), layers.LayerTypeEthernet, gopacket.Default)
 }
@@ -110,7 +118,9 @@ func createICMPPacket(srcIP, dstIP string) gopacket.Packet {
 		ComputeChecksums: true,
 	}
 	
-	gopacket.SerializeLayers(buffer, opts, eth, ipv4, icmp)
+	if err := gopacket.SerializeLayers(buffer, opts, eth, ipv4, icmp); err != nil {
+		return nil
+	}
 	
 	return gopacket.NewPacket(buffer.Bytes(), layers.LayerTypeEthernet, gopacket.Default)
 }
@@ -269,7 +279,7 @@ func TestPacketBuffer(t *testing.T) {
 	
 	// Process multiple packets
 	for i := 0; i < 5; i++ {
-		packet := createTCPPacket("192.168.1.100", "8.8.8.8", uint16(10000+i), 80, []byte("test"))
+		packet := createTCPPacket("192.168.1.100", "8.8.8.8", uint16(10000+(i%55535)), 80, []byte("test"))
 		nm.processPacket("eth0", packet)
 	}
 	
@@ -362,7 +372,9 @@ func TestIPv6Packet(t *testing.T) {
 		DstPort: 443,
 		SYN:     true,
 	}
-	tcp.SetNetworkLayerForChecksum(ipv6)
+	if err := tcp.SetNetworkLayerForChecksum(ipv6); err != nil {
+		t.Fatalf("Failed to set network layer for checksum: %v", err)
+	}
 	
 	buffer := gopacket.NewSerializeBuffer()
 	opts := gopacket.SerializeOptions{
@@ -370,7 +382,9 @@ func TestIPv6Packet(t *testing.T) {
 		ComputeChecksums: true,
 	}
 	
-	gopacket.SerializeLayers(buffer, opts, eth, ipv6, tcp)
+	if err := gopacket.SerializeLayers(buffer, opts, eth, ipv6, tcp); err != nil {
+		t.Fatalf("Failed to serialize layers: %v", err)
+	}
 	packet := gopacket.NewPacket(buffer.Bytes(), layers.LayerTypeEthernet, gopacket.Default)
 	
 	// Process packet

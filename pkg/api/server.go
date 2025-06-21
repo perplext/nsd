@@ -88,8 +88,17 @@ func (s *Server) Start() error {
 	// CORS middleware
 	r.Use(corsMiddleware)
 
+	// Create server with proper timeouts to prevent slowloris attacks
+	srv := &http.Server{
+		Addr:         fmt.Sprintf(":%d", s.port),
+		Handler:      r,
+		ReadTimeout:  15 * time.Second,
+		WriteTimeout: 15 * time.Second,
+		IdleTimeout:  60 * time.Second,
+	}
+
 	log.Printf("Starting NSD API server on port %d", s.port)
-	return http.ListenAndServe(fmt.Sprintf(":%d", s.port), r)
+	return srv.ListenAndServe()
 }
 
 func (s *Server) handleStats(w http.ResponseWriter, r *http.Request) {
@@ -151,7 +160,11 @@ func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 		log.Printf("WebSocket upgrade failed: %v", err)
 		return
 	}
-	defer conn.Close()
+	defer func() {
+		if err := conn.Close(); err != nil {
+			log.Printf("WebSocket close failed: %v", err)
+		}
+	}()
 
 	ticker := time.NewTicker(1 * time.Second)
 	defer ticker.Stop()

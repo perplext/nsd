@@ -11,6 +11,7 @@ import (
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/tcpassembly/tcpreader"
+	"github.com/perplext/nsd/pkg/security"
 )
 
 // IMAPAnalyzer analyzes IMAP protocol traffic
@@ -162,7 +163,7 @@ func (imap *IMAPAnalyzer) getOrCreateSession(sessionKey string, flow gopacket.Fl
 		ID:           fmt.Sprintf("imap_%d", time.Now().UnixNano()),
 		ClientIP:     net.ParseIP(flow.Src().String()),
 		ServerIP:     net.ParseIP(flow.Dst().String()),
-		Port:         uint16(flow.Dst().FastHash()),
+		Port:         security.SafeUint64ToUint16WithMod(flow.Dst().FastHash()),
 		State:        IMAPStateNotAuthenticated,
 		Commands:     make([]IMAPCommand, 0),
 		Capabilities: make([]string, 0),

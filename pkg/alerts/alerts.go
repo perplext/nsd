@@ -137,7 +137,12 @@ func (w *WebhookChannel) Send(alert *Alert) error {
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			// Log error but don't fail the webhook
+			log.Printf("Failed to close response body: %v", err)
+		}
+	}()
 	
 	if resp.StatusCode >= 400 {
 		return fmt.Errorf("webhook returned status code %d", resp.StatusCode)

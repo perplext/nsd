@@ -11,6 +11,7 @@ import (
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/tcpassembly/tcpreader"
+	"github.com/perplext/nsd/pkg/security"
 )
 
 // FTPAnalyzer analyzes FTP protocol traffic
@@ -83,8 +84,13 @@ func (ftp *FTPAnalyzer) AnalyzeStream(flow gopacket.Flow, reader *tcpreader.Read
 	session := ftp.getOrCreateSession(sessionKey, flow)
 	
 	// Determine if this is control or data channel
-	srcPort := uint16(flow.Src().FastHash())
-	dstPort := uint16(flow.Dst().FastHash())
+	// FastHash returns uint64, we need to safely convert to uint16
+	srcHash := flow.Src().FastHash()
+	dstHash := flow.Dst().FastHash()
+	
+	// Use secure conversion to ensure we stay within uint16 range
+	srcPort := security.SafeUint64ToUint16WithMod(srcHash)
+	dstPort := security.SafeUint64ToUint16WithMod(dstHash)
 	
 	if srcPort == 21 || dstPort == 21 {
 		// Control channel
@@ -127,7 +133,7 @@ func (ftp *FTPAnalyzer) getOrCreateSession(sessionKey string, flow gopacket.Flow
 		ID:           fmt.Sprintf("ftp_%d", time.Now().UnixNano()),
 		ClientIP:     net.ParseIP(flow.Src().String()),
 		ServerIP:     net.ParseIP(flow.Dst().String()),
-		ControlPort:  uint16(flow.Dst().FastHash()),
+		ControlPort:  security.SafeUint64ToUint16WithMod(flow.Dst().FastHash()),
 		Commands:     make([]FTPCommand, 0),
 		Transfers:    make([]FileTransfer, 0),
 		StartTime:    time.Now(),

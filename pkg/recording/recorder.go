@@ -5,13 +5,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/pcapgo"
+	"github.com/perplext/nsd/pkg/security"
 )
 
 type RecordingMode int
@@ -123,13 +126,18 @@ func (r *Recorder) StartRecording(name, description string, mode RecordingMode) 
 	filename := fmt.Sprintf("%s_%s%s", recording.ID, recording.StartTime.Format("20060102_150405"), ext)
 	recording.FilePath = filepath.Join(r.outputDir, filename)
 
-	// Ensure output directory exists
-	if err := os.MkdirAll(r.outputDir, 0755); err != nil {
+	// Ensure output directory exists with secure permissions
+	if err := os.MkdirAll(r.outputDir, 0700); err != nil {
 		return nil, fmt.Errorf("failed to create output directory: %v", err)
 	}
 
+	// Validate the constructed file path
+	if err := validateRecordingPath(recording.FilePath); err != nil {
+		return nil, fmt.Errorf("invalid recording file path: %v", err)
+	}
+	
 	// Open output file
-	file, err := os.Create(recording.FilePath)
+	file, err := os.Create(recording.FilePath) // #nosec G304 - path validated above
 	if err != nil {
 		return nil, fmt.Errorf("failed to create recording file: %v", err)
 	}
@@ -145,7 +153,9 @@ func (r *Recorder) StartRecording(name, description string, mode RecordingMode) 
 	case ModePackets:
 		r.pcapWriter = pcapgo.NewWriter(r.currentWriter)
 		if err := r.pcapWriter.WriteFileHeader(65536, 1); err != nil {
-			r.currentWriter.Close()
+			if closeErr := r.currentWriter.Close(); closeErr != nil {
+				log.Printf("Failed to close writer after error: %v", closeErr)
+			}
 			return nil, fmt.Errorf("failed to write PCAP header: %v", err)
 		}
 	case ModeStats, ModeBoth:
@@ -170,7 +180,9 @@ func (r *Recorder) StopRecording() error {
 
 	// Close writers
 	if r.currentWriter != nil {
-		r.currentWriter.Close()
+		if err := r.currentWriter.Close(); err != nil {
+			log.Printf("Failed to close writer: %v", err)
+		}
 	}
 
 	// Update recording metadata
@@ -186,9 +198,16 @@ func (r *Recorder) StopRecording() error {
 
 	// Save metadata
 	metadataPath := r.recording.FilePath + ".meta"
-	if metadataFile, err := os.Create(metadataPath); err == nil {
-		json.NewEncoder(metadataFile).Encode(r.recording)
-		metadataFile.Close()
+	metadataFile, err := security.SafeCreateFile(metadataPath, r.outputDir)
+	if err != nil {
+		log.Printf("Failed to create metadata file: %v", err)
+	} else {
+		if err := json.NewEncoder(metadataFile).Encode(r.recording); err != nil {
+			log.Printf("Failed to encode metadata: %v", err)
+		}
+		if err := metadataFile.Close(); err != nil {
+			log.Printf("Failed to close metadata file: %v", err)
+		}
 	}
 
 	r.isRecording = false
@@ -259,13 +278,25 @@ func (p *Player) LoadRecording(recordingPath string) error {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
 
+	// Validate path to prevent directory traversal
+	if err := validateRecordingPath(recordingPath); err != nil {
+		return err
+	}
+	
 	// Load metadata
 	metadataPath := recordingPath + ".meta"
-	metadataFile, err := os.Open(metadataPath)
+	
+	// Get the directory from the recording path to use for validation
+	recordingDir := filepath.Dir(recordingPath)
+	metadataFile, err := security.SafeOpenFile(metadataPath, recordingDir)
 	if err != nil {
 		return fmt.Errorf("failed to open metadata file: %v", err)
 	}
-	defer metadataFile.Close()
+	defer func() {
+		if err := metadataFile.Close(); err != nil {
+			log.Printf("Failed to close metadata file: %v", err)
+		}
+	}()
 
 	var recording Recording
 	if err := json.NewDecoder(metadataFile).Decode(&recording); err != nil {
@@ -288,8 +319,14 @@ func (p *Player) Play() error {
 		return fmt.Errorf("playback already in progress")
 	}
 
-	// Open recording file
-	file, err := os.Open(p.recording.FilePath)
+	// Validate and open recording file
+	if err := validateRecordingPath(p.recording.FilePath); err != nil {
+		return err
+	}
+	
+	// Get the directory from the recording path to use for validation
+	recordingDir := filepath.Dir(p.recording.FilePath)
+	file, err := security.SafeOpenFile(p.recording.FilePath, recordingDir)
 	if err != nil {
 		return fmt.Errorf("failed to open recording file: %v", err)
 	}
@@ -298,7 +335,9 @@ func (p *Player) Play() error {
 	if p.recording.Compressed {
 		gzReader, err := gzip.NewReader(file)
 		if err != nil {
-			file.Close()
+			if closeErr := file.Close(); closeErr != nil {
+				log.Printf("Failed to close file after error: %v", closeErr)
+			}
 			return fmt.Errorf("failed to create gzip reader: %v", err)
 		}
 		reader = gzReader
@@ -458,7 +497,8 @@ func ListRecordings(recordingDir string) ([]Recording, error) {
 	}
 
 	for _, metaFile := range files {
-		file, err := os.Open(metaFile)
+		// Use safe file opening with the recording directory as allowed directory
+		file, err := security.SafeOpenFile(metaFile, recordingDir)
 		if err != nil {
 			continue
 		}
@@ -474,4 +514,41 @@ func ListRecordings(recordingDir string) ([]Recording, error) {
 	}
 
 	return recordings, nil
+}
+
+// validateRecordingPath validates a recording file path to prevent directory traversal
+func validateRecordingPath(path string) error {
+	// Clean the path to remove any ../ or ./ elements
+	cleanPath := filepath.Clean(path)
+	
+	// Get absolute path
+	absPath, err := filepath.Abs(cleanPath)
+	if err != nil {
+		return fmt.Errorf("invalid recording path: %v", err)
+	}
+	
+	// Check if path contains suspicious patterns
+	if strings.Contains(path, "..") {
+		return fmt.Errorf("recording path contains directory traversal pattern")
+	}
+	
+	// Ensure the file has valid extension
+	ext := strings.ToLower(filepath.Ext(absPath))
+	validExts := map[string]bool{
+		".json": true,
+		".pcap": true,
+		".gz": true,
+		".meta": true,
+	}
+	
+	// Check for compound extensions like .json.gz
+	if strings.HasSuffix(absPath, ".json.gz") || strings.HasSuffix(absPath, ".pcap.gz") {
+		return nil
+	}
+	
+	if !validExts[ext] {
+		return fmt.Errorf("invalid recording file extension: %s", ext)
+	}
+	
+	return nil
 }

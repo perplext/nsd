@@ -3,6 +3,7 @@ package netcap
 import (
 	"fmt"
 	"log"
+	"math"
 	"net"
 	"sync"
 	"time"
@@ -468,10 +469,47 @@ func (nm *NetworkMonitor) GetStats() map[string]interface{} {
 	byteRate := float64(0)
 	
 	for _, iface := range nm.Interfaces {
-		totalPackets += int64(iface.PacketsIn + iface.PacketsOut)
-		totalBytes += int64(iface.BytesIn + iface.BytesOut)
-		// PacketRate and ByteRate would need to be calculated separately
-		// For now, we'll just use the raw counts
+		// Safe packet sum calculation with overflow protection
+		packetSum := iface.PacketsIn + iface.PacketsOut
+		if packetSum < iface.PacketsIn { // uint64 overflow in addition
+			totalPackets = math.MaxInt64
+			break
+		}
+		
+		// Safe conversion from uint64 to int64 with bounds checking
+		if packetSum > uint64(math.MaxInt64) {
+			totalPackets = math.MaxInt64
+			break
+		}
+		
+		// Check if adding this sum would overflow the total
+		if totalPackets > math.MaxInt64-int64(packetSum) {
+			totalPackets = math.MaxInt64
+			break
+		}
+		
+		totalPackets += int64(packetSum)
+		
+		// Safe byte sum calculation with overflow protection
+		byteSum := iface.BytesIn + iface.BytesOut
+		if byteSum < iface.BytesIn { // uint64 overflow in addition
+			totalBytes = math.MaxInt64
+			break
+		}
+		
+		// Safe conversion from uint64 to int64 with bounds checking
+		if byteSum > uint64(math.MaxInt64) {
+			totalBytes = math.MaxInt64
+			break
+		}
+		
+		// Check if adding this sum would overflow the total
+		if totalBytes > math.MaxInt64-int64(byteSum) {
+			totalBytes = math.MaxInt64
+			break
+		}
+		
+		totalBytes += int64(byteSum)
 	}
 	
 	return map[string]interface{}{

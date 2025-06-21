@@ -48,7 +48,6 @@ type UI struct {
 	sortAscending    bool
 	filterString     string
 	bpfString        string           // current BPF filter
-	packetTable      *tview.Table     // raw packet buffer view
 	histView         *tview.TextView  // packet size histogram view
 	dnsHttpView      *tview.TextView  // HTTP/DNS summary view
 	geoView          *tview.Table     // Geo mapping view
@@ -79,7 +78,6 @@ type UI struct {
 	sessionData       *SessionRecording
 	plugins           []PluginInfo
 	pluginView        *tview.TextView
-	showPlugins       bool
 	selectedPlugin    int
 	uiMutex           sync.Mutex   // Protect UI operations
 	borderStyle       string       // Current border style
@@ -589,65 +587,97 @@ func (ui *UI) updateAnimationTicker() {
 
 // rebuildLayout re-constructs the main page grid based on panel settings
 func (ui *UI) rebuildLayout() {
-    grid := NewStyledGrid().
+    grid := ui.createStyledGrid()
+    ui.mainGrid = grid
+
+    ifaceVisible := ui.isInterfacePanelVisible()
+    visibleRows, totalRows := ui.getVisibleRows()
+    maxCols := ui.calculateMaxColumns()
+    
+    ui.configureGridDimensions(grid, totalRows, maxCols, ifaceVisible)
+    ui.placePanels(grid, visibleRows, totalRows, maxCols, ifaceVisible)
+    
+    ui.pages.RemovePage("main")
+    ui.pages.AddPage("main", grid, true, true)
+    ui.app.SetRoot(ui.pages, true)
+}
+
+// createStyledGrid creates and configures a new styled grid
+func (ui *UI) createStyledGrid() *StyledGrid {
+    return NewStyledGrid().
         SetBorders(true).
         SetBorderStyle(ui.borderStyle).
         SetBorderColor(ui.theme.BorderColor).
         SetAnimation(ui.borderAnimation).
         SetAnimationFrame(ui.animationFrame)
-    
-    // Store reference to main grid for animation updates
-    ui.mainGrid = grid
+}
 
-    // determine if interfaces panel is visible
-    ifaceVisible := false
+// isInterfacePanelVisible checks if the interfaces panel is visible
+func (ui *UI) isInterfacePanelVisible() bool {
     for _, p := range ui.panels {
         if p.id == "interfaces" && p.visible {
-            ifaceVisible = true
-            break
+            return true
         }
     }
+    return false
+}
 
-    // dynamic tiling: identify visible non-interface rows
+// getVisibleRows returns the visible rows and total row count
+func (ui *UI) getVisibleRows() ([]int, int) {
     rowsSet := map[int]bool{}
     for _, p := range ui.panels {
         if p.visible && p.id != "interfaces" {
             rowsSet[p.row] = true
         }
     }
-    // sort and collect rows
+    
     visibleRows := make([]int, 0, len(rowsSet))
     for r := range rowsSet {
         visibleRows = append(visibleRows, r)
     }
     sort.Ints(visibleRows)
+    
     totalRows := len(visibleRows)
     if totalRows == 0 {
         totalRows = 1
     }
-    // count regular panels per row
+    
+    return visibleRows, totalRows
+}
+
+// calculateMaxColumns returns the maximum number of columns needed
+func (ui *UI) calculateMaxColumns() int {
     colCounts := map[int]int{}
     for _, p := range ui.panels {
         if p.visible && p.id != "interfaces" && p.colSpan == 1 {
             colCounts[p.row]++
         }
     }
+    
     maxCols := 0
     for _, c := range colCounts {
         if c > maxCols {
             maxCols = c
         }
     }
+    
     if maxCols == 0 {
         maxCols = 1
     }
-    // define grid sizes
+    
+    return maxCols
+}
+
+// configureGridDimensions sets up the grid rows and columns
+func (ui *UI) configureGridDimensions(grid *StyledGrid, totalRows, maxCols int, ifaceVisible bool) {
     rows := make([]int, totalRows)
     grid.SetRows(rows...)
-    dataOffset := 1
-    if !ifaceVisible {
-        dataOffset = 0
+    
+    dataOffset := 0
+    if ifaceVisible {
+        dataOffset = 1
     }
+    
     cols := make([]int, maxCols+dataOffset)
     if ifaceVisible {
         cols[0] = 20
@@ -660,48 +690,66 @@ func (ui *UI) rebuildLayout() {
         }
     }
     grid.SetColumns(cols...)
+}
 
-    // place panels
+// placePanels adds all visible panels to the grid
+func (ui *UI) placePanels(grid *StyledGrid, visibleRows []int, totalRows, maxCols int, ifaceVisible bool) {
+    dataOffset := 0
+    if ifaceVisible {
+        dataOffset = 1
+    }
+    
     for _, p := range ui.panels {
         if !p.visible {
             continue
         }
+        
         if p.id == "interfaces" {
             if ifaceVisible {
-                // span all rows in first col
                 grid.AddItem(p.primitive, 0, 0, totalRows, 1, 0, 0, true)
             }
             continue
         }
-        // map original row to new index
-        newRow := 0
-        for i, r := range visibleRows {
-            if r == p.row {
-                newRow = i
-                break
-            }
-        }
-        if p.colSpan > 1 {
-            // full-width panels except interfaces
-            grid.AddItem(p.primitive, newRow, dataOffset, p.rowSpan, maxCols, 0, 0, true)
-        } else {
-            // tile single-col panels
-            idx := 0
-            for _, q := range ui.panels {
-                if !q.visible || q.id == "interfaces" || q.colSpan > 1 || q.row != p.row {
-                    continue
-                }
-                if q.id == p.id {
-                    break
-                }
-                idx++
-            }
-            grid.AddItem(p.primitive, newRow, dataOffset+idx, p.rowSpan, 1, 0, 0, true)
+        
+        ui.placeRegularPanel(grid, p, visibleRows, dataOffset, maxCols)
+    }
+}
+
+// placeRegularPanel places a non-interface panel in the grid
+func (ui *UI) placeRegularPanel(grid *StyledGrid, p *panel, visibleRows []int, dataOffset, maxCols int) {
+    newRow := ui.mapRowToNewIndex(p.row, visibleRows)
+    
+    if p.colSpan > 1 {
+        grid.AddItem(p.primitive, newRow, dataOffset, p.rowSpan, maxCols, 0, 0, true)
+    } else {
+        idx := ui.calculatePanelColumn(p)
+        grid.AddItem(p.primitive, newRow, dataOffset+idx, p.rowSpan, 1, 0, 0, true)
+    }
+}
+
+// mapRowToNewIndex maps original row to new index in visible rows
+func (ui *UI) mapRowToNewIndex(row int, visibleRows []int) int {
+    for i, r := range visibleRows {
+        if r == row {
+            return i
         }
     }
-    ui.pages.RemovePage("main")
-    ui.pages.AddPage("main", grid, true, true)
-    ui.app.SetRoot(ui.pages, true)
+    return 0
+}
+
+// calculatePanelColumn calculates the column index for a single-column panel
+func (ui *UI) calculatePanelColumn(targetPanel *panel) int {
+    idx := 0
+    for _, p := range ui.panels {
+        if !p.visible || p.id == "interfaces" || p.colSpan > 1 || p.row != targetPanel.row {
+            continue
+        }
+        if p.id == targetPanel.id {
+            break
+        }
+        idx++
+    }
+    return idx
 }
 
 // togglePanel flips visibility of the named panel and rebuilds layout
@@ -2920,7 +2968,8 @@ func (ui *UI) saveRecording(filename string) error {
 		return err
 	}
 	
-	return os.WriteFile(filename, data, 0644)
+	// Use secure permissions for exported files
+	return os.WriteFile(filename, data, 0600)
 }
 
 // showReplayMenu shows menu to load and replay sessions
@@ -3298,7 +3347,8 @@ func (ui *UI) saveProfile(name string) error {
 	
 	// Create profiles directory if it doesn't exist
 	profilesDir := ui.getProfilesDir()
-	if err := os.MkdirAll(profilesDir, 0755); err != nil {
+	// Use secure permissions for profiles directory
+	if err := os.MkdirAll(profilesDir, 0700); err != nil {
 		return fmt.Errorf("failed to create profiles directory: %w", err)
 	}
 	
@@ -3309,7 +3359,8 @@ func (ui *UI) saveProfile(name string) error {
 		return fmt.Errorf("failed to marshal profile: %w", err)
 	}
 	
-	if err := os.WriteFile(filename, data, 0644); err != nil {
+	// Use secure permissions for profile files
+	if err := os.WriteFile(filename, data, 0600); err != nil {
 		return fmt.Errorf("failed to write profile file: %w", err)
 	}
 	
@@ -3671,7 +3722,8 @@ func (ui *UI) showDashboardBuilder() {
 		profilesDir := ui.getProfilesDir()
 		dashboardsDir := filepath.Join(profilesDir, "dashboards")
 		
-		if err := os.MkdirAll(dashboardsDir, 0755); err != nil {
+		// Use secure permissions for dashboards directory
+		if err := os.MkdirAll(dashboardsDir, 0700); err != nil {
 			ui.showError(fmt.Sprintf("Failed to create dashboards directory: %v", err))
 			return
 		}
@@ -3689,7 +3741,8 @@ func (ui *UI) showDashboardBuilder() {
 			return
 		}
 		
-		if err := os.WriteFile(filepath, data, 0644); err != nil {
+		// Use secure permissions for dashboard files
+		if err := os.WriteFile(filepath, data, 0600); err != nil {
 			ui.showError(fmt.Sprintf("Failed to save dashboard: %v", err))
 			return
 		}

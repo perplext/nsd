@@ -1,12 +1,16 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
+	"runtime"
 	"runtime/debug"
+	"time"
 	
-	"github.com/perplext/nsd/pkg/errors"
+	pkgerrors "github.com/perplext/nsd/pkg/errors"
 )
 
 // setupErrorHandling configures global error handling
@@ -47,19 +51,22 @@ func handleStartupError(phase string, err error) {
 	// Format error message based on type
 	var message string
 	switch {
-	case errors.Is(err, errors.ErrPermissionDenied):
+	case errors.Is(err, pkgerrors.ErrPermissionDenied):
 		message = fmt.Sprintf("Permission denied during %s. Please run as root/administrator.", phase)
-	case errors.Is(err, errors.ErrInterfaceNotFound):
+	case errors.Is(err, pkgerrors.ErrInterfaceNotFound):
 		message = fmt.Sprintf("Network interface not found during %s. Please check the interface name.", phase)
-	case errors.Is(err, errors.ErrInvalidConfig):
+	case errors.Is(err, pkgerrors.ErrInvalidConfig):
 		message = fmt.Sprintf("Invalid configuration during %s: %v", phase, err)
-	case errors.Is(err, errors.ErrPluginLoadFailed):
+	case errors.Is(err, pkgerrors.ErrPluginLoadFailed):
 		message = fmt.Sprintf("Failed to load plugin during %s: %v", phase, err)
 	default:
 		message = fmt.Sprintf("Error during %s: %v", phase, err)
 	}
 	
-	fmt.Fprintf(os.Stderr, "Error: %s\n", message)
+	if _, err := fmt.Fprintf(os.Stderr, "Error: %s\n", message); err != nil {
+		// Last resort - try to at least log it
+		log.Printf("Failed to write to stderr: %v", err)
+	}
 	
 	// Provide helpful suggestions
 	suggestRecovery(phase, err)
@@ -69,44 +76,79 @@ func handleStartupError(phase string, err error) {
 
 // suggestRecovery provides recovery suggestions based on the error
 func suggestRecovery(phase string, err error) {
-	fmt.Fprintln(os.Stderr, "\nSuggestions:")
+	if _, err := fmt.Fprintln(os.Stderr, "\nSuggestions:"); err != nil {
+		log.Printf("Failed to write suggestions header: %v", err)
+		return
+	}
 	
 	switch {
-	case errors.Is(err, errors.ErrPermissionDenied):
-		fmt.Fprintln(os.Stderr, "  - Run with sudo or as administrator")
-		fmt.Fprintln(os.Stderr, "  - Check if the binary has the necessary capabilities")
+	case errors.Is(err, pkgerrors.ErrPermissionDenied):
+		if _, err := fmt.Fprintln(os.Stderr, "  - Run with sudo or as administrator"); err != nil {
+			log.Printf("Failed to write suggestion: %v", err)
+		}
+		if _, err := fmt.Fprintln(os.Stderr, "  - Check if the binary has the necessary capabilities"); err != nil {
+			log.Printf("Failed to write suggestion: %v", err)
+		}
 		
-	case errors.Is(err, errors.ErrInterfaceNotFound):
-		fmt.Fprintln(os.Stderr, "  - List available interfaces with: nsd --list-interfaces")
-		fmt.Fprintln(os.Stderr, "  - Use -i flag to specify an interface")
+	case errors.Is(err, pkgerrors.ErrInterfaceNotFound):
+		if _, err := fmt.Fprintln(os.Stderr, "  - List available interfaces with: nsd --list-interfaces"); err != nil {
+			log.Printf("Failed to write suggestion: %v", err)
+		}
+		if _, err := fmt.Fprintln(os.Stderr, "  - Use -i flag to specify an interface"); err != nil {
+			log.Printf("Failed to write suggestion: %v", err)
+		}
 		
-	case errors.Is(err, errors.ErrInvalidConfig):
-		fmt.Fprintln(os.Stderr, "  - Check your configuration file syntax")
-		fmt.Fprintln(os.Stderr, "  - Run with --validate-config to check configuration")
+	case errors.Is(err, pkgerrors.ErrInvalidConfig):
+		if _, err := fmt.Fprintln(os.Stderr, "  - Check your configuration file syntax"); err != nil {
+			log.Printf("Failed to write suggestion: %v", err)
+		}
+		if _, err := fmt.Fprintln(os.Stderr, "  - Run with --validate-config to check configuration"); err != nil {
+			log.Printf("Failed to write suggestion: %v", err)
+		}
 		
-	case errors.Is(err, errors.ErrPluginLoadFailed):
-		fmt.Fprintln(os.Stderr, "  - Verify the plugin file exists and is readable")
-		fmt.Fprintln(os.Stderr, "  - Ensure the plugin was compiled with the same Go version")
-		fmt.Fprintln(os.Stderr, "  - Check plugin compatibility with --plugin-info")
+	case errors.Is(err, pkgerrors.ErrPluginLoadFailed):
+		if _, err := fmt.Fprintln(os.Stderr, "  - Verify the plugin file exists and is readable"); err != nil {
+			log.Printf("Failed to write suggestion: %v", err)
+		}
+		if _, err := fmt.Fprintln(os.Stderr, "  - Ensure the plugin was compiled with the same Go version"); err != nil {
+			log.Printf("Failed to write suggestion: %v", err)
+		}
+		if _, err := fmt.Fprintln(os.Stderr, "  - Check plugin compatibility with --plugin-info"); err != nil {
+			log.Printf("Failed to write suggestion: %v", err)
+		}
 	}
 }
 
 // saveEmergencyState tries to save application state during a crash
 func saveEmergencyState() {
-	// Try to create crash dump file
-	crashFile := fmt.Sprintf("nsd_crash_%d.log", os.Getpid())
+	// Try to create crash dump file in temp directory
+	crashFile := filepath.Join(os.TempDir(), fmt.Sprintf("nsd_crash_%d.log", os.Getpid()))
 	
-	f, err := os.Create(crashFile)
+	// Use OpenFile with secure permissions
+	f, err := os.OpenFile(crashFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600) // #nosec G304 - using os.TempDir()
 	if err != nil {
 		log.Printf("Failed to create crash file: %v", err)
 		return
 	}
-	defer f.Close()
+	defer func() {
+		if err := f.Close(); err != nil {
+			log.Printf("Failed to close crash file: %v", err)
+		}
+	}()
 	
 	// Write crash information
-	fmt.Fprintf(f, "NetMon Crash Report\n")
-	fmt.Fprintf(f, "Time: %s\n", log.Flags())
-	fmt.Fprintf(f, "Stack:\n%s\n", debug.Stack())
+	if _, err := fmt.Fprintf(f, "NetMon Crash Report\n"); err != nil {
+		log.Printf("Failed to write crash header: %v", err)
+		return
+	}
+	if _, err := fmt.Fprintf(f, "Time: %s\n", time.Now().Format(time.RFC3339)); err != nil {
+		log.Printf("Failed to write timestamp: %v", err)
+		return
+	}
+	if _, err := fmt.Fprintf(f, "Stack:\n%s\n", debug.Stack()); err != nil {
+		log.Printf("Failed to write stack trace: %v", err)
+		return
+	}
 	
 	log.Printf("Crash information saved to %s", crashFile)
 }
@@ -126,7 +168,7 @@ func validateEnvironment() error {
 		if os.Geteuid() != 0 {
 			// Check for CAP_NET_RAW capability
 			// This is a simplified check - real implementation would use libcap
-			return errors.ErrPermissionDenied
+			return pkgerrors.ErrPermissionDenied
 		}
 	}
 	

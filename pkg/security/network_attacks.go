@@ -198,7 +198,7 @@ func (nad *NetworkAttackDetector) ProcessPacket(packet gopacket.Packet) []Attack
 	defer nad.mu.Unlock()
 	
 	nad.stats.TotalPackets++
-	var alerts []AttackAlert
+	alerts := make([]AttackAlert, 0)
 	
 	// Layer 2 analysis
 	if ethLayer := packet.Layer(layers.LayerTypeEthernet); ethLayer != nil {

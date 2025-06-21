@@ -207,10 +207,14 @@ func TestGraphWidgetStartStop(t *testing.T) {
 	gw := NewGraphWidget()
 	gw.SetSampleInterval(10 * time.Millisecond)
 	
+	var mu sync.Mutex
 	count := 0
 	gw.SetDataFunc(func() (float64, float64) {
+		mu.Lock()
 		count++
-		return float64(count), float64(count * 2)
+		currentCount := count
+		mu.Unlock()
+		return float64(currentCount), float64(currentCount * 2)
 	})
 	
 	// Start the widget
@@ -223,7 +227,10 @@ func TestGraphWidgetStartStop(t *testing.T) {
 	gw.Stop()
 	
 	// Check that data was collected
-	assert.Greater(t, count, 0)
+	mu.Lock()
+	finalCount := count
+	mu.Unlock()
+	assert.Greater(t, finalCount, 0)
 }
 
 // Test GraphWidget SetSampleInterval and SetHistoryDuration

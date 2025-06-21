@@ -11,7 +11,7 @@ func TestNewRadialConnectionVisualization(t *testing.T) {
 	viz := NewRadialConnectionVisualization()
 	
 	assert.NotNil(t, viz)
-	assert.Equal(t, "Radial Connection View", viz.GetName())
+	assert.Equal(t, "Radial Connection Graph", viz.GetName())
 }
 
 func TestRadialConnectionVisualizationUpdate(t *testing.T) {
@@ -28,8 +28,8 @@ func TestRadialConnectionVisualizationGetMinSize(t *testing.T) {
 	viz := NewRadialConnectionVisualization()
 	
 	w, h := viz.GetMinSize()
-	assert.Equal(t, 80, w)
-	assert.Equal(t, 24, h)
+	assert.Equal(t, 50, w)
+	assert.Equal(t, 30, h)
 }
 
 func TestRadialConnectionVisualizationSupportsFullscreen(t *testing.T) {

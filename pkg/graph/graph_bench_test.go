@@ -7,8 +7,6 @@ import (
 	"testing"
 	"time"
 	"unsafe"
-	
-	"github.com/gdamore/tcell/v2"
 )
 
 // BenchmarkGraphDataOperations benchmarks data operations
@@ -145,8 +143,8 @@ func BenchmarkInterpolation(b *testing.B) {
 
 // BenchmarkScaling benchmarks value scaling operations
 func BenchmarkScaling(b *testing.B) {
-	g := NewGraph()
 	// Cannot access private fields minValue and maxValue
+	// g := NewGraph()
 	// g.minValue = 0
 	// g.maxValue = 1000
 	
@@ -194,9 +192,9 @@ func BenchmarkMultiGraph(b *testing.B) {
 			
 			// Add graphs
 			for i := 0; i < count; i++ {
-				g := NewGraph()
-				g.SetTitle(fmt.Sprintf("Graph %d", i))
-				mg.AddGraph(fmt.Sprintf("graph%d", i), g)
+				gw := NewGraphWidget()
+				gw.SetTitle(fmt.Sprintf("Graph %d", i))
+				mg.AddGraph(gw)
 			}
 			
 			// Add data to all graphs
@@ -253,7 +251,7 @@ func BenchmarkHistoricalData(b *testing.B) {
 			b.ResetTimer()
 			b.ReportAllocs()
 			
-			screen := NewMockScreen(120, 40)
+			// screen := NewMockScreen(120, 40)
 			// DrawInBounds method doesn't exist
 			// for i := 0; i < b.N; i++ {
 			// 	g.DrawInBounds(screen, 0, 0, 120, 40)

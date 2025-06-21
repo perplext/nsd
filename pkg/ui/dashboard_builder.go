@@ -29,8 +29,6 @@ type DashboardBuilder struct {
 	// Grid configuration
 	gridRows       int
 	gridCols       int
-	currentRow     int
-	currentCol     int
 	
 	// Callbacks
 	onSave         func(layout DashboardLayout)

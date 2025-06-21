@@ -7,6 +7,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"log"
 	"mime"
 	"net"
 	"os"
@@ -126,7 +127,11 @@ func NewFileExtractor(outputDir string, maxFileSize int64) *FileExtractor {
 	}
 
 	// Create output directory
-	os.MkdirAll(outputDir, 0755)
+	// Use secure permissions for output directory
+	if err := os.MkdirAll(outputDir, 0700); err != nil {
+		log.Printf("Warning: failed to create output directory: %v", err)
+		// Continue anyway, the directory might be created later
+	}
 
 	// Initialize stream factory
 	fe.streamFactory = &httpStreamFactory{extractor: fe}
@@ -507,14 +512,18 @@ func (h *httpStream) saveFile(file ExtractedFile) error {
 	// Create timestamp-based subdirectory
 	dateDir := file.Timestamp.Format("2006-01-02")
 	fullDir := filepath.Join(h.extractor.outputDir, dateDir)
-	os.MkdirAll(fullDir, 0755)
+	// Use secure permissions for directory creation
+	if err := os.MkdirAll(fullDir, 0700); err != nil {
+		return fmt.Errorf("failed to create directory: %v", err)
+	}
 	
 	// Generate unique filename
 	filename := fmt.Sprintf("%s_%s_%s", file.ID, file.Source.String(), file.Filename)
 	file.FilePath = filepath.Join(fullDir, filename)
 	
 	// Write file
-	return os.WriteFile(file.FilePath, []byte{}, 0644) // Content would be written here
+	// Use secure permissions for extracted files
+	return os.WriteFile(file.FilePath, []byte{}, 0600) // Content would be written here
 }
 
 // Helper functions

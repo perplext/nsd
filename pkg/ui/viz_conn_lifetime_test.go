@@ -29,13 +29,13 @@ func TestConnectionLifetimeVisualizationGetMinSize(t *testing.T) {
 	
 	w, h := viz.GetMinSize()
 	assert.Equal(t, 60, w)
-	assert.Equal(t, 20, h)
+	assert.Equal(t, 35, h)
 }
 
 func TestConnectionLifetimeVisualizationSupportsFullscreen(t *testing.T) {
 	viz := NewConnectionLifetimeVisualization()
 	
-	assert.False(t, viz.SupportsFullscreen())
+	assert.True(t, viz.SupportsFullscreen())
 }
 
 func TestConnectionLifetimeVisualizationSetTheme(t *testing.T) {

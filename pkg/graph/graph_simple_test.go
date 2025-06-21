@@ -1,6 +1,7 @@
 package graph
 
 import (
+	"sync"
 	"testing"
 	"time"
 
@@ -167,10 +168,14 @@ func TestGraphWidget_Basic(t *testing.T) {
 	require.NotNil(t, widget.Graph)
 	
 	// Set data function
+	var mu sync.Mutex
 	counter := 0
 	widget.SetDataFunc(func() (float64, float64) {
+		mu.Lock()
 		counter++
-		return float64(counter), float64(counter * 2)
+		currentCounter := counter
+		mu.Unlock()
+		return float64(currentCounter), float64(currentCounter * 2)
 	})
 	
 	// Set intervals

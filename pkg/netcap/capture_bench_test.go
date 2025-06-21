@@ -9,7 +9,6 @@ import (
 	
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
-	"github.com/google/gopacket/pcap"
 	"github.com/perplext/nsd/pkg/ratelimit"
 	"github.com/perplext/nsd/pkg/resource"
 )
@@ -38,13 +37,16 @@ func generateTestPackets(count int) []gopacket.Packet {
 		}
 		
 		tcp := &layers.TCP{
-			SrcPort: layers.TCPPort(1000 + i%1000),
+			SrcPort: layers.TCPPort(1000 + (i%1000)),
 			DstPort: layers.TCPPort(80),
-			Seq:     uint32(i * 1000),
-			Ack:     uint32(i * 1000),
+			Seq:     uint32((i % 4294967) * 1000), // Prevent overflow
+			Ack:     uint32((i % 4294967) * 1000), // Prevent overflow
 			Window:  65535,
 		}
-		tcp.SetNetworkLayerForChecksum(ip)
+		if err := tcp.SetNetworkLayerForChecksum(ip); err != nil {
+			// Log error but continue with benchmark
+			return nil
+		}
 		
 		// Serialize to create packet
 		buf := gopacket.NewSerializeBuffer()
@@ -53,7 +55,10 @@ func generateTestPackets(count int) []gopacket.Packet {
 			FixLengths:       true,
 		}
 		
-		gopacket.SerializeLayers(buf, opts, eth, ip, tcp)
+		if err := gopacket.SerializeLayers(buf, opts, eth, ip, tcp); err != nil {
+			// Return nil on error
+			return nil
+		}
 		packet := gopacket.NewPacket(buf.Bytes(), layers.LayerTypeEthernet, gopacket.Default)
 		packets[i] = packet
 	}
@@ -211,7 +216,11 @@ func BenchmarkControlledCapture(b *testing.B) {
 			if err != nil {
 				b.Fatal(err)
 			}
-			defer cm.StopGracefully(5 * time.Second)
+			defer func() {
+				if err := cm.StopGracefully(5 * time.Second); err != nil {
+					b.Errorf("Failed to stop gracefully: %v", err)
+				}
+			}()
 			
 			packets := generateTestPackets(1000)
 			
@@ -284,7 +293,11 @@ func BenchmarkConcurrentPacketProcessing(b *testing.B) {
 			if err != nil {
 				b.Fatal(err)
 			}
-			defer cm.StopGracefully(5 * time.Second)
+			defer func() {
+				if err := cm.StopGracefully(5 * time.Second); err != nil {
+					b.Errorf("Failed to stop gracefully: %v", err)
+				}
+			}()
 			
 			packets := generateTestPackets(10000)
 			
@@ -370,7 +383,10 @@ func generatePacketWithSize(size int) gopacket.Packet {
 		Window:  65535,
 		SYN:     true,
 	}
-	tcp.SetNetworkLayerForChecksum(ipv4)
+	if err := tcp.SetNetworkLayerForChecksum(ipv4); err != nil {
+		// Return empty packet on error
+		return gopacket.NewPacket([]byte{}, layers.LayerTypeEthernet, gopacket.Default)
+	}
 	
 	// Calculate payload size
 	headerSize := 14 + 20 + 20 // Ethernet + IP + TCP
@@ -391,7 +407,10 @@ func generatePacketWithSize(size int) gopacket.Packet {
 		ComputeChecksums: true,
 	}
 	
-	gopacket.SerializeLayers(buf, opts, eth, ipv4, tcp, gopacket.Payload(payload))
+	if err := gopacket.SerializeLayers(buf, opts, eth, ipv4, tcp, gopacket.Payload(payload)); err != nil {
+		// Return empty packet on error
+		return gopacket.NewPacket([]byte{}, layers.LayerTypeEthernet, gopacket.Default)
+	}
 	
 	return gopacket.NewPacket(buf.Bytes(), layers.LayerTypeEthernet, gopacket.Default)
 }
@@ -429,7 +448,11 @@ func BenchmarkMemoryUsage(b *testing.B) {
 		startAlloc := m.Alloc
 		
 		cm, _ := NewControlledMonitor(DefaultControlledConfig())
-		defer cm.StopGracefully(5 * time.Second)
+		defer func() {
+			if err := cm.StopGracefully(5 * time.Second); err != nil {
+				b.Errorf("Failed to stop gracefully: %v", err)
+			}
+		}()
 		
 		packets := generateTestPackets(10000)
 		

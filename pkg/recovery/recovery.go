@@ -48,7 +48,8 @@ func (rm *RecoveryManager) SaveCheckpoint(state map[string]interface{}) error {
 	}
 	
 	// Create checkpoint directory
-	if err := os.MkdirAll(rm.checkpointDir, 0755); err != nil {
+	// Use secure permissions for checkpoint directory
+	if err := os.MkdirAll(rm.checkpointDir, 0700); err != nil {
 		return fmt.Errorf("failed to create checkpoint directory: %w", err)
 	}
 	

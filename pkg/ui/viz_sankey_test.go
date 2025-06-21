@@ -11,7 +11,7 @@ func TestNewSankeyVisualization(t *testing.T) {
 	viz := NewSankeyVisualization()
 	
 	assert.NotNil(t, viz)
-	assert.Equal(t, "Sankey Flow Diagram", viz.GetName())
+	assert.Equal(t, "Network Flow Sankey", viz.GetName())
 }
 
 func TestSankeyVisualizationUpdate(t *testing.T) {
@@ -28,8 +28,8 @@ func TestSankeyVisualizationGetMinSize(t *testing.T) {
 	viz := NewSankeyVisualization()
 	
 	w, h := viz.GetMinSize()
-	assert.Equal(t, 80, w)
-	assert.Equal(t, 24, h)
+	assert.Equal(t, 60, w)
+	assert.Equal(t, 20, h)
 }
 
 func TestSankeyVisualizationSupportsFullscreen(t *testing.T) {

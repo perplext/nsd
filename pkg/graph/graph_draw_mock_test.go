@@ -23,7 +23,8 @@ func (s *SimpleScreen) Fill(rune, tcell.Style)                              {}
 func (s *SimpleScreen) SetStyle(tcell.Style)                                {}
 func (s *SimpleScreen) ShowCursor(int, int)                                 {}
 func (s *SimpleScreen) HideCursor()                                         {}
-func (s *SimpleScreen) SetCursorStyle(tcell.CursorStyle)                    {}
+func (s *SimpleScreen) SetCursorStyle(tcell.CursorStyle, ...tcell.Color)    {}
+func (s *SimpleScreen) SetCell(x, y int, style tcell.Style, ch ...rune)     {}
 func (s *SimpleScreen) GetCursorStyle() tcell.CursorStyle                   { return tcell.CursorStyleDefault }
 func (s *SimpleScreen) CanDisplay(rune, bool) bool                          { return true }
 func (s *SimpleScreen) CharacterSet() string                                { return "UTF-8" }
@@ -45,6 +46,7 @@ func (s *SimpleScreen) PollEvent() tcell.Event                              { re
 func (s *SimpleScreen) PostEvent(ev tcell.Event) error                      { return nil }
 func (s *SimpleScreen) ChannelEvents(ch chan<- tcell.Event, quit <-chan struct{}) {}
 func (s *SimpleScreen) PostEventWait(tcell.Event)                           {}
+func (s *SimpleScreen) HasPendingEvent() bool                               { return false }
 func (s *SimpleScreen) EnableFocus()                                         {}
 func (s *SimpleScreen) DisableFocus()                                        {}
 func (s *SimpleScreen) Beep() error                                         { return nil }
@@ -53,8 +55,9 @@ func (s *SimpleScreen) Resume() error                                       { re
 func (s *SimpleScreen) LockRegion(x, y, width, height int, lock bool)       {}
 func (s *SimpleScreen) Tty() (tcell.Tty, bool)                             { return nil, false }
 func (s *SimpleScreen) Colors() int                                         { return 256 }
-func (s *SimpleScreen) GetClipboard() ([]byte, error)                       { return nil, nil }
-func (s *SimpleScreen) SetClipboard([]byte) error                           { return nil }
+func (s *SimpleScreen) GetClipboard()                                       {}
+func (s *SimpleScreen) SetClipboard([]byte)                                 {}
+func (s *SimpleScreen) SetTitle(string)                                     {}
 
 // Test Draw method paths
 func TestGraph_DrawPaths(t *testing.T) {

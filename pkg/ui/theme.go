@@ -11,6 +11,31 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// validateThemePath validates a theme file path to prevent directory traversal
+func validateThemePath(path string) error {
+	// Clean the path to remove any ../ or ./ elements
+	cleanPath := filepath.Clean(path)
+	
+	// Get absolute path
+	absPath, err := filepath.Abs(cleanPath)
+	if err != nil {
+		return fmt.Errorf("invalid theme path: %v", err)
+	}
+	
+	// Check if path contains suspicious patterns
+	if strings.Contains(path, "..") {
+		return fmt.Errorf("theme path contains directory traversal pattern")
+	}
+	
+	// Ensure the file has a valid theme extension
+	ext := strings.ToLower(filepath.Ext(absPath))
+	if ext != ".json" && ext != ".yaml" && ext != ".yml" {
+		return fmt.Errorf("invalid theme file extension: %s", ext)
+	}
+	
+	return nil
+}
+
 // Theme defines UI color scheme inspired by VSCode themes.
 type Theme struct {
 	BorderColor        tcell.Color
@@ -297,6 +322,11 @@ type themeConfig struct {
 
 // LoadThemes loads custom themes from JSON or YAML file and merges into Themes
 func LoadThemes(path string) error {
+	// Validate path to prevent directory traversal attacks
+	if err := validateThemePath(path); err != nil {
+		return err
+	}
+	
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return err
@@ -369,7 +399,13 @@ func ExportTheme(name, path string) error {
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(path, data, 0644)
+	// Validate path before writing
+	if err := validateThemePath(path); err != nil {
+		return err
+	}
+	
+	// Use secure file permissions (0600) instead of world-readable (0644)
+	return os.WriteFile(path, data, 0600)
 }
 
 // colorToHex converts a tcell.Color to a hex string (#rrggbb).

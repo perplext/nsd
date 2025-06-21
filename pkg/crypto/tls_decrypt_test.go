@@ -49,18 +49,26 @@ func createTestCertAndKey(t *testing.T) (certFile, keyFile string) {
 
 	// Write certificate
 	certFile = filepath.Join(tmpDir, "test.crt")
-	certOut, err := os.Create(certFile)
+	certOut, err := os.Create(certFile) // #nosec G304 - test file in temp directory
 	require.NoError(t, err)
-	defer certOut.Close()
+	defer func() {
+		if err := certOut.Close(); err != nil {
+			t.Logf("Failed to close cert file: %v", err)
+		}
+	}()
 
 	err = pem.Encode(certOut, &pem.Block{Type: "CERTIFICATE", Bytes: certDER})
 	require.NoError(t, err)
 
 	// Write key
 	keyFile = filepath.Join(tmpDir, "test.key")
-	keyOut, err := os.Create(keyFile)
+	keyOut, err := os.Create(keyFile) // #nosec G304 - test file in temp directory
 	require.NoError(t, err)
-	defer keyOut.Close()
+	defer func() {
+		if err := keyOut.Close(); err != nil {
+			t.Logf("Failed to close key file: %v", err)
+		}
+	}()
 
 	keyDER, err := x509.MarshalPKCS8PrivateKey(key)
 	require.NoError(t, err)
@@ -77,7 +85,8 @@ CLIENT_RANDOM 52cb20b96d31e6c6bfde70317fb569a4d476e5b6b6905c0b5c73c79a4b055c73 7
 CLIENT_RANDOM 52cb20ba4a96de7a3858c4c5f87e4a62b193bbbcc64c7dd08f8b1d209c8c6e96 85e3f5e39b71f9a3f8a0b1b8e7e0e5a1e3f3b8e17e8e3a1f8e1b3e8a7e0b5a1e3f
 `
 	tmpFile := filepath.Join(t.TempDir(), "keylog.txt")
-	err := os.WriteFile(tmpFile, []byte(content), 0644)
+	// Use secure permissions for test files
+	err := os.WriteFile(tmpFile, []byte(content), 0600)
 	require.NoError(t, err)
 	return tmpFile
 }
@@ -106,7 +115,10 @@ func createTestTLSPacket(srcIP, dstIP string, srcPort, dstPort uint16, tlsData [
 		Seq:     12345,
 		Window:  14600,
 	}
-	tcp.SetNetworkLayerForChecksum(ip)
+	if err := tcp.SetNetworkLayerForChecksum(ip); err != nil {
+		// Log error but continue as this is test data
+		fmt.Printf("Warning: failed to set network layer for checksum: %v\n", err)
+	}
 
 	// Create packet
 	buf := gopacket.NewSerializeBuffer()
@@ -115,7 +127,10 @@ func createTestTLSPacket(srcIP, dstIP string, srcPort, dstPort uint16, tlsData [
 		FixLengths:       true,
 	}
 
-	gopacket.SerializeLayers(buf, opts, eth, ip, tcp, gopacket.Payload(tlsData))
+	if err := gopacket.SerializeLayers(buf, opts, eth, ip, tcp, gopacket.Payload(tlsData)); err != nil {
+		// Return a basic packet on error
+		return gopacket.NewPacket([]byte{}, layers.LayerTypeEthernet, gopacket.Default)
+	}
 	return gopacket.NewPacket(buf.Bytes(), layers.LayerTypeEthernet, gopacket.Default)
 }
 
@@ -144,7 +159,8 @@ func TestLoadPrivateKey(t *testing.T) {
 
 	// Test loading invalid PEM
 	invalidFile := filepath.Join(t.TempDir(), "invalid.key")
-	err = os.WriteFile(invalidFile, []byte("not a valid pem"), 0644)
+	// Use secure permissions for test files
+	err = os.WriteFile(invalidFile, []byte("not a valid pem"), 0600)
 	require.NoError(t, err)
 	err = td.LoadPrivateKey("test.example.com", certFile, invalidFile)
 	assert.Error(t, err)
@@ -166,7 +182,8 @@ func TestLoadKeyLogFile(t *testing.T) {
 
 	// Test loading file with invalid format
 	invalidFile := filepath.Join(t.TempDir(), "invalid.txt")
-	err = os.WriteFile(invalidFile, []byte("invalid format\nno valid entries"), 0644)
+	// Use secure permissions for test files
+	err = os.WriteFile(invalidFile, []byte("invalid format\nno valid entries"), 0600)
 	require.NoError(t, err)
 	err = td.LoadKeyLogFile(invalidFile)
 	assert.NoError(t, err) // Should not error, just skip invalid lines
@@ -279,7 +296,9 @@ func TestProcessHandshake(t *testing.T) {
 		0x00, 0x2f, // Cipher suite: TLS_RSA_WITH_AES_128_CBC_SHA
 		0x00, // Compression method: none
 	}
-	td.processHandshake(session, serverHello, time.Now().Unix())
+	if _, err := td.processHandshake(session, serverHello, time.Now().Unix()); err != nil {
+		t.Errorf("Failed to process server hello: %v", err)
+	}
 	assert.Equal(t, uint16(0x002f), session.CipherSuite)
 
 	// Test certificate
@@ -288,7 +307,9 @@ func TestProcessHandshake(t *testing.T) {
 		0x00, 0x00, 0x03, // Length: 3 bytes
 		0x00, 0x00, 0x00, // Certificate list length: 0 (simplified)
 	}
-	td.processHandshake(session, certificate, time.Now().Unix())
+	if _, err := td.processHandshake(session, certificate, time.Now().Unix()); err != nil {
+		t.Errorf("Failed to process certificate: %v", err)
+	}
 	// No assertions as it's a simplified test
 
 	// Test client key exchange
@@ -297,7 +318,9 @@ func TestProcessHandshake(t *testing.T) {
 		0x00, 0x00, 0x02, // Length: 2 bytes
 		0x00, 0x00, // Encrypted pre-master secret (simplified)
 	}
-	td.processHandshake(session, clientKeyExchange, time.Now().Unix())
+	if _, err := td.processHandshake(session, clientKeyExchange, time.Now().Unix()); err != nil {
+		t.Errorf("Failed to process client key exchange: %v", err)
+	}
 	// Check state after key exchange
 	assert.Equal(t, TLSStateEstablished, session.State)
 }
@@ -323,7 +346,9 @@ func TestProcessClientHello(t *testing.T) {
 		// Extensions would go here for SNI
 	}
 
-	td.processClientHello(session, clientHello, time.Now().Unix())
+	if _, err := td.processClientHello(session, clientHello, time.Now().Unix()); err != nil {
+		t.Errorf("Failed to process client hello: %v", err)
+	}
 	// Basic test without SNI extension
 }
 
@@ -346,7 +371,9 @@ func TestProcessAlert(t *testing.T) {
 
 	for _, alert := range alerts {
 		alertData := []byte{alert.level, alert.description}
-		td.processAlert(session, alertData, time.Now().Unix())
+		if _, err := td.processAlert(session, alertData, time.Now().Unix()); err != nil {
+			t.Errorf("Failed to process alert: %v", err)
+		}
 		if alert.expectError {
 			assert.Equal(t, TLSStateClosed, session.State)
 		}
@@ -446,7 +473,7 @@ func TestSessionManagement(t *testing.T) {
 		td.sessions[sessionID] = &TLSSession{
 			ClientIP:   net.ParseIP(fmt.Sprintf("192.168.1.%d", i+1)),
 			ServerIP:   net.ParseIP("192.168.1.200"),
-			ClientPort: uint16(50000 + i),
+			ClientPort: uint16(50000 + (i % 15535)), // Prevent overflow
 			ServerPort: 443,
 			State:      TLSStateEstablished,
 			ServerName: fmt.Sprintf("server%d.example.com", i),
@@ -488,11 +515,13 @@ func TestConcurrentAccess(t *testing.T) {
 			packet := createTestTLSPacket(
 				fmt.Sprintf("192.168.1.%d", id),
 				"192.168.1.200",
-				uint16(50000+id),
+				uint16(50000+(id%15535)), // Prevent overflow
 				443,
 				clientHello,
 			)
-			td.ProcessTLSPacket(packet)
+			if _, err := td.ProcessTLSPacket(packet); err != nil {
+				t.Errorf("Failed to process TLS packet: %v", err)
+			}
 			done <- true
 		}(i)
 	}

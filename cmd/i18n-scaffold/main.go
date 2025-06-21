@@ -27,9 +27,17 @@ func main() {
     os.Exit(1)
   }
   for _, f := range files {
-    data, err := ioutil.ReadFile(f)
+    // Validate path before reading
+    cleanPath := filepath.Clean(f)
+    // Since we're reading from a trusted glob pattern, just check it's not empty
+    if cleanPath == "" {
+      fmt.Fprintf(os.Stderr, "Invalid file path %s: %v\n", f, err)
+      continue
+    }
+    
+    data, err := ioutil.ReadFile(cleanPath)
     if err != nil {
-      fmt.Fprintf(os.Stderr, "Failed to read %s: %v\n", f, err)
+      fmt.Fprintf(os.Stderr, "Failed to read %s: %v\n", cleanPath, err)
       continue
     }
     var m map[string]string
@@ -67,7 +75,8 @@ func main() {
       fmt.Fprintf(os.Stderr, "Failed to marshal %s: %v\n", f, err)
       continue
     }
-    if err := ioutil.WriteFile(f, append(b, '\n'), 0644); err != nil {
+    // Use secure permissions for generated translation files
+    if err := ioutil.WriteFile(f, append(b, '\n'), 0600); err != nil {
       fmt.Fprintf(os.Stderr, "Failed to write %s: %v\n", f, err)
       continue
     }
@@ -89,7 +98,11 @@ func translate(text, target string) string {
     fmt.Fprintf(os.Stderr, "Translation error [%s]: %v\n", target, err)
     return text
   }
-  defer resp.Body.Close()
+  defer func() {
+    if err := resp.Body.Close(); err != nil {
+      fmt.Fprintf(os.Stderr, "Failed to close response body: %v\n", err)
+    }
+  }()
   var res map[string]interface{}
   if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
     fmt.Fprintf(os.Stderr, "Decode error [%s]: %v\n", target, err)

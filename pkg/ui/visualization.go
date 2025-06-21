@@ -78,11 +78,9 @@ func (r *VisualizationRegistry) GetAll() []Visualization {
 
 // BaseVisualization provides common functionality for visualizations
 type BaseVisualization struct {
-	view      tview.Primitive
 	theme     Theme
 	monitor   *netcap.NetworkMonitor
 	textView  *tview.TextView
-	borderBox *tview.Box
 }
 
 // SetTheme sets the color theme

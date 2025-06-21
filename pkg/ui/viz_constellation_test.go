@@ -11,7 +11,7 @@ func TestNewConstellationVisualization(t *testing.T) {
 	viz := NewConstellationVisualization()
 	
 	assert.NotNil(t, viz)
-	assert.Equal(t, "Connection Constellation", viz.GetName())
+	assert.Equal(t, "Port Constellation", viz.GetName())
 }
 
 func TestConstellationVisualizationUpdate(t *testing.T) {
@@ -28,8 +28,8 @@ func TestConstellationVisualizationGetMinSize(t *testing.T) {
 	viz := NewConstellationVisualization()
 	
 	w, h := viz.GetMinSize()
-	assert.Equal(t, 80, w)
-	assert.Equal(t, 24, h)
+	assert.Equal(t, 60, w)
+	assert.Equal(t, 30, h)
 }
 
 func TestConstellationVisualizationSupportsFullscreen(t *testing.T) {
