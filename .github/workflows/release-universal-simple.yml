@@ -75,14 +75,14 @@ jobs:
           
           # Build binary
           if [ "${{ matrix.goos }}" = "windows" ]; then
-            OUTPUT_NAME="nsd-${VERSION}-${{ matrix.goos }}-${{ matrix.goarch }}.exe"
-            go build -ldflags="-s -w -X main.version=${VERSION}" -o "${OUTPUT_NAME}" ./cmd/nsd
+            BINARY_NAME="nsd-binary-${VERSION}-${{ matrix.goos }}-${{ matrix.goarch }}.exe"
+            go build -ldflags="-s -w -X main.version=${VERSION}" -o "${BINARY_NAME}" ./cmd/nsd
             
             # Create package directory
             PKG_DIR="nsd-${VERSION}-${{ matrix.goos }}-${{ matrix.goarch }}"
             rm -rf "${PKG_DIR}"  # Remove if exists
             mkdir -p "${PKG_DIR}"
-            cp "${OUTPUT_NAME}" "${PKG_DIR}/nsd.exe"
+            cp "${BINARY_NAME}" "${PKG_DIR}/nsd.exe"
             cp README.md LICENSE "${PKG_DIR}/"
             cp docs/WINDOWS.md "${PKG_DIR}/"
             mkdir -p "${PKG_DIR}/examples"
@@ -103,14 +103,14 @@ jobs:
               shasum -a 256 "${PKG_DIR}.zip" > "${PKG_DIR}.zip.sha256"
             fi
           else
-            OUTPUT_NAME="nsd-${VERSION}-${{ matrix.goos }}-${{ matrix.goarch }}"
-            go build -ldflags="-s -w -X main.version=${VERSION}" -o "${OUTPUT_NAME}" ./cmd/nsd
+            BINARY_NAME="nsd-binary-${VERSION}-${{ matrix.goos }}-${{ matrix.goarch }}"
+            go build -ldflags="-s -w -X main.version=${VERSION}" -o "${BINARY_NAME}" ./cmd/nsd
             
             # Create package directory
             PKG_DIR="nsd-${VERSION}-${{ matrix.goos }}-${{ matrix.goarch }}"
             rm -rf "${PKG_DIR}"  # Remove if exists
             mkdir -p "${PKG_DIR}"
-            cp "${OUTPUT_NAME}" "${PKG_DIR}/nsd"
+            cp "${BINARY_NAME}" "${PKG_DIR}/nsd"
             cp README.md LICENSE "${PKG_DIR}/"
             mkdir -p "${PKG_DIR}/examples"
             cp -r examples/i18n "${PKG_DIR}/examples/"
