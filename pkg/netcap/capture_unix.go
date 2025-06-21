@@ -5,6 +5,7 @@ package netcap
 import (
 	"fmt"
 	"strings"
+	"time"
 	
 	"github.com/google/gopacket/pcap"
 )
@@ -52,6 +53,6 @@ func ListWindowsInterfaces() ([]string, error) {
 }
 
 // openWindowsLive is just a wrapper for pcap.OpenLive on Unix
-func openWindowsLive(device string, snaplen int32, promisc bool, timeout pcap.Duration) (*pcap.Handle, error) {
+func openWindowsLive(device string, snaplen int32, promisc bool, timeout time.Duration) (*pcap.Handle, error) {
 	return pcap.OpenLive(device, snaplen, promisc, timeout)
 }

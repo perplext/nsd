@@ -1,0 +1,316 @@
+name: Build Universal Release (Simple)
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., v0.8.0)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  # Only build for platforms that can realistically work with full functionality
+  build-native-primary:
+    name: Build Primary Platforms
+    strategy:
+      matrix:
+        include:
+          # Linux native builds
+          - os: ubuntu-latest
+            arch: amd64
+            goos: linux
+            goarch: amd64
+          # macOS native builds  
+          - os: macos-13
+            arch: amd64
+            goos: darwin
+            goarch: amd64
+          - os: macos-latest
+            arch: arm64
+            goos: darwin
+            goarch: arm64
+          # Windows native builds
+          - os: windows-latest
+            arch: amd64
+            goos: windows
+            goarch: amd64
+          - os: windows-latest
+            arch: 386
+            goos: windows
+            goarch: 386
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+      
+      - name: Install dependencies (Linux)
+        if: matrix.goos == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libpcap-dev
+      
+      - name: Install dependencies (macOS)
+        if: matrix.goos == 'darwin'
+        run: |
+          brew install libpcap
+          if [ "${{ matrix.arch }}" = "amd64" ]; then
+            echo "PKG_CONFIG_PATH=/usr/local/opt/libpcap/lib/pkgconfig:$PKG_CONFIG_PATH" >> $GITHUB_ENV
+          else
+            echo "PKG_CONFIG_PATH=/opt/homebrew/opt/libpcap/lib/pkgconfig:$PKG_CONFIG_PATH" >> $GITHUB_ENV
+          fi
+      
+      - name: Build
+        env:
+          CGO_ENABLED: 1
+          GOARCH: ${{ matrix.goarch }}
+        run: |
+          VERSION=${{ github.event.inputs.version }}
+          
+          # Build binary
+          if [ "${{ matrix.goos }}" = "windows" ]; then
+            OUTPUT_NAME="nsd-${VERSION}-${{ matrix.goos }}-${{ matrix.goarch }}.exe"
+            go build -ldflags="-s -w -X main.version=${VERSION}" -o "${OUTPUT_NAME}" ./cmd/nsd
+            
+            # Create package directory
+            PKG_DIR="nsd-${VERSION}-${{ matrix.goos }}-${{ matrix.goarch }}"
+            mkdir -p "${PKG_DIR}"
+            cp "${OUTPUT_NAME}" "${PKG_DIR}/nsd.exe"
+            cp README.md LICENSE "${PKG_DIR}/"
+            cp docs/WINDOWS.md "${PKG_DIR}/"
+            mkdir -p "${PKG_DIR}/examples"
+            cp -r examples/i18n "${PKG_DIR}/examples/"
+            cp examples/PLUGINS.md "${PKG_DIR}/examples/"
+            
+            # Create zip
+            if command -v zip >/dev/null; then
+              zip -r "${PKG_DIR}.zip" "${PKG_DIR}/"
+            else
+              7z a "${PKG_DIR}.zip" "${PKG_DIR}/"
+            fi
+            
+            # Create checksum
+            if command -v sha256sum >/dev/null; then
+              sha256sum "${PKG_DIR}.zip" > "${PKG_DIR}.zip.sha256"
+            else
+              shasum -a 256 "${PKG_DIR}.zip" > "${PKG_DIR}.zip.sha256"
+            fi
+          else
+            OUTPUT_NAME="nsd-${VERSION}-${{ matrix.goos }}-${{ matrix.goarch }}"
+            go build -ldflags="-s -w -X main.version=${VERSION}" -o "${OUTPUT_NAME}" ./cmd/nsd
+            
+            # Create package directory
+            PKG_DIR="nsd-${VERSION}-${{ matrix.goos }}-${{ matrix.goarch }}"
+            mkdir -p "${PKG_DIR}"
+            cp "${OUTPUT_NAME}" "${PKG_DIR}/nsd"
+            cp README.md LICENSE "${PKG_DIR}/"
+            mkdir -p "${PKG_DIR}/examples"
+            cp -r examples/i18n "${PKG_DIR}/examples/"
+            cp examples/PLUGINS.md "${PKG_DIR}/examples/"
+            
+            # Create tar.gz
+            tar -czf "${PKG_DIR}.tar.gz" "${PKG_DIR}/"
+            
+            # Create checksum
+            if command -v sha256sum >/dev/null; then
+              sha256sum "${PKG_DIR}.tar.gz" > "${PKG_DIR}.tar.gz.sha256"
+            else
+              shasum -a 256 "${PKG_DIR}.tar.gz" > "${PKG_DIR}.tar.gz.sha256"
+            fi
+          fi
+        shell: bash
+      
+      - name: Upload to release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=${{ github.event.inputs.version }}
+          
+          if [ "${{ matrix.goos }}" = "windows" ]; then
+            PKG_NAME="nsd-${VERSION}-${{ matrix.goos }}-${{ matrix.goarch }}"
+            gh release upload ${VERSION} "${PKG_NAME}.zip" "${PKG_NAME}.zip.sha256" --clobber
+          else
+            PKG_NAME="nsd-${VERSION}-${{ matrix.goos }}-${{ matrix.goarch }}"
+            gh release upload ${VERSION} "${PKG_NAME}.tar.gz" "${PKG_NAME}.tar.gz.sha256" --clobber
+          fi
+        shell: bash
+
+  # Build source-only packages for platforms that require local compilation
+  build-source-packages:
+    name: Build Source Packages
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Create source packages
+        run: |
+          VERSION=${{ github.event.inputs.version }}
+          VERSION_NUM=${VERSION#v}
+          
+          # Create source package for BSD systems
+          mkdir -p "nsd-${VERSION}-source-bsd"
+          cp -r . "nsd-${VERSION}-source-bsd/"
+          rm -rf "nsd-${VERSION}-source-bsd/.git"
+          
+          # Add BSD-specific instructions
+          cat > "nsd-${VERSION}-source-bsd/BUILD-BSD.md" << 'EOF'
+          # Building NSD on BSD Systems
+          
+          ## Prerequisites
+          
+          ### FreeBSD
+          ```bash
+          sudo pkg install go libpcap
+          ```
+          
+          ### OpenBSD  
+          ```bash
+          doas pkg_add go libpcap
+          ```
+          
+          ### NetBSD
+          ```bash
+          sudo pkgin install go libpcap
+          ```
+          
+          ## Building
+          ```bash
+          go build -o nsd ./cmd/nsd
+          ```
+          
+          ## Running
+          ```bash
+          # FreeBSD/NetBSD
+          sudo ./nsd
+          
+          # OpenBSD
+          doas ./nsd
+          ```
+          EOF
+          
+          tar -czf "nsd-${VERSION}-source-bsd.tar.gz" "nsd-${VERSION}-source-bsd/"
+          sha256sum "nsd-${VERSION}-source-bsd.tar.gz" > "nsd-${VERSION}-source-bsd.tar.gz.sha256"
+          
+          # Create source package for ARM/embedded systems
+          mkdir -p "nsd-${VERSION}-source-arm"
+          cp -r . "nsd-${VERSION}-source-arm/"
+          rm -rf "nsd-${VERSION}-source-arm/.git"
+          
+          cat > "nsd-${VERSION}-source-arm/BUILD-ARM.md" << 'EOF'
+          # Building NSD on ARM Systems
+          
+          ## Raspberry Pi
+          ```bash
+          # Install dependencies
+          sudo apt-get update
+          sudo apt-get install golang-go libpcap-dev
+          
+          # Build
+          go build -o nsd ./cmd/nsd
+          
+          # Run
+          sudo ./nsd
+          ```
+          
+          ## OpenWrt/MIPS Routers
+          Due to the CGO requirement for libpcap, NSD needs to be cross-compiled
+          with a proper toolchain or built directly on the target device.
+          
+          For full packet capture functionality, build on the target device:
+          ```bash
+          opkg update
+          opkg install go libpcap-dev
+          go build -o nsd ./cmd/nsd
+          ```
+          EOF
+          
+          tar -czf "nsd-${VERSION}-source-arm.tar.gz" "nsd-${VERSION}-source-arm/"
+          sha256sum "nsd-${VERSION}-source-arm.tar.gz" > "nsd-${VERSION}-source-arm.tar.gz.sha256"
+      
+      - name: Upload source packages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=${{ github.event.inputs.version }}
+          gh release upload ${VERSION} \
+            "nsd-${VERSION}-source-bsd.tar.gz" \
+            "nsd-${VERSION}-source-bsd.tar.gz.sha256" \
+            "nsd-${VERSION}-source-arm.tar.gz" \
+            "nsd-${VERSION}-source-arm.tar.gz.sha256" \
+            --clobber
+
+  create-universal-macos:
+    name: Create Universal macOS Binary  
+    needs: [build-native-primary]
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Download macOS binaries
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=${{ github.event.inputs.version }}
+          
+          # Download both architectures
+          gh release download ${VERSION} -p "nsd-${VERSION}-darwin-*.tar.gz"
+          
+          # Extract binaries
+          tar -xzf "nsd-${VERSION}-darwin-amd64.tar.gz"
+          tar -xzf "nsd-${VERSION}-darwin-arm64.tar.gz"
+          
+          # Create universal binary
+          lipo -create \
+            "nsd-${VERSION}-darwin-amd64/nsd" \
+            "nsd-${VERSION}-darwin-arm64/nsd" \
+            -output nsd-universal
+          
+          # Create universal package
+          mkdir -p "nsd-${VERSION}-darwin-universal"
+          cp nsd-universal "nsd-${VERSION}-darwin-universal/nsd"
+          cp README.md LICENSE "nsd-${VERSION}-darwin-universal/"
+          cp -r "nsd-${VERSION}-darwin-amd64/examples" "nsd-${VERSION}-darwin-universal/"
+          
+          # Create tar.gz
+          tar -czf "nsd-${VERSION}-darwin-universal.tar.gz" "nsd-${VERSION}-darwin-universal"
+          
+          # Create checksum
+          shasum -a 256 "nsd-${VERSION}-darwin-universal.tar.gz" > "nsd-${VERSION}-darwin-universal.tar.gz.sha256"
+      
+      - name: Upload universal binary
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=${{ github.event.inputs.version }}
+          gh release upload ${VERSION} \
+            "nsd-${VERSION}-darwin-universal.tar.gz" \
+            "nsd-${VERSION}-darwin-universal.tar.gz.sha256" \
+            --clobber
+
+  create-combined-checksums:
+    name: Create Combined Checksums
+    needs: [build-native-primary, build-source-packages, create-universal-macos]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Download and create checksums
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=${{ github.event.inputs.version }}
+          
+          # Download all assets
+          gh release download ${VERSION} -D .
+          
+          # Create combined checksums
+          sha256sum *.tar.gz *.zip 2>/dev/null > SHA256SUMS || true
+          
+          # Upload checksums
+          gh release upload ${VERSION} SHA256SUMS --clobber
