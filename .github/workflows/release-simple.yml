@@ -80,14 +80,16 @@ jobs:
       - name: Install dependencies
         run: |
           brew install libpcap
+          # Set PKG_CONFIG_PATH for both Intel and ARM Macs
+          echo "PKG_CONFIG_PATH=/opt/homebrew/opt/libpcap/lib/pkgconfig:/usr/local/opt/libpcap/lib/pkgconfig:$PKG_CONFIG_PATH" >> $GITHUB_ENV
       
       - name: Build
         run: |
           VERSION=${{ github.event.inputs.version }}
           VERSION_NUM=${VERSION#v}
           
-          # Build for macOS
-          GOARCH=${{ matrix.arch }} go build -ldflags="-s -w -X main.version=${VERSION}" \
+          # Build for macOS with CGO enabled
+          CGO_ENABLED=1 GOARCH=${{ matrix.arch }} go build -ldflags="-s -w -X main.version=${VERSION}" \
             -o nsd-darwin-${{ matrix.arch }} ./cmd/nsd
           
           # Create package

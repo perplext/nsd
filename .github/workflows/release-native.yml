@@ -1,0 +1,326 @@
+name: Build Native Release Packages
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., v0.7)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  build-linux:
+    name: Build Linux Package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+      
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libpcap-dev
+      
+      - name: Build
+        run: |
+          VERSION=${{ github.event.inputs.version }}
+          VERSION_NUM=${VERSION#v}
+          
+          # Build for native architecture only
+          go build -ldflags="-s -w -X main.version=${VERSION}" \
+            -o nsd-linux-amd64 ./cmd/nsd
+          
+          # Create package
+          mkdir -p "nsd-${VERSION}-linux-amd64"
+          cp nsd-linux-amd64 "nsd-${VERSION}-linux-amd64/nsd"
+          cp README.md LICENSE "nsd-${VERSION}-linux-amd64/"
+          
+          # Copy examples
+          mkdir -p "nsd-${VERSION}-linux-amd64/examples"
+          cp -r examples/i18n "nsd-${VERSION}-linux-amd64/examples/"
+          cp examples/PLUGINS.md "nsd-${VERSION}-linux-amd64/examples/"
+          
+          # Create tar.gz
+          tar -czf "nsd-${VERSION}-linux-amd64.tar.gz" "nsd-${VERSION}-linux-amd64"
+          
+          # Create checksum
+          sha256sum "nsd-${VERSION}-linux-amd64.tar.gz" > "nsd-${VERSION}-linux-amd64.tar.gz.sha256"
+      
+      - name: Upload to release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=${{ github.event.inputs.version }}
+          gh release upload ${VERSION} \
+            "nsd-${VERSION}-linux-amd64.tar.gz" \
+            "nsd-${VERSION}-linux-amd64.tar.gz.sha256" \
+            --clobber
+
+  build-macos-intel:
+    name: Build macOS Intel Package
+    runs-on: macos-13  # Use macOS 13 for Intel
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+      
+      - name: Install dependencies
+        run: |
+          brew install libpcap
+          # Intel Macs use /usr/local
+          echo "PKG_CONFIG_PATH=/usr/local/opt/libpcap/lib/pkgconfig:$PKG_CONFIG_PATH" >> $GITHUB_ENV
+      
+      - name: Build
+        run: |
+          VERSION=${{ github.event.inputs.version }}
+          VERSION_NUM=${VERSION#v}
+          
+          # Build for native architecture
+          go build -ldflags="-s -w -X main.version=${VERSION}" \
+            -o nsd-darwin-amd64 ./cmd/nsd
+          
+          # Create package
+          mkdir -p "nsd-${VERSION}-darwin-amd64"
+          cp nsd-darwin-amd64 "nsd-${VERSION}-darwin-amd64/nsd"
+          cp README.md LICENSE "nsd-${VERSION}-darwin-amd64/"
+          
+          # Copy examples
+          mkdir -p "nsd-${VERSION}-darwin-amd64/examples"
+          cp -r examples/i18n "nsd-${VERSION}-darwin-amd64/examples/"
+          cp examples/PLUGINS.md "nsd-${VERSION}-darwin-amd64/examples/"
+          
+          # Create tar.gz
+          tar -czf "nsd-${VERSION}-darwin-amd64.tar.gz" "nsd-${VERSION}-darwin-amd64"
+          
+          # Create checksum
+          shasum -a 256 "nsd-${VERSION}-darwin-amd64.tar.gz" > "nsd-${VERSION}-darwin-amd64.tar.gz.sha256"
+      
+      - name: Upload to release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=${{ github.event.inputs.version }}
+          gh release upload ${VERSION} \
+            "nsd-${VERSION}-darwin-amd64.tar.gz" \
+            "nsd-${VERSION}-darwin-amd64.tar.gz.sha256" \
+            --clobber
+
+  build-macos-arm:
+    name: Build macOS ARM Package
+    runs-on: macos-latest  # Latest uses M1/M2
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+      
+      - name: Install dependencies
+        run: |
+          brew install libpcap
+          # ARM Macs use /opt/homebrew
+          echo "PKG_CONFIG_PATH=/opt/homebrew/opt/libpcap/lib/pkgconfig:$PKG_CONFIG_PATH" >> $GITHUB_ENV
+      
+      - name: Build
+        run: |
+          VERSION=${{ github.event.inputs.version }}
+          VERSION_NUM=${VERSION#v}
+          
+          # Build for native architecture
+          go build -ldflags="-s -w -X main.version=${VERSION}" \
+            -o nsd-darwin-arm64 ./cmd/nsd
+          
+          # Create package
+          mkdir -p "nsd-${VERSION}-darwin-arm64"
+          cp nsd-darwin-arm64 "nsd-${VERSION}-darwin-arm64/nsd"
+          cp README.md LICENSE "nsd-${VERSION}-darwin-arm64/"
+          
+          # Copy examples
+          mkdir -p "nsd-${VERSION}-darwin-arm64/examples"
+          cp -r examples/i18n "nsd-${VERSION}-darwin-arm64/examples/"
+          cp examples/PLUGINS.md "nsd-${VERSION}-darwin-arm64/examples/"
+          
+          # Create tar.gz
+          tar -czf "nsd-${VERSION}-darwin-arm64.tar.gz" "nsd-${VERSION}-darwin-arm64"
+          
+          # Create checksum
+          shasum -a 256 "nsd-${VERSION}-darwin-arm64.tar.gz" > "nsd-${VERSION}-darwin-arm64.tar.gz.sha256"
+      
+      - name: Upload to release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=${{ github.event.inputs.version }}
+          gh release upload ${VERSION} \
+            "nsd-${VERSION}-darwin-arm64.tar.gz" \
+            "nsd-${VERSION}-darwin-arm64.tar.gz.sha256" \
+            --clobber
+
+  build-deb:
+    name: Build DEB Package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+      
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libpcap-dev dpkg-dev
+      
+      - name: Build DEB
+        run: |
+          VERSION=${{ github.event.inputs.version }}
+          VERSION_NUM=${VERSION#v}
+          ARCH=amd64
+          
+          # Build binary
+          go build -ldflags="-s -w -X main.version=${VERSION}" \
+            -o nsd ./cmd/nsd
+          
+          # Create package structure
+          PKG_DIR="nsd_${VERSION_NUM}_${ARCH}"
+          mkdir -p "$PKG_DIR/DEBIAN"
+          mkdir -p "$PKG_DIR/usr/bin"
+          mkdir -p "$PKG_DIR/usr/share/man/man1"
+          mkdir -p "$PKG_DIR/usr/share/doc/nsd"
+          mkdir -p "$PKG_DIR/usr/share/nsd/examples"
+          
+          # Copy files
+          cp nsd "$PKG_DIR/usr/bin/"
+          cp README.md LICENSE "$PKG_DIR/usr/share/doc/nsd/"
+          cp -r examples/* "$PKG_DIR/usr/share/nsd/examples/"
+          
+          # Create control file
+          cat > "$PKG_DIR/DEBIAN/control" << EOF
+          Package: nsd
+          Version: $VERSION_NUM
+          Architecture: $ARCH
+          Maintainer: NSD Team <nsd@example.com>
+          Homepage: https://github.com/perplext/nsd
+          Description: Network Sniffing Dashboard
+           Real-time network traffic monitoring tool with terminal UI
+          Depends: libc6, libpcap0.8
+          Section: net
+          Priority: optional
+          EOF
+          
+          # Create postinst script
+          cat > "$PKG_DIR/DEBIAN/postinst" << 'EOF'
+          #!/bin/sh
+          set -e
+          
+          case "$1" in
+              configure)
+                  # Set capabilities for packet capture without full root
+                  if command -v setcap >/dev/null 2>&1; then
+                      setcap cap_net_raw,cap_net_admin+eip /usr/bin/nsd || true
+                  fi
+                  ;;
+          esac
+          
+          exit 0
+          EOF
+          chmod 755 "$PKG_DIR/DEBIAN/postinst"
+          
+          # Build package
+          dpkg-deb --build "$PKG_DIR"
+          
+          # Create checksum
+          sha256sum "${PKG_DIR}.deb" > "${PKG_DIR}.deb.sha256"
+      
+      - name: Upload to release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=${{ github.event.inputs.version }}
+          VERSION_NUM=${VERSION#v}
+          gh release upload ${VERSION} \
+            "nsd_${VERSION_NUM}_amd64.deb" \
+            "nsd_${VERSION_NUM}_amd64.deb.sha256" \
+            --clobber
+
+  create-universal-macos:
+    name: Create Universal macOS Binary
+    needs: [build-macos-intel, build-macos-arm]
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Download macOS binaries
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=${{ github.event.inputs.version }}
+          
+          # Download both architectures
+          gh release download ${VERSION} -p "nsd-${VERSION}-darwin-*.tar.gz"
+          
+          # Extract binaries
+          tar -xzf "nsd-${VERSION}-darwin-amd64.tar.gz"
+          tar -xzf "nsd-${VERSION}-darwin-arm64.tar.gz"
+          
+          # Create universal binary
+          lipo -create \
+            "nsd-${VERSION}-darwin-amd64/nsd" \
+            "nsd-${VERSION}-darwin-arm64/nsd" \
+            -output nsd-universal
+          
+          # Create universal package
+          mkdir -p "nsd-${VERSION}-darwin-universal"
+          cp nsd-universal "nsd-${VERSION}-darwin-universal/nsd"
+          cp README.md LICENSE "nsd-${VERSION}-darwin-universal/"
+          cp -r "nsd-${VERSION}-darwin-amd64/examples" "nsd-${VERSION}-darwin-universal/"
+          
+          # Create tar.gz
+          tar -czf "nsd-${VERSION}-darwin-universal.tar.gz" "nsd-${VERSION}-darwin-universal"
+          
+          # Create checksum
+          shasum -a 256 "nsd-${VERSION}-darwin-universal.tar.gz" > "nsd-${VERSION}-darwin-universal.tar.gz.sha256"
+      
+      - name: Upload universal binary
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=${{ github.event.inputs.version }}
+          gh release upload ${VERSION} \
+            "nsd-${VERSION}-darwin-universal.tar.gz" \
+            "nsd-${VERSION}-darwin-universal.tar.gz.sha256" \
+            --clobber
+
+  create-checksums:
+    name: Create Combined Checksums
+    needs: [build-linux, build-macos-intel, build-macos-arm, build-deb, create-universal-macos]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Download and create checksums
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=${{ github.event.inputs.version }}
+          
+          # Download all assets
+          gh release download ${VERSION} -D .
+          
+          # Create combined checksums
+          sha256sum *.tar.gz *.deb 2>/dev/null > SHA256SUMS || true
+          
+          # Upload checksums
+          gh release upload ${VERSION} SHA256SUMS --clobber
