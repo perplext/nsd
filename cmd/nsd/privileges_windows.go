@@ -18,8 +18,8 @@ var (
 )
 
 const (
-	tokenQuery      = 0x0008
-	tokenElevation  = 20
+	tokenQuery           = 0x0008
+	tokenElevationType   = 20
 )
 
 // TOKEN_ELEVATION structure
@@ -57,7 +57,7 @@ func checkPrivileges() bool {
 	var size uint32
 	ret, _, _ = procGetTokenInformation.Call(
 		uintptr(token),
-		tokenElevation,
+		tokenElevationType,
 		uintptr(unsafe.Pointer(&elevation)),
 		unsafe.Sizeof(elevation),
 		uintptr(unsafe.Pointer(&size)),
