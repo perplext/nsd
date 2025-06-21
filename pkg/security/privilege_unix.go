@@ -241,12 +241,23 @@ func (se *SecureExec) Execute(cmdName string, args ...string) ([]byte, error) {
 	gid := os.Getgid()
 	
 	// Check for integer overflow before converting to uint32
-	const maxUint32 = 1<<32 - 1
-	if uid < 0 || uid > maxUint32 {
-		return nil, fmt.Errorf("UID value %d cannot be safely converted to uint32", uid)
+	// On 32-bit systems, int max is less than uint32 max, so we need a different check
+	if uid < 0 {
+		return nil, fmt.Errorf("UID value %d cannot be negative", uid)
 	}
-	if gid < 0 || gid > maxUint32 {
-		return nil, fmt.Errorf("GID value %d cannot be safely converted to uint32", gid)
+	if gid < 0 {
+		return nil, fmt.Errorf("GID value %d cannot be negative", gid)
+	}
+	
+	// On 64-bit systems, check if the value exceeds uint32 max
+	if strconv.IntSize == 64 {
+		const maxUint32 = 1<<32 - 1
+		if uid > maxUint32 {
+			return nil, fmt.Errorf("UID value %d exceeds uint32 maximum", uid)
+		}
+		if gid > maxUint32 {
+			return nil, fmt.Errorf("GID value %d exceeds uint32 maximum", gid)
+		}
 	}
 	
 	cmd.SysProcAttr = &syscall.SysProcAttr{

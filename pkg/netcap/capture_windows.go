@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"runtime"
 	"strings"
+	"time"
 	
 	"github.com/google/gopacket/pcap"
 )
@@ -110,7 +111,7 @@ func ListWindowsInterfaces() ([]string, error) {
 }
 
 // openWindowsLive opens a live capture handle with Windows-specific error handling
-func openWindowsLive(device string, snaplen int32, promisc bool, timeout pcap.Duration) (*pcap.Handle, error) {
+func openWindowsLive(device string, snaplen int32, promisc bool, timeout time.Duration) (*pcap.Handle, error) {
 	handle, err := pcap.OpenLive(device, snaplen, promisc, timeout)
 	if err != nil {
 		errStr := err.Error()
