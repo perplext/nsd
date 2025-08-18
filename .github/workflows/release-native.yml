@@ -16,7 +16,7 @@ jobs:
     name: Build Linux Package
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -67,7 +67,7 @@ jobs:
     name: Build macOS Intel Package
     runs-on: macos-13  # Use macOS 13 for Intel
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -119,7 +119,7 @@ jobs:
     name: Build macOS ARM Package
     runs-on: macos-latest  # Latest uses M1/M2
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -171,7 +171,7 @@ jobs:
     name: Build DEB Package
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -260,7 +260,7 @@ jobs:
     needs: [build-macos-intel, build-macos-arm]
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       
       - name: Download macOS binaries
         env:
@@ -307,7 +307,7 @@ jobs:
     name: Build Windows Package
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -368,7 +368,7 @@ jobs:
     needs: [build-linux, build-macos-intel, build-macos-arm, build-deb, create-universal-macos, build-windows]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       
       - name: Download and create checksums
         env:
