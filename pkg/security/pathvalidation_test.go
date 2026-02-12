@@ -11,7 +11,7 @@ import (
 func TestValidateAndCleanPath(t *testing.T) {
 	// Create a temporary directory for testing
 	tmpDir := t.TempDir()
-	
+
 	tests := []struct {
 		name        string
 		path        string
@@ -19,6 +19,7 @@ func TestValidateAndCleanPath(t *testing.T) {
 		wantErr     bool
 		errContains string
 		expectPath  string
+		unixOnly    bool
 	}{
 		{
 			name:       "Valid relative path",
@@ -66,15 +67,19 @@ func TestValidateAndCleanPath(t *testing.T) {
 			name:        "Absolute path outside allowed directory",
 			path:        "/etc/passwd",
 			allowedDir:  tmpDir,
-			wantErr:     runtime.GOOS != "windows",
+			wantErr:     true,
 			errContains: "outside allowed directory",
+			unixOnly:    true,
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			if tt.unixOnly && runtime.GOOS == "windows" {
+				t.Skip("Unix-specific path test")
+			}
 			result, err := ValidateAndCleanPath(tt.path, tt.allowedDir)
-			
+
 			if tt.wantErr {
 				if err == nil {
 					t.Errorf("Expected error but got none")
@@ -101,13 +106,13 @@ func TestSafeFileOperations(t *testing.T) {
 	tmpDir := t.TempDir()
 	testFile := filepath.Join(tmpDir, "test.txt")
 	testContent := []byte("test content")
-	
+
 	// Write test content to file
 	err := os.WriteFile(testFile, testContent, 0600)
 	if err != nil {
 		t.Fatalf("Failed to create test file: %v", err)
 	}
-	
+
 	t.Run("SafeReadFile", func(t *testing.T) {
 		// Test reading valid file
 		content, err := SafeReadFile("test.txt", tmpDir)
@@ -117,14 +122,14 @@ func TestSafeFileOperations(t *testing.T) {
 		if string(content) != string(testContent) {
 			t.Errorf("Expected content '%s', got '%s'", string(testContent), string(content))
 		}
-		
+
 		// Test reading file outside allowed directory
 		_, err = SafeReadFile("../../../etc/passwd", tmpDir)
 		if err == nil {
 			t.Error("Expected error for directory traversal attack")
 		}
 	})
-	
+
 	t.Run("SafeOpenFile", func(t *testing.T) {
 		// Test opening valid file
 		file, err := SafeOpenFile("test.txt", tmpDir)
@@ -134,23 +139,23 @@ func TestSafeFileOperations(t *testing.T) {
 		if file != nil {
 			_ = file.Close()
 		}
-		
+
 		// Test opening file outside allowed directory
 		_, err = SafeOpenFile("../../../etc/passwd", tmpDir)
 		if err == nil {
 			t.Error("Expected error for directory traversal attack")
 		}
 	})
-	
+
 	t.Run("SafeWriteFile", func(t *testing.T) {
 		newContent := []byte("new test content")
-		
+
 		// Test writing to valid file
 		err := SafeWriteFile("newtest.txt", newContent, tmpDir)
 		if err != nil {
 			t.Errorf("Unexpected error: %v", err)
 		}
-		
+
 		// Verify content was written
 		written, err := os.ReadFile(filepath.Join(tmpDir, "newtest.txt"))
 		if err != nil {
@@ -159,14 +164,14 @@ func TestSafeFileOperations(t *testing.T) {
 		if string(written) != string(newContent) {
 			t.Errorf("Expected content '%s', got '%s'", string(newContent), string(written))
 		}
-		
+
 		// Test writing file outside allowed directory
 		err = SafeWriteFile("../../../tmp/malicious.txt", newContent, tmpDir)
 		if err == nil {
 			t.Error("Expected error for directory traversal attack")
 		}
 	})
-	
+
 	t.Run("SafeCreateFile", func(t *testing.T) {
 		// Test creating valid file
 		file, err := SafeCreateFile("created.txt", tmpDir)
@@ -176,9 +181,9 @@ func TestSafeFileOperations(t *testing.T) {
 		if file != nil {
 			_ = file.Close()
 		}
-		
+
 		// Test creating file outside allowed directory
-		_, err = SafeCreateFile("../../../tmp/malicious.txt", tmpDir) 
+		_, err = SafeCreateFile("../../../tmp/malicious.txt", tmpDir)
 		if err == nil {
 			t.Error("Expected error for directory traversal attack")
 		}
@@ -187,7 +192,7 @@ func TestSafeFileOperations(t *testing.T) {
 
 // Helper function to check if a string contains a substring
 func containsString(s, substr string) bool {
-	return len(s) >= len(substr) && (s == substr || len(substr) == 0 || 
+	return len(s) >= len(substr) && (s == substr || len(substr) == 0 ||
 		(len(s) > len(substr) && func() bool {
 			for i := 0; i <= len(s)-len(substr); i++ {
 				if s[i:i+len(substr)] == substr {

@@ -1,6 +1,7 @@
 package security
 
 import (
+	"path/filepath"
 	"runtime"
 	"strings"
 	"testing"
@@ -332,8 +333,8 @@ func TestInputSanitizer(t *testing.T) {
 		// Valid with cleaning
 		result, err := is.SanitizeFilePath("  ./logs//capture.pcap  ")
 		assert.NoError(t, err)
-		assert.Equal(t, "logs/capture.pcap", result)
-		
+		assert.Equal(t, filepath.Join("logs", "capture.pcap"), result)
+
 		// Invalid
 		_, err = is.SanitizeFilePath("../../../etc/passwd")
 		assert.Error(t, err)
