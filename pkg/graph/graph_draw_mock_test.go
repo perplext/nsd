@@ -56,8 +56,12 @@ func (s *SimpleScreen) LockRegion(x, y, width, height int, lock bool)       {}
 func (s *SimpleScreen) Tty() (tcell.Tty, bool)                             { return nil, false }
 func (s *SimpleScreen) Colors() int                                         { return 256 }
 func (s *SimpleScreen) GetClipboard()                                       {}
-func (s *SimpleScreen) SetClipboard([]byte)                                 {}
-func (s *SimpleScreen) SetTitle(string)                                     {}
+func (s *SimpleScreen) SetClipboard([]byte)                                              {}
+func (s *SimpleScreen) SetTitle(string)                                                  {}
+func (s *SimpleScreen) Get(x, y int) (string, tcell.Style, int)                         { return " ", tcell.StyleDefault, 1 }
+func (s *SimpleScreen) Put(x, y int, str string, style tcell.Style) (string, int)       { return "", 0 }
+func (s *SimpleScreen) PutStr(x, y int, str string)                                     {}
+func (s *SimpleScreen) PutStrStyled(x, y int, str string, style tcell.Style)            {}
 
 // Test Draw method paths
 func TestGraph_DrawPaths(t *testing.T) {

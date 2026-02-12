@@ -81,7 +81,12 @@ func (ms *MockScreen) LockRegion(x, y, width, height int, lock bool) {}
 func (ms *MockScreen) Tty() (tcell.Tty, bool)              { return nil, false }
 func (ms *MockScreen) SetClipboard([]byte)                 {}
 func (ms *MockScreen) SetCursorStyle(tcell.CursorStyle, ...tcell.Color) {}
-func (ms *MockScreen) SetTitle(string)                     {}
+func (ms *MockScreen) GetCursorStyle() tcell.CursorStyle               { return tcell.CursorStyleDefault }
+func (ms *MockScreen) Get(x, y int) (string, tcell.Style, int)         { return " ", tcell.StyleDefault, 1 }
+func (ms *MockScreen) Put(x, y int, str string, style tcell.Style) (string, int) { return "", 0 }
+func (ms *MockScreen) PutStr(x, y int, str string)                     {}
+func (ms *MockScreen) PutStrStyled(x, y int, str string, style tcell.Style) {}
+func (ms *MockScreen) SetTitle(string)                                  {}
 
 // BenchmarkGraphRendering benchmarks graph rendering performance
 func BenchmarkGraphRendering(b *testing.B) {
