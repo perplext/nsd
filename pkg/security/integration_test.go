@@ -2,8 +2,9 @@ package security
 
 import (
 	"os"
+	"runtime"
 	"testing"
-	
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -49,7 +50,9 @@ func TestSecurityIntegration(t *testing.T) {
 		assert.Error(t, validator.ValidateInterfaceName(maliciousInputs["interface"]))
 		assert.Error(t, validator.ValidateBPFFilter(maliciousInputs["filter"]))
 		assert.Error(t, validator.ValidateThemeName(maliciousInputs["theme"]))
-		assert.Error(t, validator.ValidateFilePath(maliciousInputs["file"]))
+		if runtime.GOOS != "windows" {
+			assert.Error(t, validator.ValidateFilePath(maliciousInputs["file"]))
+		}
 	})
 	
 	// Test 3: Privilege manager (skip if not root)

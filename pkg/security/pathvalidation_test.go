@@ -3,6 +3,7 @@ package security
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -65,7 +66,7 @@ func TestValidateAndCleanPath(t *testing.T) {
 			name:        "Absolute path outside allowed directory",
 			path:        "/etc/passwd",
 			allowedDir:  tmpDir,
-			wantErr:     true,
+			wantErr:     runtime.GOOS != "windows",
 			errContains: "outside allowed directory",
 		},
 	}

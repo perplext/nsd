@@ -1,9 +1,10 @@
 package security
 
 import (
+	"runtime"
 	"strings"
 	"testing"
-	
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -98,32 +99,38 @@ func TestValidator_ValidateFilePath(t *testing.T) {
 	v := NewValidator()
 	
 	tests := []struct {
-		name    string
-		input   string
-		wantErr bool
-		errMsg  string
+		name     string
+		input    string
+		wantErr  bool
+		errMsg   string
+		unixOnly bool
 	}{
 		// Valid cases
-		{"Simple file", "output.json", false, ""},
-		{"With directory", "logs/capture.pcap", false, ""},
-		{"Absolute path", "/tmp/nsd.log", false, ""},
-		
+		{"Simple file", "output.json", false, "", false},
+		{"With directory", "logs/capture.pcap", false, "", false},
+		{"Absolute path", "/tmp/nsd.log", false, "", false},
+
 		// Invalid cases
-		{"Empty", "", true, "empty"},
-		{"Null bytes", "file\x00.txt", true, "null bytes"},
-		{"Directory traversal", "../../../etc/passwd", true, "directory traversal"},
-		{"Hidden traversal", "logs/../../../etc/passwd", true, "directory traversal"},
-		{"System path etc", "/etc/passwd", true, "system path"},
-		{"System path proc", "/proc/self/environ", true, "system path"},
-		{"System path sys", "/sys/kernel/config", true, "system path"},
-		{"Too long", strings.Repeat("a", 4097), true, "too long"},
+		{"Empty", "", true, "empty", false},
+		{"Null bytes", "file\x00.txt", true, "null bytes", false},
+		{"Directory traversal", "../../../etc/passwd", true, "directory traversal", false},
+		{"Hidden traversal", "logs/../../../etc/passwd", true, "directory traversal", false},
+		{"System path etc", "/etc/passwd", true, "system path", true},
+		{"System path proc", "/proc/self/environ", true, "system path", true},
+		{"System path sys", "/sys/kernel/config", true, "system path", true},
+		{"Too long", strings.Repeat("a", 4097), true, "too long", false},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			if tt.unixOnly && runtime.GOOS == "windows" {
+				t.Skip("Unix-specific path test")
+			}
 			err := v.ValidateFilePath(tt.input)
 			if tt.wantErr {
-				assert.Error(t, err)
+				if !assert.Error(t, err) {
+					return
+				}
 				if tt.errMsg != "" {
 					assert.Contains(t, err.Error(), tt.errMsg)
 				}
