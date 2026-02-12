@@ -86,6 +86,7 @@ jobs:
       - name: Run tests
         run: |
           go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
+        shell: bash
         env:
           CGO_ENABLED: 1
 
