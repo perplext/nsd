@@ -46,7 +46,7 @@ type ExtractedFile struct {
 	OriginalName string                 `json:"original_name"`
 	ContentType  string                 `json:"content_type"`
 	Size         int64                  `json:"size"`
-	MD5Hash      string                 `json:"md5_hash"` // Deprecated: kept for JSON compatibility, now populated with SHA256
+	MD5Hash      string                 `json:"md5_hash,omitempty"` // Deprecated: no longer computed, use SHA256Hash instead
 	SHA256Hash   string                 `json:"sha256_hash"`
 	Timestamp    time.Time              `json:"timestamp"`
 	FilePath     string                 `json:"file_path"`
@@ -497,7 +497,7 @@ func (h *httpStream) createExtractedFile(filename, contentType string, content [
 		OriginalName: filename,
 		ContentType:  contentType,
 		Size:         int64(len(content)),
-		MD5Hash:      hex.EncodeToString(sha256Hash[:]),
+		// MD5Hash intentionally left empty (deprecated, use SHA256Hash)
 		SHA256Hash:   hex.EncodeToString(sha256Hash[:]),
 		Timestamp:    time.Now(),
 		Direction:    direction,
