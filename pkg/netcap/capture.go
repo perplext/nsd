@@ -488,7 +488,7 @@ func (nm *NetworkMonitor) GetStats() map[string]interface{} {
 		}
 		
 		// Check if adding this sum would overflow the total
-		if totalPackets > math.MaxInt64-int64(packetSum) {
+		if totalPackets > math.MaxInt64-int64(packetSum) { // #nosec G115 -- bounds checked above
 			totalPackets = math.MaxInt64
 			break
 		}
@@ -509,7 +509,7 @@ func (nm *NetworkMonitor) GetStats() map[string]interface{} {
 		}
 		
 		// Check if adding this sum would overflow the total
-		if totalBytes > math.MaxInt64-int64(byteSum) {
+		if totalBytes > math.MaxInt64-int64(byteSum) { // #nosec G115 -- bounds checked above
 			totalBytes = math.MaxInt64
 			break
 		}

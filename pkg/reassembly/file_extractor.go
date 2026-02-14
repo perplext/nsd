@@ -3,7 +3,6 @@ package reassembly
 import (
 	"bufio"
 	"bytes"
-	"crypto/md5"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
@@ -47,7 +46,7 @@ type ExtractedFile struct {
 	OriginalName string                 `json:"original_name"`
 	ContentType  string                 `json:"content_type"`
 	Size         int64                  `json:"size"`
-	MD5Hash      string                 `json:"md5_hash"`
+	MD5Hash      string                 `json:"md5_hash,omitempty"` // Deprecated: no longer computed, use SHA256Hash instead
 	SHA256Hash   string                 `json:"sha256_hash"`
 	Timestamp    time.Time              `json:"timestamp"`
 	FilePath     string                 `json:"file_path"`
@@ -463,8 +462,7 @@ func (h *httpStream) createExtractedFile(filename, contentType string, content [
 	// Generate unique ID
 	id := fmt.Sprintf("%d_%s_%s", time.Now().Unix(), h.net.Src().String(), h.net.Dst().String())
 	
-	// Calculate hashes
-	md5Hash := md5.Sum(content)
+	// Calculate hash
 	sha256Hash := sha256.Sum256(content)
 	
 	// Detect file type from content if not provided
@@ -499,7 +497,7 @@ func (h *httpStream) createExtractedFile(filename, contentType string, content [
 		OriginalName: filename,
 		ContentType:  contentType,
 		Size:         int64(len(content)),
-		MD5Hash:      hex.EncodeToString(md5Hash[:]),
+		// MD5Hash intentionally left empty (deprecated, use SHA256Hash)
 		SHA256Hash:   hex.EncodeToString(sha256Hash[:]),
 		Timestamp:    time.Now(),
 		Direction:    direction,

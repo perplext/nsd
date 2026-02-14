@@ -91,7 +91,7 @@ func (rm *RecoveryManager) cleanOldCheckpoints() {
 	if len(files) > rm.maxCheckpoints {
 		// Sort by name (timestamp)
 		for i := 0; i < len(files)-rm.maxCheckpoints; i++ {
-			_ = os.Remove(files[i])
+			_ = os.Remove(files[i]) // #nosec G104 -- best-effort old checkpoint cleanup
 		}
 	}
 }
@@ -272,6 +272,6 @@ func (hc *HealthChecker) Start(ctx context.Context) {
 // runChecks runs all health checks
 func (hc *HealthChecker) runChecks() {
 	for _, check := range hc.checks {
-		_ = check()
+		_ = check() // #nosec G104 -- health check results are reported via HealthChecker status
 	}
 }

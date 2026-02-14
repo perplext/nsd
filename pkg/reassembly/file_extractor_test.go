@@ -139,7 +139,6 @@ func TestExtractedFileStructure(t *testing.T) {
 		OriginalName: "test.txt",
 		ContentType:  "text/plain",
 		Size:         1024,
-		MD5Hash:      "d41d8cd98f00b204e9800998ecf8427e",
 		SHA256Hash:   "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
 		Timestamp:    time.Now(),
 		FilePath:     "/tmp/extracted_123.dat",
