@@ -107,6 +107,7 @@ func (pm *PrivilegeManager) checkLinuxCapabilities() error {
 	}
 	
 	// Create command with secure environment
+	// #nosec G204 -- getcapPath is validated against known static paths; execPath from os.Executable() + validation
 	cmd := exec.Command(getcapPath, execPath)
 	cmd.Env = []string{
 		"PATH=/usr/bin:/bin:/usr/sbin:/sbin",
@@ -263,8 +264,8 @@ func (se *SecureExec) Execute(cmdName string, args ...string) ([]byte, error) {
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		// Drop supplementary groups
 		Credential: &syscall.Credential{
-			Uid: uint32(uid),
-			Gid: uint32(gid),
+			Uid: uint32(uid), // #nosec G115 -- bounds checked above (maxUint32)
+			Gid: uint32(gid), // #nosec G115 -- bounds checked above (maxUint32)
 		},
 	}
 	

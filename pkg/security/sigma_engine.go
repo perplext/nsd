@@ -2,6 +2,7 @@ package security
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"strings"
 	"time"
@@ -365,7 +366,10 @@ func (se *SigmaEngine) loadDefaultRules() {
 	
 	// Compile rules
 	for i := range defaultRules {
-		_ = se.compileRule(&defaultRules[i])
+		if err := se.compileRule(&defaultRules[i]); err != nil {
+			log.Printf("WARNING: failed to compile sigma rule %q: %v", defaultRules[i].ID, err)
+			continue
+		}
 		se.rules = append(se.rules, defaultRules[i])
 	}
 }

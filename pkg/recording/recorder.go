@@ -357,7 +357,7 @@ func (p *Player) playbackLoop() {
 	defer func() {
 		p.mutex.Lock()
 		if p.currentReader != nil {
-			_ = p.currentReader.Close()
+			_ = p.currentReader.Close() // #nosec G104 -- best-effort cleanup in defer
 		}
 		p.isPlaying = false
 		p.mutex.Unlock()
@@ -459,7 +459,7 @@ func (p *Player) Stop() {
 	
 	p.isPlaying = false
 	if p.currentReader != nil {
-		_ = p.currentReader.Close()
+		_ = p.currentReader.Close() // #nosec G104 -- best-effort cleanup
 		p.currentReader = nil
 	}
 }
@@ -505,10 +505,10 @@ func ListRecordings(recordingDir string) ([]Recording, error) {
 
 		var recording Recording
 		if err := json.NewDecoder(file).Decode(&recording); err != nil {
-			_ = file.Close()
+			_ = file.Close() // #nosec G104 -- best-effort cleanup
 			continue
 		}
-		_ = file.Close()
+		_ = file.Close() // #nosec G104 -- read-only file, close error is non-actionable
 
 		recordings = append(recordings, recording)
 	}
