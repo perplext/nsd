@@ -43,7 +43,7 @@ jobs:
             goarch: 386
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       
       - name: Set up Go
         uses: actions/setup-go@v6
@@ -148,7 +148,7 @@ jobs:
     name: Build Source Packages
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       
       - name: Create source packages
         run: |
@@ -258,7 +258,7 @@ jobs:
     needs: [build-native-primary]
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       
       - name: Download macOS binaries
         env:
@@ -306,7 +306,7 @@ jobs:
     needs: [build-native-primary, build-source-packages, create-universal-macos]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       
       - name: Download and create checksums
         env:

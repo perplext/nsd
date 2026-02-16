@@ -24,7 +24,7 @@ jobs:
           - arch: i386
             goarch: 386
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       
       - name: Set up Go
         uses: actions/setup-go@v6
@@ -114,7 +114,7 @@ jobs:
             cc: mipsel-linux-gnu-gcc
             pkg: gcc-mipsel-linux-gnu
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       
       - name: Set up Go
         uses: actions/setup-go@v6
@@ -211,7 +211,7 @@ jobs:
           - os: dragonfly
             arch: amd64
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       
       - name: Set up Go
         uses: actions/setup-go@v6
@@ -280,7 +280,7 @@ jobs:
     name: Build macOS Intel Package
     runs-on: macos-13
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       
       - name: Set up Go
         uses: actions/setup-go@v6
@@ -325,7 +325,7 @@ jobs:
     name: Build macOS ARM Package
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       
       - name: Set up Go
         uses: actions/setup-go@v6
@@ -379,7 +379,7 @@ jobs:
           - arch: arm64
             goarch: arm64
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       
       - name: Set up Go
         uses: actions/setup-go@v6
@@ -435,7 +435,7 @@ jobs:
     needs: [build-linux-native, build-linux-cross, build-bsd, build-macos-intel, build-macos-arm, build-windows]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       
       - name: Download and create checksums
         env:
