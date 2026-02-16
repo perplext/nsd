@@ -384,7 +384,7 @@ jobs:
       contents: read
     steps:
       - name: Update Homebrew formula
-        uses: dawidd6/action-homebrew-bump-formula@v5
+        uses: dawidd6/action-homebrew-bump-formula@v7
         with:
           token: ${{ secrets.HOMEBREW_GITHUB_TOKEN }}
           formula: nsd
