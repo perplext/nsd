@@ -147,8 +147,10 @@ func (nm *NetworkMonitor) StartCapture(interfaceName string) error {
 	// Get local addresses
 	nm.updateLocalAddresses()
 
-	// Open the device for capturing with Windows-specific error handling
-	handle, err := openWindowsLive(interfaceName, 1600, true, pcap.BlockForever)
+	// Open the device for capturing with Windows-specific error handling.
+	// Use a read timeout so the packet-reading goroutine periodically yields,
+	// allowing it to check the StopCapture channel and avoid deadlocking on Close().
+	handle, err := openWindowsLive(interfaceName, 1600, true, 100*time.Millisecond)
 	if err != nil {
 		return err
 	}
