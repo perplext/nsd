@@ -1,5 +1,5 @@
 # Build stage
-FROM golang:1.25-alpine AS builder
+FROM golang:1.26-alpine AS builder
 
 # Install build dependencies
 RUN apk add --no-cache gcc musl-dev libpcap-dev git
@@ -27,7 +27,7 @@ RUN CGO_ENABLED=1 go build \
     -o nsd ./cmd/nsd
 
 # Runtime stage
-FROM alpine:3.22
+FROM alpine:3.23
 
 # Install runtime dependencies
 RUN apk add --no-cache libpcap ca-certificates tzdata && \
