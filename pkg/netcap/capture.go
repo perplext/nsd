@@ -493,7 +493,7 @@ func (nm *NetworkMonitor) GetStats() map[string]interface{} {
 			break
 		}
 		
-		totalPackets += int64(packetSum)
+		totalPackets += int64(packetSum) // #nosec G115 -- bounds checked: packetSum <= MaxInt64 (line 485)
 		
 		// Safe byte sum calculation with overflow protection
 		byteSum := iface.BytesIn + iface.BytesOut
@@ -514,7 +514,7 @@ func (nm *NetworkMonitor) GetStats() map[string]interface{} {
 			break
 		}
 		
-		totalBytes += int64(byteSum)
+		totalBytes += int64(byteSum) // #nosec G115 -- bounds checked: byteSum <= MaxInt64 (line 506)
 	}
 	
 	return map[string]interface{}{

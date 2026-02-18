@@ -182,7 +182,7 @@ func TestProtocolManagerConcurrency(t *testing.T) {
 			}
 			
 			tcp := layers.TCP{
-				SrcPort: layers.TCPPort(50000 + id),
+				SrcPort: layers.TCPPort(50000 + id), // #nosec G115 -- id ranges 0-9, value always fits uint16
 				DstPort: 21,
 				SYN:     true,
 				Window:  1024,
