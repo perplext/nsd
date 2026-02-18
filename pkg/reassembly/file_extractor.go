@@ -20,6 +20,7 @@ import (
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/tcpassembly"
 	"github.com/google/gopacket/tcpassembly/tcpreader"
+	"github.com/perplext/nsd/pkg/security"
 )
 
 // FileExtractor handles real-time file extraction from network traffic
@@ -477,13 +478,13 @@ func (h *httpStream) createExtractedFile(filename, contentType string, content [
 	if direction == DirectionUpload {
 		srcIP = net.ParseIP(h.net.Src().String())
 		dstIP = net.ParseIP(h.net.Dst().String())
-		srcPort = uint16(h.transport.Src().FastHash())
-		dstPort = uint16(h.transport.Dst().FastHash())
+		srcPort = security.SafeUint64ToUint16WithMod(h.transport.Src().FastHash())
+		dstPort = security.SafeUint64ToUint16WithMod(h.transport.Dst().FastHash())
 	} else {
 		srcIP = net.ParseIP(h.net.Dst().String())
 		dstIP = net.ParseIP(h.net.Src().String())
-		srcPort = uint16(h.transport.Dst().FastHash())
-		dstPort = uint16(h.transport.Src().FastHash())
+		srcPort = security.SafeUint64ToUint16WithMod(h.transport.Dst().FastHash())
+		dstPort = security.SafeUint64ToUint16WithMod(h.transport.Src().FastHash())
 	}
 	
 	return ExtractedFile{
