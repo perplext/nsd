@@ -2,7 +2,7 @@
 FROM golang:1.26-alpine AS builder
 
 # Install build dependencies
-RUN apk add --no-cache gcc musl-dev libpcap-dev git
+RUN apk add --no-cache gcc musl-dev binutils libpcap-dev git
 
 # Set working directory
 WORKDIR /build
