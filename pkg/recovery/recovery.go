@@ -10,6 +10,8 @@ import (
 	"runtime/debug"
 	"sync"
 	"time"
+
+	"github.com/perplext/nsd/pkg/security"
 )
 
 // RecoveryManager handles application recovery and fault tolerance
@@ -160,8 +162,8 @@ func getMemoryInfo() MemInfo {
 func (rm *RecoveryManager) saveCrashReport(report CrashReport) {
 	filename := fmt.Sprintf("crash_%s.log", report.Timestamp.Format("20060102_150405"))
 	path := filepath.Join(rm.checkpointDir, filename)
-	
-	file, err := os.Create(path)
+
+	file, err := security.SafeCreateFile(path, rm.checkpointDir)
 	if err != nil {
 		log.Printf("Failed to save crash report: %v", err)
 		return

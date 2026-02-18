@@ -146,13 +146,13 @@ func GetAnimatedBorderChar(style BorderChars, position string, frame int) rune {
 	// For fire animation, cycle through different fire characters
 	if style.TopLeft == '🔥' {
 		fireChars := []rune{'🔥', '🔥', '🔥', '🔥'}
-		return fireChars[frame%len(fireChars)]
+		return fireChars[frame%len(fireChars)] // #nosec G602 -- slice is a non-empty literal, modulo prevents OOB
 	}
 	
 	// For sparkle/star animations
 	if style.TopLeft == '✦' {
 		starChars := []rune{'✦', '✧', '✶', '✷', '✵'}
-		return starChars[frame%len(starChars)]
+		return starChars[frame%len(starChars)] // #nosec G602 -- slice is a non-empty literal, modulo prevents OOB
 	}
 	
 	// Default: return the appropriate character for the position

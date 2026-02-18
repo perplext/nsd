@@ -2,6 +2,7 @@ package ui
 
 import (
 	"os"
+	"path/filepath"
 	"time"
 
 	chart "github.com/wcharczuk/go-chart/v2"
@@ -47,7 +48,8 @@ func (ui *UI) ExportSVG(path string) error {
 		})
 	}
 
-	f, err := os.Create(path)
+	cleanPath := filepath.Clean(path)
+	f, err := os.Create(cleanPath) // #nosec G304 -- path is user-provided via CLI flag, cleaned above
 	if err != nil {
 		return err
 	}
@@ -94,7 +96,8 @@ func (ui *UI) ExportPNG(path string) error {
 		})
 	}
 
-	f, err := os.Create(path)
+	cleanPath := filepath.Clean(path)
+	f, err := os.Create(cleanPath) // #nosec G304 -- path is user-provided via CLI flag, cleaned above
 	if err != nil {
 		return err
 	}

@@ -446,9 +446,9 @@ func (ftp *FTPAnalyzer) parsePortCommand(portStr string) *net.TCPAddr {
 		if num < 0 || num > 255 {
 			return nil
 		}
-		nums[i] = num
+		nums[i] = num // #nosec G602 -- bounds guaranteed by len(parts)==6 check above
 	}
-	
+
 	ip := net.IPv4(byte(nums[0]), byte(nums[1]), byte(nums[2]), byte(nums[3]))
 	port := nums[4]*256 + nums[5]
 	
@@ -468,7 +468,7 @@ func (ftp *FTPAnalyzer) parsePassiveResponse(response string) *net.TCPAddr {
 	}
 	
 	var nums [6]int
-	for i := 1; i < 7; i++ {
+	for i := 1; i < 7 && i < len(matches); i++ { // #nosec G602 -- len(matches)==7 checked above
 		num, err := strconv.Atoi(matches[i])
 		if err != nil {
 			return nil
@@ -479,9 +479,9 @@ func (ftp *FTPAnalyzer) parsePassiveResponse(response string) *net.TCPAddr {
 		}
 		nums[i-1] = num
 	}
-	
-	ip := net.IPv4(byte(nums[0]), byte(nums[1]), byte(nums[2]), byte(nums[3]))
-	port := nums[4]*256 + nums[5]
+
+	ip := net.IPv4(byte(nums[0]), byte(nums[1]), byte(nums[2]), byte(nums[3])) // #nosec G602 -- nums is [6]int, fully populated by loop above
+	port := nums[4]*256 + nums[5]                                               // #nosec G602 -- nums is [6]int, indices 4 and 5 are valid
 	
 	return &net.TCPAddr{
 		IP:   ip,

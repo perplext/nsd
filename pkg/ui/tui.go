@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -1246,9 +1247,14 @@ func (ui *UI) getGeoLocation(ip string) *GeoLocation {
         }
     }
     
+    // Validate IP before constructing URL
+    if net.ParseIP(ip) == nil {
+        return nil
+    }
+
     // Fetch from API with more fields
     url := fmt.Sprintf("http://ip-api.com/json/%s?fields=status,message,country,countryCode,region,regionName,city,lat,lon,isp,org,as", ip)
-    resp, err := http.Get(url)
+    resp, err := http.Get(url) // #nosec G107 -- URL uses validated IP address from network capture
     if err != nil {
         return nil
     }
