@@ -477,7 +477,7 @@ func (ftp *FTPAnalyzer) parsePassiveResponse(response string) *net.TCPAddr {
 		if num < 0 || num > 255 {
 			return nil
 		}
-		nums[i-1] = num
+		nums[i-1] = num // #nosec G602 -- i ranges 1-6, i-1 ranges 0-5, fits [6]int array
 	}
 
 	ip := net.IPv4(byte(nums[0]), byte(nums[1]), byte(nums[2]), byte(nums[3])) // #nosec G602 -- nums is [6]int, fully populated by loop above

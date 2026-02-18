@@ -3,7 +3,7 @@ package protocols
 import (
 	"bufio"
 	"bytes"
-	"crypto/md5"
+	"crypto/md5" // #nosec G501 -- MD5 used for SSH fingerprint display, not cryptographic security
 	"encoding/binary"
 	"fmt"
 	"net"
@@ -12,6 +12,7 @@ import (
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/tcpassembly/tcpreader"
+	"github.com/perplext/nsd/pkg/security"
 )
 
 // SSHAnalyzer analyzes SSH protocol traffic
@@ -154,7 +155,7 @@ func (ssh *SSHAnalyzer) getOrCreateSession(sessionKey string, flow gopacket.Flow
 		ID:                fmt.Sprintf("ssh_%d", time.Now().UnixNano()),
 		ClientIP:          net.ParseIP(flow.Src().String()),
 		ServerIP:          net.ParseIP(flow.Dst().String()),
-		Port:              uint16(flow.Dst().FastHash()),
+		Port:              security.SafeUint64ToUint16WithMod(flow.Dst().FastHash()),
 		AuthAttempts:      make([]AuthAttempt, 0),
 		KeyExchanges:      make([]KeyExchange, 0),
 		ChannelRequests:   make([]ChannelRequest, 0),
@@ -460,7 +461,7 @@ func (ssh *SSHAnalyzer) parseServerVersion(session *SSHSession, version string) 
 }
 
 func (ssh *SSHAnalyzer) calculateFingerprint(data string) string {
-	hash := md5.Sum([]byte(data))
+	hash := md5.Sum([]byte(data)) // #nosec G401 -- MD5 for SSH fingerprint display, not cryptographic security
 	return fmt.Sprintf("%x", hash)
 }
 

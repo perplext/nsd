@@ -66,7 +66,7 @@ func (c *ConnectionLifetimeVisualization) Update(monitor *netcap.NetworkMonitor)
 			conn.DstIP, conn.DstPort)
 		
 		// Since FirstSeen is not available, estimate lifetime based on packets and size
-		lifetime := time.Duration(conn.Packets) * time.Millisecond * 100 // rough estimate
+		lifetime := time.Duration(conn.Packets) * time.Millisecond * 100 // #nosec G115 -- packet count used as duration estimate // rough estimate
 		c.lifetimes[key] = lifetime
 	}
 	
@@ -89,7 +89,7 @@ func (c *ConnectionLifetimeVisualization) Update(monitor *netcap.NetworkMonitor)
 	// Count connections in each category
 	for _, conn := range connections {
 		// Since FirstSeen is not available, estimate lifetime based on packets and size
-		lifetime := time.Duration(conn.Packets) * time.Millisecond * 100 // rough estimate
+		lifetime := time.Duration(conn.Packets) * time.Millisecond * 100 // #nosec G115 -- packet count used as duration estimate // rough estimate
 		service := getServiceName(conn)
 		
 		for i := range categories {
@@ -190,7 +190,7 @@ func (c *ConnectionLifetimeVisualization) Update(monitor *netcap.NetworkMonitor)
 		}
 		
 		// Since FirstSeen is not available, estimate lifetime based on packets and size
-		lifetime := time.Duration(conn.Packets) * time.Millisecond * 100 // rough estimate
+		lifetime := time.Duration(conn.Packets) * time.Millisecond * 100 // #nosec G115 -- packet count used as duration estimate // rough estimate
 		service := getServiceName(conn)
 		
 		output.WriteString(fmt.Sprintf("• %s:%d → %s (%s) - %s\n",
@@ -235,7 +235,7 @@ func (c *ConnectionLifetimeVisualization) getServiceLifetimes(connections []*net
 	for _, conn := range connections {
 		service := getServiceName(conn)
 		// Since FirstSeen is not available, estimate lifetime based on packets and size
-		lifetime := time.Duration(conn.Packets) * time.Millisecond * 100 // rough estimate
+		lifetime := time.Duration(conn.Packets) * time.Millisecond * 100 // #nosec G115 -- packet count used as duration estimate // rough estimate
 		
 		if stats[service] == nil {
 			stats[service] = &lifetimeStats{}
@@ -254,7 +254,7 @@ func (c *ConnectionLifetimeVisualization) getLongLivedConnections(connections []
 	
 	for _, conn := range connections {
 		// Since FirstSeen is not available, estimate lifetime based on packets and size
-		lifetime := time.Duration(conn.Packets) * time.Millisecond * 100 // rough estimate
+		lifetime := time.Duration(conn.Packets) * time.Millisecond * 100 // #nosec G115 -- packet count used as duration estimate // rough estimate
 		if lifetime >= threshold {
 			longLived = append(longLived, conn)
 		}
@@ -264,8 +264,8 @@ func (c *ConnectionLifetimeVisualization) getLongLivedConnections(connections []
 	for i := 0; i < len(longLived); i++ {
 		for j := i + 1; j < len(longLived); j++ {
 			// Since FirstSeen is not available, estimate lifetime based on packets and size
-			lifetime1 := time.Duration(longLived[i].Packets) * time.Millisecond * 100
-			lifetime2 := time.Duration(longLived[j].Packets) * time.Millisecond * 100
+			lifetime1 := time.Duration(longLived[i].Packets) * time.Millisecond * 100 // #nosec G115 -- packet count used as duration estimate
+			lifetime2 := time.Duration(longLived[j].Packets) * time.Millisecond * 100 // #nosec G115 -- packet count used as duration estimate
 			if lifetime2 > lifetime1 {
 				longLived[i], longLived[j] = longLived[j], longLived[i]
 			}

@@ -2136,7 +2136,7 @@ func (ui *UI) getCPUMemory() (float64, float64) {
 
 // colorTag returns a hex code suitable for tview dynamic color tags.
 func colorTag(c tcell.Color) string {
-    rgb := uint32(c)
+    rgb := uint32(c) // #nosec G115 -- tcell.Color values are non-negative, fit uint32
     r := (rgb >> 16) & 0xff
     g := (rgb >> 8) & 0xff
     b := rgb & 0xff
@@ -2803,7 +2803,7 @@ func (ui *UI) stopRecording() {
 	// Calculate totals
 	if stats, ok := ui.networkMonitor.GetInterfaceStats()[ui.selectedIface]; ok {
 		ui.sessionData.TotalBytes = stats.BytesIn + stats.BytesOut
-		ui.sessionData.PacketCount = int(stats.PacketsIn + stats.PacketsOut)
+		ui.sessionData.PacketCount = int(stats.PacketsIn + stats.PacketsOut) // #nosec G115 -- packet counts fit int on 64-bit platforms
 	}
 	
 	// Save recording
@@ -2934,7 +2934,8 @@ func (ui *UI) showReplayMenu() {
 
 // loadAndReplaySession loads and replays a recorded session
 func (ui *UI) loadAndReplaySession(filename string) {
-	data, err := os.ReadFile(filename)
+	cleanPath := filepath.Clean(filename)
+	data, err := os.ReadFile(cleanPath) // #nosec G304 -- user-selected replay file, path cleaned
 	if err != nil {
 		ui.showError(fmt.Sprintf("Failed to load session: %v", err))
 		return
@@ -3207,9 +3208,9 @@ func (ui *UI) saveProfile(name string) error {
 // loadProfile loads a UI profile and applies it
 func (ui *UI) loadProfile(name string) error {
 	profilesDir := ui.getProfilesDir()
-	filename := filepath.Join(profilesDir, name+".json")
-	
-	data, err := os.ReadFile(filename)
+	filename := filepath.Clean(filepath.Join(profilesDir, name+".json"))
+
+	data, err := os.ReadFile(filename) // #nosec G304 -- path constructed from known profiles dir, cleaned
 	if err != nil {
 		return fmt.Errorf("failed to read profile file: %w", err)
 	}
@@ -3459,7 +3460,7 @@ func (ui *UI) showVisualizationFullscreen(vizID string) {
 func (ui *UI) showDashboard(layout DashboardLayout) {
 	dashboard := NewDashboard(GlobalRegistry, ui.networkMonitor)
 	dashboard.SetTheme(ui.theme)
-	dashboard.SetLayout(layout)
+	_ = dashboard.SetLayout(layout) // #nosec G104 -- layout errors are non-fatal for dashboard display
 	
 	// Update dashboard periodically
 	go func() {

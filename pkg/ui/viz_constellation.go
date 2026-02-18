@@ -199,7 +199,7 @@ func (c *ConstellationVisualization) updateStars(portActivity map[int]int, width
 		if !found {
 			// Create new star
 			angle := float64(port%360) * math.Pi / 180
-			distance := float64(10 + rand.Intn(10))
+			distance := float64(10 + rand.Intn(10)) // #nosec G404 -- visualization only
 			
 			x := centerX + int(distance*math.Cos(angle))
 			y := centerY + int(distance*math.Sin(angle)/2) // Aspect ratio
@@ -209,7 +209,7 @@ func (c *ConstellationVisualization) updateStars(portActivity map[int]int, width
 				y:       y,
 				port:    port,
 				size:    c.getStarSize(activity),
-				twinkle: rand.Intn(3),
+				twinkle: rand.Intn(3), // #nosec G404 -- visualization only
 			})
 		}
 	}

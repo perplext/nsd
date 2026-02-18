@@ -118,7 +118,7 @@ func LoadConfig(path string) (*Config, error) {
 		return nil, fmt.Errorf("invalid config path: %w", err)
 	}
 	
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) // #nosec G304 -- path validated by ValidateFilePath above
 	if err != nil {
 		return nil, fmt.Errorf("failed to read config: %w", err)
 	}

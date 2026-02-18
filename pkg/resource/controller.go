@@ -71,11 +71,11 @@ func DefaultConfig() *Config {
 
 // NewController creates a new resource controller
 func NewController(cfg *Config) (*Controller, error) {
-	pid := int32(runtime.GOMAXPROCS(0))
+	pid := int32(runtime.GOMAXPROCS(0)) // #nosec G115 -- GOMAXPROCS returns small value, fits int32
 	proc, err := process.NewProcess(pid)
 	if err != nil {
 		// Try current process
-		proc, err = process.NewProcess(int32(os.Getpid()))
+		proc, err = process.NewProcess(int32(os.Getpid())) // #nosec G115 -- PIDs always fit int32
 		if err != nil {
 			return nil, fmt.Errorf("failed to get process info: %w", err)
 		}
@@ -163,7 +163,7 @@ func (rc *Controller) checkResources() {
 func (rc *Controller) updateMemoryUsage() {
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
-	rc.currentMemoryMB = int64(m.Alloc / 1024 / 1024)
+	rc.currentMemoryMB = int64(m.Alloc / 1024 / 1024) // #nosec G115 -- memory in MB always fits int64
 	
 	// Trigger GC if needed
 	if rc.currentMemoryMB > rc.gcTriggerMB {
@@ -184,7 +184,7 @@ func (rc *Controller) updateCPUUsage() {
 
 // updateGoroutineCount updates current goroutine count
 func (rc *Controller) updateGoroutineCount() {
-	atomic.StoreInt32(&rc.currentGoroutines, int32(runtime.NumGoroutine()))
+	atomic.StoreInt32(&rc.currentGoroutines, int32(runtime.NumGoroutine())) // #nosec G115 -- goroutine count fits int32
 }
 
 // Violation represents a resource limit violation
@@ -346,7 +346,7 @@ type Usage struct {
 
 // SetPacketBufferSize updates the packet buffer size
 func (rc *Controller) SetPacketBufferSize(size int) {
-	atomic.StoreInt32(&rc.packetBufferSize, int32(size))
+	atomic.StoreInt32(&rc.packetBufferSize, int32(size)) // #nosec G115 -- buffer size is a small configuration value
 }
 
 // SetCallbacks sets callback functions
