@@ -79,9 +79,9 @@ func (m *MatrixRainVisualization) initializeColumns() {
 	for i := range m.columns {
 		m.columns[i] = matrixColumn{
 			chars:    make([]rune, m.height),
-			position: rand.Intn(m.height),
-			speed:    rand.Intn(3) + 1,
-			length:   rand.Intn(10) + 5,
+			position: rand.Intn(m.height),  // #nosec G404 -- visualization only
+			speed:    rand.Intn(3) + 1,     // #nosec G404 -- visualization only
+			length:   rand.Intn(10) + 5,    // #nosec G404 -- visualization only
 		}
 		
 		// Fill with spaces initially
@@ -103,7 +103,7 @@ func (m *MatrixRainVisualization) Update(monitor *netcap.NetworkMonitor) {
 		if time.Since(pkt.Timestamp) < 2*time.Second {
 			m.packetBuffer = append(m.packetBuffer, matrixPacket{
 				protocol: pkt.Protocol,
-				size:     int(pkt.Length),
+				size:     int(pkt.Length), // #nosec G115 -- packet length fits int
 				time:     pkt.Timestamp,
 			})
 		}
@@ -189,27 +189,27 @@ func (m *MatrixRainVisualization) updateMatrix() {
 			// Reset if at bottom
 			if m.columns[i].position-m.columns[i].length > m.height {
 				m.columns[i].position = 0
-				m.columns[i].speed = rand.Intn(3) + 1
-				m.columns[i].length = rand.Intn(10) + 5
+				m.columns[i].speed = rand.Intn(3) + 1   // #nosec G404 -- visualization only
+				m.columns[i].length = rand.Intn(10) + 5 // #nosec G404 -- visualization only
 			}
-			
+
 			// Add new character at head position
 			if m.columns[i].position < m.height && m.columns[i].position >= 0 {
 				// Choose character based on recent packets
-				if len(m.packetBuffer) > 0 && rand.Float32() < 0.7 {
+				if len(m.packetBuffer) > 0 && rand.Float32() < 0.7 { // #nosec G404 -- visualization only
 					// Use protocol character
-					pkt := m.packetBuffer[rand.Intn(len(m.packetBuffer))]
+					pkt := m.packetBuffer[rand.Intn(len(m.packetBuffer))] // #nosec G404 -- visualization only
 					if chars, ok := protoChars[pkt.protocol]; ok {
-						m.columns[i].chars[m.columns[i].position] = chars[rand.Intn(len(chars))]
+						m.columns[i].chars[m.columns[i].position] = chars[rand.Intn(len(chars))] // #nosec G404 -- visualization only
 					} else {
-						m.columns[i].chars[m.columns[i].position] = rune('0' + rand.Intn(10))
+						m.columns[i].chars[m.columns[i].position] = rune('0' + rand.Intn(10)) // #nosec G404 -- visualization only
 					}
 				} else {
 					// Random character
-					if rand.Float32() < 0.5 {
-						m.columns[i].chars[m.columns[i].position] = rune('0' + rand.Intn(10))
+					if rand.Float32() < 0.5 { // #nosec G404 -- visualization only
+						m.columns[i].chars[m.columns[i].position] = rune('0' + rand.Intn(10)) // #nosec G404 -- visualization only
 					} else {
-						m.columns[i].chars[m.columns[i].position] = rune('A' + rand.Intn(26))
+						m.columns[i].chars[m.columns[i].position] = rune('A' + rand.Intn(26)) // #nosec G404 -- visualization only
 					}
 				}
 			}

@@ -103,7 +103,7 @@ func getFireColor(frame int) tcell.Color {
 // getMatrixColor creates matrix-like green variations
 func getMatrixColor(frame int) tcell.Color {
 	intensity := 100 + (frame*10)%155
-	return tcell.NewRGBColor(0, int32(intensity), 0)
+	return tcell.NewRGBColor(0, int32(intensity), 0) // #nosec G115 -- intensity is bounded 100-254 by calculation above
 }
 
 // getWaveColor creates a wave effect

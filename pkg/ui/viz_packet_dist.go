@@ -59,7 +59,7 @@ func (p *PacketDistributionVisualization) Update(monitor *netcap.NetworkMonitor)
 	
 	// Categorize packets by size
 	for _, pkt := range packets {
-		bucket := p.getBucket(int(pkt.Length))
+		bucket := p.getBucket(int(pkt.Length)) // #nosec G115 -- packet length fits int
 		p.distribution[bucket]++
 	}
 	
@@ -215,7 +215,7 @@ func (p *PacketDistributionVisualization) calculateAverageSize(packets []*netcap
 	
 	total := 0
 	for _, pkt := range packets {
-		total += int(pkt.Length)
+		total += int(pkt.Length) // #nosec G115 -- packet length fits int
 	}
 	
 	return total / len(packets)
@@ -234,7 +234,7 @@ func (p *PacketDistributionVisualization) getProtocolSizes(packets []*netcap.Pac
 		if sizes[pkt.Protocol] == nil {
 			sizes[pkt.Protocol] = &protocolSize{}
 		}
-		sizes[pkt.Protocol].total += int(pkt.Length)
+		sizes[pkt.Protocol].total += int(pkt.Length) // #nosec G115 -- packet length fits int
 		sizes[pkt.Protocol].count++
 	}
 	

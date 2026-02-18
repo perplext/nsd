@@ -327,7 +327,7 @@ func LoadThemes(path string) error {
 		return err
 	}
 	
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) // #nosec G304 -- path validated by validateThemePath above
 	if err != nil {
 		return err
 	}

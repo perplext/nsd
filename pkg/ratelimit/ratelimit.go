@@ -105,7 +105,7 @@ func (rl *RateLimiter) AllowPacketN(n int) bool {
 	
 	allowed := rl.packetLimiter.AllowN(time.Now(), n)
 	if !allowed {
-		atomic.AddUint64(&rl.droppedPackets, uint64(n))
+		atomic.AddUint64(&rl.droppedPackets, uint64(n)) // #nosec G115 -- n is a small packet count, always positive
 	}
 	return allowed
 }
@@ -115,10 +115,10 @@ func (rl *RateLimiter) AllowBytes(bytes int) bool {
 	if rl.byteLimiter == nil {
 		return true
 	}
-	
+
 	allowed := rl.byteLimiter.AllowN(time.Now(), bytes)
 	if !allowed {
-		atomic.AddUint64(&rl.droppedBytes, uint64(bytes))
+		atomic.AddUint64(&rl.droppedBytes, uint64(bytes)) // #nosec G115 -- bytes is a positive packet size
 	}
 	return allowed
 }

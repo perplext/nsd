@@ -279,5 +279,5 @@ func ParseCommand(line string) (command string, args []string) {
 
 // GenerateEventID generates a unique event ID
 func GenerateEventID(protocol string) string {
-	return fmt.Sprintf("%s_%d_%d", protocol, time.Now().UnixNano(), rand.Intn(1000))
+	return fmt.Sprintf("%s_%d_%d", protocol, time.Now().UnixNano(), rand.Intn(1000)) // #nosec G404 -- event IDs are for tracing, not security
 }

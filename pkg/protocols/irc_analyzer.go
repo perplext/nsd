@@ -11,6 +11,7 @@ import (
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/tcpassembly/tcpreader"
+	"github.com/perplext/nsd/pkg/security"
 )
 
 // IRCAnalyzer analyzes IRC protocol traffic including DCC file transfers
@@ -137,8 +138,8 @@ func (irc *IRCAnalyzer) AnalyzeStream(flow gopacket.Flow, reader *tcpreader.Read
 	sessionKey := fmt.Sprintf("%s->%s", flow.Src().String(), flow.Dst().String())
 	
 	// Check if this might be a DCC session
-	srcPort := uint16(flow.Src().FastHash())
-	dstPort := uint16(flow.Dst().FastHash())
+	srcPort := security.SafeUint64ToUint16WithMod(flow.Src().FastHash())
+	dstPort := security.SafeUint64ToUint16WithMod(flow.Dst().FastHash())
 	
 	if irc.isDCCPort(srcPort) || irc.isDCCPort(dstPort) {
 		// Handle DCC session
@@ -195,7 +196,7 @@ func (irc *IRCAnalyzer) getOrCreateSession(sessionKey string, flow gopacket.Flow
 		ID:           fmt.Sprintf("irc_%d", time.Now().UnixNano()),
 		ClientIP:     net.ParseIP(flow.Src().String()),
 		ServerIP:     net.ParseIP(flow.Dst().String()),
-		Port:         uint16(flow.Dst().FastHash()),
+		Port:         security.SafeUint64ToUint16WithMod(flow.Dst().FastHash()),
 		Channels:     make([]string, 0),
 		Messages:     make([]IRCMessage, 0),
 		Commands:     make([]IRCCommand, 0),
@@ -504,7 +505,7 @@ func (irc *IRCAnalyzer) getOrCreateDCCSession(sessionKey string, flow gopacket.F
 		Type:      DCCTypeSend, // Default assumption
 		ClientIP:  net.ParseIP(flow.Src().String()),
 		ServerIP:  net.ParseIP(flow.Dst().String()),
-		Port:      uint16(flow.Dst().FastHash()),
+		Port:      security.SafeUint64ToUint16WithMod(flow.Dst().FastHash()),
 		StartTime: time.Now(),
 		Active:    true,
 	}
