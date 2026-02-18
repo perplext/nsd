@@ -196,7 +196,8 @@ func (m *MatrixRainVisualization) updateMatrix() {
 			// Add new character at head position
 			if m.columns[i].position < m.height && m.columns[i].position >= 0 {
 				// Choose character based on recent packets
-				if len(m.packetBuffer) > 0 && rand.Float32() < 0.7 { // #nosec G404 -- visualization only
+				usePacket := rand.Float32() < 0.7 // #nosec G404 -- visualization only
+				if len(m.packetBuffer) > 0 && usePacket {
 					// Use protocol character
 					pkt := m.packetBuffer[rand.Intn(len(m.packetBuffer))] // #nosec G404 -- visualization only
 					if chars, ok := protoChars[pkt.protocol]; ok {
@@ -206,7 +207,8 @@ func (m *MatrixRainVisualization) updateMatrix() {
 					}
 				} else {
 					// Random character
-					if rand.Float32() < 0.5 { // #nosec G404 -- visualization only
+					useDigit := rand.Float32() < 0.5 // #nosec G404 -- visualization only
+					if useDigit {
 						m.columns[i].chars[m.columns[i].position] = rune('0' + rand.Intn(10)) // #nosec G404 -- visualization only
 					} else {
 						m.columns[i].chars[m.columns[i].position] = rune('A' + rand.Intn(26)) // #nosec G404 -- visualization only
