@@ -1,6 +1,6 @@
 module github.com/perplext/nsd
 
-go 1.24.0
+go 1.25.0
 
 require (
 	github.com/gdamore/tcell/v2 v2.13.8
@@ -29,9 +29,9 @@ require (
 	github.com/tklauser/go-sysconf v0.3.12 // indirect
 	github.com/tklauser/numcpus v0.6.1 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
-	golang.org/x/image v0.18.0 // indirect
+	golang.org/x/image v0.38.0 // indirect
 	golang.org/x/net v0.38.0 // indirect
 	golang.org/x/sys v0.38.0 // indirect
 	golang.org/x/term v0.37.0 // indirect
-	golang.org/x/text v0.31.0 // indirect
+	golang.org/x/text v0.35.0 // indirect
 )
