@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1783082086662,
+  "lastUpdate": 1783083030364,
   "repoUrl": "https://github.com/perplext/nsd",
   "entries": {
     "Go Benchmark": [
@@ -52872,6 +52872,2504 @@ window.BENCHMARK_DATA = {
             "value": 295,
             "unit": "allocs/op",
             "extra": "32400 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "perplext",
+            "username": "perplext"
+          },
+          "committer": {
+            "name": "perplext",
+            "username": "perplext"
+          },
+          "id": "7aab1aa6d5987598b390648d024921217c568c8e",
+          "message": "ci: bump CI to Go 1.25 to match go.mod requirement",
+          "timestamp": "2026-04-29T01:55:20Z",
+          "url": "https://github.com/perplext/nsd/pull/63/commits/7aab1aa6d5987598b390648d024921217c568c8e"
+        },
+        "date": 1783083030063,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkProcessTLSPacket (github.com/perplext/nsd/pkg/crypto)",
+            "value": 587.7,
+            "unit": "ns/op\t     208 B/op\t       8 allocs/op",
+            "extra": "1963500 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkProcessTLSPacket (github.com/perplext/nsd/pkg/crypto) - ns/op",
+            "value": 587.7,
+            "unit": "ns/op",
+            "extra": "1963500 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkProcessTLSPacket (github.com/perplext/nsd/pkg/crypto) - B/op",
+            "value": 208,
+            "unit": "B/op",
+            "extra": "1963500 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkProcessTLSPacket (github.com/perplext/nsd/pkg/crypto) - allocs/op",
+            "value": 8,
+            "unit": "allocs/op",
+            "extra": "1963500 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHexToBytes (github.com/perplext/nsd/pkg/crypto)",
+            "value": 6502,
+            "unit": "ns/op\t    1588 B/op\t      93 allocs/op",
+            "extra": "180848 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHexToBytes (github.com/perplext/nsd/pkg/crypto) - ns/op",
+            "value": 6502,
+            "unit": "ns/op",
+            "extra": "180848 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHexToBytes (github.com/perplext/nsd/pkg/crypto) - B/op",
+            "value": 1588,
+            "unit": "B/op",
+            "extra": "180848 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHexToBytes (github.com/perplext/nsd/pkg/crypto) - allocs/op",
+            "value": 93,
+            "unit": "allocs/op",
+            "extra": "180848 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphAddPoint (github.com/perplext/nsd/pkg/graph)",
+            "value": 161.4,
+            "unit": "ns/op\t      60 B/op\t       0 allocs/op",
+            "extra": "6703108 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphAddPoint (github.com/perplext/nsd/pkg/graph) - ns/op",
+            "value": 161.4,
+            "unit": "ns/op",
+            "extra": "6703108 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphAddPoint (github.com/perplext/nsd/pkg/graph) - B/op",
+            "value": 60,
+            "unit": "B/op",
+            "extra": "6703108 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphAddPoint (github.com/perplext/nsd/pkg/graph) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "6703108 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphAddDualPoint (github.com/perplext/nsd/pkg/graph)",
+            "value": 251.5,
+            "unit": "ns/op\t     121 B/op\t       0 allocs/op",
+            "extra": "4755670 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphAddDualPoint (github.com/perplext/nsd/pkg/graph) - ns/op",
+            "value": 251.5,
+            "unit": "ns/op",
+            "extra": "4755670 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphAddDualPoint (github.com/perplext/nsd/pkg/graph) - B/op",
+            "value": 121,
+            "unit": "B/op",
+            "extra": "4755670 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphAddDualPoint (github.com/perplext/nsd/pkg/graph) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "4755670 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkFormatValueFunc (github.com/perplext/nsd/pkg/graph)",
+            "value": 261.5,
+            "unit": "ns/op\t      16 B/op\t       2 allocs/op",
+            "extra": "4442902 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkFormatValueFunc (github.com/perplext/nsd/pkg/graph) - ns/op",
+            "value": 261.5,
+            "unit": "ns/op",
+            "extra": "4442902 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkFormatValueFunc (github.com/perplext/nsd/pkg/graph) - B/op",
+            "value": 16,
+            "unit": "B/op",
+            "extra": "4442902 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkFormatValueFunc (github.com/perplext/nsd/pkg/graph) - allocs/op",
+            "value": 2,
+            "unit": "allocs/op",
+            "extra": "4442902 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphDataOperations/AddDataPoint (github.com/perplext/nsd/pkg/graph)",
+            "value": 1410,
+            "unit": "ns/op\t      1000 datapoints\t     183 B/op\t       0 allocs/op",
+            "extra": "886258 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphDataOperations/AddDataPoint (github.com/perplext/nsd/pkg/graph) - ns/op",
+            "value": 1410,
+            "unit": "ns/op",
+            "extra": "886258 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphDataOperations/AddDataPoint (github.com/perplext/nsd/pkg/graph) - datapoints",
+            "value": 1000,
+            "unit": "datapoints",
+            "extra": "886258 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphDataOperations/AddDataPoint (github.com/perplext/nsd/pkg/graph) - B/op",
+            "value": 183,
+            "unit": "B/op",
+            "extra": "886258 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphDataOperations/AddDataPoint (github.com/perplext/nsd/pkg/graph) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "886258 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphDataOperations/AddDataPointWithRotation (github.com/perplext/nsd/pkg/graph)",
+            "value": 231,
+            "unit": "ns/op\t     126 B/op\t       0 allocs/op",
+            "extra": "5203041 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphDataOperations/AddDataPointWithRotation (github.com/perplext/nsd/pkg/graph) - ns/op",
+            "value": 231,
+            "unit": "ns/op",
+            "extra": "5203041 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphDataOperations/AddDataPointWithRotation (github.com/perplext/nsd/pkg/graph) - B/op",
+            "value": 126,
+            "unit": "B/op",
+            "extra": "5203041 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphDataOperations/AddDataPointWithRotation (github.com/perplext/nsd/pkg/graph) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "5203041 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphDataOperations/ClearData (github.com/perplext/nsd/pkg/graph)",
+            "value": 249495,
+            "unit": "ns/op\t  106802 B/op\t      13 allocs/op",
+            "extra": "4749 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphDataOperations/ClearData (github.com/perplext/nsd/pkg/graph) - ns/op",
+            "value": 249495,
+            "unit": "ns/op",
+            "extra": "4749 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphDataOperations/ClearData (github.com/perplext/nsd/pkg/graph) - B/op",
+            "value": 106802,
+            "unit": "B/op",
+            "extra": "4749 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphDataOperations/ClearData (github.com/perplext/nsd/pkg/graph) - allocs/op",
+            "value": 13,
+            "unit": "allocs/op",
+            "extra": "4749 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/braille-10pts-Small (github.com/perplext/nsd/pkg/graph)",
+            "value": 22351,
+            "unit": "ns/op\t     727 B/op\t      59 allocs/op",
+            "extra": "53352 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/braille-10pts-Small (github.com/perplext/nsd/pkg/graph) - ns/op",
+            "value": 22351,
+            "unit": "ns/op",
+            "extra": "53352 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/braille-10pts-Small (github.com/perplext/nsd/pkg/graph) - B/op",
+            "value": 727,
+            "unit": "B/op",
+            "extra": "53352 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/braille-10pts-Small (github.com/perplext/nsd/pkg/graph) - allocs/op",
+            "value": 59,
+            "unit": "allocs/op",
+            "extra": "53352 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/braille-10pts-Medium (github.com/perplext/nsd/pkg/graph)",
+            "value": 22318,
+            "unit": "ns/op\t     729 B/op\t      59 allocs/op",
+            "extra": "52788 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/braille-10pts-Medium (github.com/perplext/nsd/pkg/graph) - ns/op",
+            "value": 22318,
+            "unit": "ns/op",
+            "extra": "52788 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/braille-10pts-Medium (github.com/perplext/nsd/pkg/graph) - B/op",
+            "value": 729,
+            "unit": "B/op",
+            "extra": "52788 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/braille-10pts-Medium (github.com/perplext/nsd/pkg/graph) - allocs/op",
+            "value": 59,
+            "unit": "allocs/op",
+            "extra": "52788 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/braille-10pts-Large (github.com/perplext/nsd/pkg/graph)",
+            "value": 22609,
+            "unit": "ns/op\t     729 B/op\t      59 allocs/op",
+            "extra": "53089 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/braille-10pts-Large (github.com/perplext/nsd/pkg/graph) - ns/op",
+            "value": 22609,
+            "unit": "ns/op",
+            "extra": "53089 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/braille-10pts-Large (github.com/perplext/nsd/pkg/graph) - B/op",
+            "value": 729,
+            "unit": "B/op",
+            "extra": "53089 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/braille-10pts-Large (github.com/perplext/nsd/pkg/graph) - allocs/op",
+            "value": 59,
+            "unit": "allocs/op",
+            "extra": "53089 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/braille-100pts-Small (github.com/perplext/nsd/pkg/graph)",
+            "value": 22606,
+            "unit": "ns/op\t     702 B/op\t      60 allocs/op",
+            "extra": "52947 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/braille-100pts-Small (github.com/perplext/nsd/pkg/graph) - ns/op",
+            "value": 22606,
+            "unit": "ns/op",
+            "extra": "52947 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/braille-100pts-Small (github.com/perplext/nsd/pkg/graph) - B/op",
+            "value": 702,
+            "unit": "B/op",
+            "extra": "52947 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/braille-100pts-Small (github.com/perplext/nsd/pkg/graph) - allocs/op",
+            "value": 60,
+            "unit": "allocs/op",
+            "extra": "52947 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/braille-100pts-Medium (github.com/perplext/nsd/pkg/graph)",
+            "value": 22567,
+            "unit": "ns/op\t     699 B/op\t      60 allocs/op",
+            "extra": "52881 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/braille-100pts-Medium (github.com/perplext/nsd/pkg/graph) - ns/op",
+            "value": 22567,
+            "unit": "ns/op",
+            "extra": "52881 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/braille-100pts-Medium (github.com/perplext/nsd/pkg/graph) - B/op",
+            "value": 699,
+            "unit": "B/op",
+            "extra": "52881 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/braille-100pts-Medium (github.com/perplext/nsd/pkg/graph) - allocs/op",
+            "value": 60,
+            "unit": "allocs/op",
+            "extra": "52881 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/braille-100pts-Large (github.com/perplext/nsd/pkg/graph)",
+            "value": 22667,
+            "unit": "ns/op\t     707 B/op\t      60 allocs/op",
+            "extra": "51986 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/braille-100pts-Large (github.com/perplext/nsd/pkg/graph) - ns/op",
+            "value": 22667,
+            "unit": "ns/op",
+            "extra": "51986 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/braille-100pts-Large (github.com/perplext/nsd/pkg/graph) - B/op",
+            "value": 707,
+            "unit": "B/op",
+            "extra": "51986 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/braille-100pts-Large (github.com/perplext/nsd/pkg/graph) - allocs/op",
+            "value": 60,
+            "unit": "allocs/op",
+            "extra": "51986 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/braille-1000pts-Small (github.com/perplext/nsd/pkg/graph)",
+            "value": 22719,
+            "unit": "ns/op\t     706 B/op\t      60 allocs/op",
+            "extra": "52620 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/braille-1000pts-Small (github.com/perplext/nsd/pkg/graph) - ns/op",
+            "value": 22719,
+            "unit": "ns/op",
+            "extra": "52620 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/braille-1000pts-Small (github.com/perplext/nsd/pkg/graph) - B/op",
+            "value": 706,
+            "unit": "B/op",
+            "extra": "52620 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/braille-1000pts-Small (github.com/perplext/nsd/pkg/graph) - allocs/op",
+            "value": 60,
+            "unit": "allocs/op",
+            "extra": "52620 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/braille-1000pts-Medium (github.com/perplext/nsd/pkg/graph)",
+            "value": 22562,
+            "unit": "ns/op\t     702 B/op\t      60 allocs/op",
+            "extra": "52798 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/braille-1000pts-Medium (github.com/perplext/nsd/pkg/graph) - ns/op",
+            "value": 22562,
+            "unit": "ns/op",
+            "extra": "52798 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/braille-1000pts-Medium (github.com/perplext/nsd/pkg/graph) - B/op",
+            "value": 702,
+            "unit": "B/op",
+            "extra": "52798 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/braille-1000pts-Medium (github.com/perplext/nsd/pkg/graph) - allocs/op",
+            "value": 60,
+            "unit": "allocs/op",
+            "extra": "52798 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/braille-1000pts-Large (github.com/perplext/nsd/pkg/graph)",
+            "value": 22689,
+            "unit": "ns/op\t     704 B/op\t      60 allocs/op",
+            "extra": "52537 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/braille-1000pts-Large (github.com/perplext/nsd/pkg/graph) - ns/op",
+            "value": 22689,
+            "unit": "ns/op",
+            "extra": "52537 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/braille-1000pts-Large (github.com/perplext/nsd/pkg/graph) - B/op",
+            "value": 704,
+            "unit": "B/op",
+            "extra": "52537 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/braille-1000pts-Large (github.com/perplext/nsd/pkg/graph) - allocs/op",
+            "value": 60,
+            "unit": "allocs/op",
+            "extra": "52537 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/block-10pts-Small (github.com/perplext/nsd/pkg/graph)",
+            "value": 20288,
+            "unit": "ns/op\t     534 B/op\t      57 allocs/op",
+            "extra": "58617 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/block-10pts-Small (github.com/perplext/nsd/pkg/graph) - ns/op",
+            "value": 20288,
+            "unit": "ns/op",
+            "extra": "58617 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/block-10pts-Small (github.com/perplext/nsd/pkg/graph) - B/op",
+            "value": 534,
+            "unit": "B/op",
+            "extra": "58617 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/block-10pts-Small (github.com/perplext/nsd/pkg/graph) - allocs/op",
+            "value": 57,
+            "unit": "allocs/op",
+            "extra": "58617 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/block-10pts-Medium (github.com/perplext/nsd/pkg/graph)",
+            "value": 20232,
+            "unit": "ns/op\t     535 B/op\t      57 allocs/op",
+            "extra": "57122 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/block-10pts-Medium (github.com/perplext/nsd/pkg/graph) - ns/op",
+            "value": 20232,
+            "unit": "ns/op",
+            "extra": "57122 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/block-10pts-Medium (github.com/perplext/nsd/pkg/graph) - B/op",
+            "value": 535,
+            "unit": "B/op",
+            "extra": "57122 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/block-10pts-Medium (github.com/perplext/nsd/pkg/graph) - allocs/op",
+            "value": 57,
+            "unit": "allocs/op",
+            "extra": "57122 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/block-10pts-Large (github.com/perplext/nsd/pkg/graph)",
+            "value": 20715,
+            "unit": "ns/op\t     537 B/op\t      57 allocs/op",
+            "extra": "58442 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/block-10pts-Large (github.com/perplext/nsd/pkg/graph) - ns/op",
+            "value": 20715,
+            "unit": "ns/op",
+            "extra": "58442 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/block-10pts-Large (github.com/perplext/nsd/pkg/graph) - B/op",
+            "value": 537,
+            "unit": "B/op",
+            "extra": "58442 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/block-10pts-Large (github.com/perplext/nsd/pkg/graph) - allocs/op",
+            "value": 57,
+            "unit": "allocs/op",
+            "extra": "58442 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/block-100pts-Small (github.com/perplext/nsd/pkg/graph)",
+            "value": 20882,
+            "unit": "ns/op\t     541 B/op\t      58 allocs/op",
+            "extra": "57070 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/block-100pts-Small (github.com/perplext/nsd/pkg/graph) - ns/op",
+            "value": 20882,
+            "unit": "ns/op",
+            "extra": "57070 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/block-100pts-Small (github.com/perplext/nsd/pkg/graph) - B/op",
+            "value": 541,
+            "unit": "B/op",
+            "extra": "57070 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/block-100pts-Small (github.com/perplext/nsd/pkg/graph) - allocs/op",
+            "value": 58,
+            "unit": "allocs/op",
+            "extra": "57070 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/block-100pts-Medium (github.com/perplext/nsd/pkg/graph)",
+            "value": 20794,
+            "unit": "ns/op\t     543 B/op\t      58 allocs/op",
+            "extra": "57414 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/block-100pts-Medium (github.com/perplext/nsd/pkg/graph) - ns/op",
+            "value": 20794,
+            "unit": "ns/op",
+            "extra": "57414 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/block-100pts-Medium (github.com/perplext/nsd/pkg/graph) - B/op",
+            "value": 543,
+            "unit": "B/op",
+            "extra": "57414 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/block-100pts-Medium (github.com/perplext/nsd/pkg/graph) - allocs/op",
+            "value": 58,
+            "unit": "allocs/op",
+            "extra": "57414 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/block-100pts-Large (github.com/perplext/nsd/pkg/graph)",
+            "value": 21169,
+            "unit": "ns/op\t     547 B/op\t      58 allocs/op",
+            "extra": "57394 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/block-100pts-Large (github.com/perplext/nsd/pkg/graph) - ns/op",
+            "value": 21169,
+            "unit": "ns/op",
+            "extra": "57394 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/block-100pts-Large (github.com/perplext/nsd/pkg/graph) - B/op",
+            "value": 547,
+            "unit": "B/op",
+            "extra": "57394 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/block-100pts-Large (github.com/perplext/nsd/pkg/graph) - allocs/op",
+            "value": 58,
+            "unit": "allocs/op",
+            "extra": "57394 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/block-1000pts-Small (github.com/perplext/nsd/pkg/graph)",
+            "value": 20768,
+            "unit": "ns/op\t     540 B/op\t      58 allocs/op",
+            "extra": "57214 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/block-1000pts-Small (github.com/perplext/nsd/pkg/graph) - ns/op",
+            "value": 20768,
+            "unit": "ns/op",
+            "extra": "57214 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/block-1000pts-Small (github.com/perplext/nsd/pkg/graph) - B/op",
+            "value": 540,
+            "unit": "B/op",
+            "extra": "57214 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/block-1000pts-Small (github.com/perplext/nsd/pkg/graph) - allocs/op",
+            "value": 58,
+            "unit": "allocs/op",
+            "extra": "57214 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/block-1000pts-Medium (github.com/perplext/nsd/pkg/graph)",
+            "value": 20740,
+            "unit": "ns/op\t     542 B/op\t      58 allocs/op",
+            "extra": "57429 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/block-1000pts-Medium (github.com/perplext/nsd/pkg/graph) - ns/op",
+            "value": 20740,
+            "unit": "ns/op",
+            "extra": "57429 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/block-1000pts-Medium (github.com/perplext/nsd/pkg/graph) - B/op",
+            "value": 542,
+            "unit": "B/op",
+            "extra": "57429 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/block-1000pts-Medium (github.com/perplext/nsd/pkg/graph) - allocs/op",
+            "value": 58,
+            "unit": "allocs/op",
+            "extra": "57429 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/block-1000pts-Large (github.com/perplext/nsd/pkg/graph)",
+            "value": 20860,
+            "unit": "ns/op\t     544 B/op\t      58 allocs/op",
+            "extra": "56605 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/block-1000pts-Large (github.com/perplext/nsd/pkg/graph) - ns/op",
+            "value": 20860,
+            "unit": "ns/op",
+            "extra": "56605 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/block-1000pts-Large (github.com/perplext/nsd/pkg/graph) - B/op",
+            "value": 544,
+            "unit": "B/op",
+            "extra": "56605 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/block-1000pts-Large (github.com/perplext/nsd/pkg/graph) - allocs/op",
+            "value": 58,
+            "unit": "allocs/op",
+            "extra": "56605 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/tty-10pts-Small (github.com/perplext/nsd/pkg/graph)",
+            "value": 20048,
+            "unit": "ns/op\t     533 B/op\t      57 allocs/op",
+            "extra": "59162 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/tty-10pts-Small (github.com/perplext/nsd/pkg/graph) - ns/op",
+            "value": 20048,
+            "unit": "ns/op",
+            "extra": "59162 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/tty-10pts-Small (github.com/perplext/nsd/pkg/graph) - B/op",
+            "value": 533,
+            "unit": "B/op",
+            "extra": "59162 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/tty-10pts-Small (github.com/perplext/nsd/pkg/graph) - allocs/op",
+            "value": 57,
+            "unit": "allocs/op",
+            "extra": "59162 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/tty-10pts-Medium (github.com/perplext/nsd/pkg/graph)",
+            "value": 20358,
+            "unit": "ns/op\t     533 B/op\t      57 allocs/op",
+            "extra": "59454 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/tty-10pts-Medium (github.com/perplext/nsd/pkg/graph) - ns/op",
+            "value": 20358,
+            "unit": "ns/op",
+            "extra": "59454 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/tty-10pts-Medium (github.com/perplext/nsd/pkg/graph) - B/op",
+            "value": 533,
+            "unit": "B/op",
+            "extra": "59454 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/tty-10pts-Medium (github.com/perplext/nsd/pkg/graph) - allocs/op",
+            "value": 57,
+            "unit": "allocs/op",
+            "extra": "59454 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/tty-10pts-Large (github.com/perplext/nsd/pkg/graph)",
+            "value": 20169,
+            "unit": "ns/op\t     533 B/op\t      57 allocs/op",
+            "extra": "59310 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/tty-10pts-Large (github.com/perplext/nsd/pkg/graph) - ns/op",
+            "value": 20169,
+            "unit": "ns/op",
+            "extra": "59310 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/tty-10pts-Large (github.com/perplext/nsd/pkg/graph) - B/op",
+            "value": 533,
+            "unit": "B/op",
+            "extra": "59310 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/tty-10pts-Large (github.com/perplext/nsd/pkg/graph) - allocs/op",
+            "value": 57,
+            "unit": "allocs/op",
+            "extra": "59310 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/tty-100pts-Small (github.com/perplext/nsd/pkg/graph)",
+            "value": 20788,
+            "unit": "ns/op\t     542 B/op\t      58 allocs/op",
+            "extra": "57835 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/tty-100pts-Small (github.com/perplext/nsd/pkg/graph) - ns/op",
+            "value": 20788,
+            "unit": "ns/op",
+            "extra": "57835 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/tty-100pts-Small (github.com/perplext/nsd/pkg/graph) - B/op",
+            "value": 542,
+            "unit": "B/op",
+            "extra": "57835 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/tty-100pts-Small (github.com/perplext/nsd/pkg/graph) - allocs/op",
+            "value": 58,
+            "unit": "allocs/op",
+            "extra": "57835 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/tty-100pts-Medium (github.com/perplext/nsd/pkg/graph)",
+            "value": 20680,
+            "unit": "ns/op\t     541 B/op\t      58 allocs/op",
+            "extra": "57618 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/tty-100pts-Medium (github.com/perplext/nsd/pkg/graph) - ns/op",
+            "value": 20680,
+            "unit": "ns/op",
+            "extra": "57618 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/tty-100pts-Medium (github.com/perplext/nsd/pkg/graph) - B/op",
+            "value": 541,
+            "unit": "B/op",
+            "extra": "57618 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/tty-100pts-Medium (github.com/perplext/nsd/pkg/graph) - allocs/op",
+            "value": 58,
+            "unit": "allocs/op",
+            "extra": "57618 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/tty-100pts-Large (github.com/perplext/nsd/pkg/graph)",
+            "value": 20687,
+            "unit": "ns/op\t     540 B/op\t      58 allocs/op",
+            "extra": "57940 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/tty-100pts-Large (github.com/perplext/nsd/pkg/graph) - ns/op",
+            "value": 20687,
+            "unit": "ns/op",
+            "extra": "57940 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/tty-100pts-Large (github.com/perplext/nsd/pkg/graph) - B/op",
+            "value": 540,
+            "unit": "B/op",
+            "extra": "57940 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/tty-100pts-Large (github.com/perplext/nsd/pkg/graph) - allocs/op",
+            "value": 58,
+            "unit": "allocs/op",
+            "extra": "57940 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/tty-1000pts-Small (github.com/perplext/nsd/pkg/graph)",
+            "value": 21086,
+            "unit": "ns/op\t     542 B/op\t      58 allocs/op",
+            "extra": "57667 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/tty-1000pts-Small (github.com/perplext/nsd/pkg/graph) - ns/op",
+            "value": 21086,
+            "unit": "ns/op",
+            "extra": "57667 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/tty-1000pts-Small (github.com/perplext/nsd/pkg/graph) - B/op",
+            "value": 542,
+            "unit": "B/op",
+            "extra": "57667 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/tty-1000pts-Small (github.com/perplext/nsd/pkg/graph) - allocs/op",
+            "value": 58,
+            "unit": "allocs/op",
+            "extra": "57667 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/tty-1000pts-Medium (github.com/perplext/nsd/pkg/graph)",
+            "value": 20611,
+            "unit": "ns/op\t     541 B/op\t      58 allocs/op",
+            "extra": "57872 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/tty-1000pts-Medium (github.com/perplext/nsd/pkg/graph) - ns/op",
+            "value": 20611,
+            "unit": "ns/op",
+            "extra": "57872 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/tty-1000pts-Medium (github.com/perplext/nsd/pkg/graph) - B/op",
+            "value": 541,
+            "unit": "B/op",
+            "extra": "57872 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/tty-1000pts-Medium (github.com/perplext/nsd/pkg/graph) - allocs/op",
+            "value": 58,
+            "unit": "allocs/op",
+            "extra": "57872 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/tty-1000pts-Large (github.com/perplext/nsd/pkg/graph)",
+            "value": 20752,
+            "unit": "ns/op\t     544 B/op\t      58 allocs/op",
+            "extra": "57745 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/tty-1000pts-Large (github.com/perplext/nsd/pkg/graph) - ns/op",
+            "value": 20752,
+            "unit": "ns/op",
+            "extra": "57745 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/tty-1000pts-Large (github.com/perplext/nsd/pkg/graph) - B/op",
+            "value": 544,
+            "unit": "B/op",
+            "extra": "57745 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/tty-1000pts-Large (github.com/perplext/nsd/pkg/graph) - allocs/op",
+            "value": 58,
+            "unit": "allocs/op",
+            "extra": "57745 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkBrailleGeneration (github.com/perplext/nsd/pkg/graph)",
+            "value": 5.787,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "209124010 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkBrailleGeneration (github.com/perplext/nsd/pkg/graph) - ns/op",
+            "value": 5.787,
+            "unit": "ns/op",
+            "extra": "209124010 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkBrailleGeneration (github.com/perplext/nsd/pkg/graph) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "209124010 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkBrailleGeneration (github.com/perplext/nsd/pkg/graph) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "209124010 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkInterpolation (github.com/perplext/nsd/pkg/graph)",
+            "value": 1e-7,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkInterpolation (github.com/perplext/nsd/pkg/graph) - ns/op",
+            "value": 1e-7,
+            "unit": "ns/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkInterpolation (github.com/perplext/nsd/pkg/graph) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkInterpolation (github.com/perplext/nsd/pkg/graph) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkScaling (github.com/perplext/nsd/pkg/graph)",
+            "value": 0.0000196,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkScaling (github.com/perplext/nsd/pkg/graph) - ns/op",
+            "value": 0.0000196,
+            "unit": "ns/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkScaling (github.com/perplext/nsd/pkg/graph) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkScaling (github.com/perplext/nsd/pkg/graph) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMultiGraph/Graphs-2 (github.com/perplext/nsd/pkg/graph)",
+            "value": 41016,
+            "unit": "ns/op\t    1363 B/op\t     114 allocs/op",
+            "extra": "29408 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMultiGraph/Graphs-2 (github.com/perplext/nsd/pkg/graph) - ns/op",
+            "value": 41016,
+            "unit": "ns/op",
+            "extra": "29408 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMultiGraph/Graphs-2 (github.com/perplext/nsd/pkg/graph) - B/op",
+            "value": 1363,
+            "unit": "B/op",
+            "extra": "29408 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMultiGraph/Graphs-2 (github.com/perplext/nsd/pkg/graph) - allocs/op",
+            "value": 114,
+            "unit": "allocs/op",
+            "extra": "29408 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMultiGraph/Graphs-4 (github.com/perplext/nsd/pkg/graph)",
+            "value": 40684,
+            "unit": "ns/op\t    1364 B/op\t     114 allocs/op",
+            "extra": "29431 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMultiGraph/Graphs-4 (github.com/perplext/nsd/pkg/graph) - ns/op",
+            "value": 40684,
+            "unit": "ns/op",
+            "extra": "29431 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMultiGraph/Graphs-4 (github.com/perplext/nsd/pkg/graph) - B/op",
+            "value": 1364,
+            "unit": "B/op",
+            "extra": "29431 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMultiGraph/Graphs-4 (github.com/perplext/nsd/pkg/graph) - allocs/op",
+            "value": 114,
+            "unit": "allocs/op",
+            "extra": "29431 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMultiGraph/Graphs-8 (github.com/perplext/nsd/pkg/graph)",
+            "value": 41262,
+            "unit": "ns/op\t    1364 B/op\t     114 allocs/op",
+            "extra": "28772 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMultiGraph/Graphs-8 (github.com/perplext/nsd/pkg/graph) - ns/op",
+            "value": 41262,
+            "unit": "ns/op",
+            "extra": "28772 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMultiGraph/Graphs-8 (github.com/perplext/nsd/pkg/graph) - B/op",
+            "value": 1364,
+            "unit": "B/op",
+            "extra": "28772 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMultiGraph/Graphs-8 (github.com/perplext/nsd/pkg/graph) - allocs/op",
+            "value": 114,
+            "unit": "allocs/op",
+            "extra": "28772 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHistoricalData/1m0s (github.com/perplext/nsd/pkg/graph)",
+            "value": 4e-7,
+            "unit": "ns/op\t        70.00 datapoints\t       0 B/op\t       0 allocs/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHistoricalData/1m0s (github.com/perplext/nsd/pkg/graph) - ns/op",
+            "value": 4e-7,
+            "unit": "ns/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHistoricalData/1m0s (github.com/perplext/nsd/pkg/graph) - datapoints",
+            "value": 70,
+            "unit": "datapoints",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHistoricalData/1m0s (github.com/perplext/nsd/pkg/graph) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHistoricalData/1m0s (github.com/perplext/nsd/pkg/graph) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHistoricalData/1h0m0s (github.com/perplext/nsd/pkg/graph)",
+            "value": 5e-7,
+            "unit": "ns/op\t      3610 datapoints\t       0 B/op\t       0 allocs/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHistoricalData/1h0m0s (github.com/perplext/nsd/pkg/graph) - ns/op",
+            "value": 5e-7,
+            "unit": "ns/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHistoricalData/1h0m0s (github.com/perplext/nsd/pkg/graph) - datapoints",
+            "value": 3610,
+            "unit": "datapoints",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHistoricalData/1h0m0s (github.com/perplext/nsd/pkg/graph) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHistoricalData/1h0m0s (github.com/perplext/nsd/pkg/graph) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHistoricalData/24h0m0s (github.com/perplext/nsd/pkg/graph)",
+            "value": 4e-7,
+            "unit": "ns/op\t      3610 datapoints\t       0 B/op\t       0 allocs/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHistoricalData/24h0m0s (github.com/perplext/nsd/pkg/graph) - ns/op",
+            "value": 4e-7,
+            "unit": "ns/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHistoricalData/24h0m0s (github.com/perplext/nsd/pkg/graph) - datapoints",
+            "value": 3610,
+            "unit": "datapoints",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHistoricalData/24h0m0s (github.com/perplext/nsd/pkg/graph) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHistoricalData/24h0m0s (github.com/perplext/nsd/pkg/graph) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentDataAccess (github.com/perplext/nsd/pkg/graph)",
+            "value": 22657,
+            "unit": "ns/op\t   53148 B/op\t      37 allocs/op",
+            "extra": "53374 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentDataAccess (github.com/perplext/nsd/pkg/graph) - ns/op",
+            "value": 22657,
+            "unit": "ns/op",
+            "extra": "53374 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentDataAccess (github.com/perplext/nsd/pkg/graph) - B/op",
+            "value": 53148,
+            "unit": "B/op",
+            "extra": "53374 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentDataAccess (github.com/perplext/nsd/pkg/graph) - allocs/op",
+            "value": 37,
+            "unit": "allocs/op",
+            "extra": "53374 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMemoryUsage/DataPointAllocation (github.com/perplext/nsd/pkg/graph)",
+            "value": 56.06,
+            "unit": "ns/op\t        32.00 bytes/point\t       0 B/op\t       0 allocs/op",
+            "extra": "21209052 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMemoryUsage/DataPointAllocation (github.com/perplext/nsd/pkg/graph) - ns/op",
+            "value": 56.06,
+            "unit": "ns/op",
+            "extra": "21209052 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMemoryUsage/DataPointAllocation (github.com/perplext/nsd/pkg/graph) - bytes/point",
+            "value": 32,
+            "unit": "bytes/point",
+            "extra": "21209052 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMemoryUsage/DataPointAllocation (github.com/perplext/nsd/pkg/graph) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "21209052 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMemoryUsage/DataPointAllocation (github.com/perplext/nsd/pkg/graph) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "21209052 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMemoryUsage/GraphWithData (github.com/perplext/nsd/pkg/graph)",
+            "value": 263212,
+            "unit": "ns/op\t  123584 B/op\t      19 allocs/op",
+            "extra": "4279 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMemoryUsage/GraphWithData (github.com/perplext/nsd/pkg/graph) - ns/op",
+            "value": 263212,
+            "unit": "ns/op",
+            "extra": "4279 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMemoryUsage/GraphWithData (github.com/perplext/nsd/pkg/graph) - B/op",
+            "value": 123584,
+            "unit": "B/op",
+            "extra": "4279 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMemoryUsage/GraphWithData (github.com/perplext/nsd/pkg/graph) - allocs/op",
+            "value": 19,
+            "unit": "allocs/op",
+            "extra": "4279 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPacketProcessing (github.com/perplext/nsd/pkg/netcap)",
+            "value": 5635,
+            "unit": "ns/op\t 213742000 packets/op\t       0 B/op\t       0 allocs/op",
+            "extra": "213742 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPacketProcessing (github.com/perplext/nsd/pkg/netcap) - ns/op",
+            "value": 5635,
+            "unit": "ns/op",
+            "extra": "213742 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPacketProcessing (github.com/perplext/nsd/pkg/netcap) - packets/op",
+            "value": 213742000,
+            "unit": "packets/op",
+            "extra": "213742 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPacketProcessing (github.com/perplext/nsd/pkg/netcap) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "213742 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPacketProcessing (github.com/perplext/nsd/pkg/netcap) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "213742 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRateLimiting/NoLimit (github.com/perplext/nsd/pkg/netcap)",
+            "value": 2.186,
+            "unit": "ns/op\t       100.0 allowed%\t       0 B/op\t       0 allocs/op",
+            "extra": "550312828 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRateLimiting/NoLimit (github.com/perplext/nsd/pkg/netcap) - ns/op",
+            "value": 2.186,
+            "unit": "ns/op",
+            "extra": "550312828 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRateLimiting/NoLimit (github.com/perplext/nsd/pkg/netcap) - allowed%",
+            "value": 100,
+            "unit": "allowed%",
+            "extra": "550312828 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRateLimiting/NoLimit (github.com/perplext/nsd/pkg/netcap) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "550312828 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRateLimiting/NoLimit (github.com/perplext/nsd/pkg/netcap) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "550312828 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRateLimiting/10kPPS (github.com/perplext/nsd/pkg/netcap)",
+            "value": 117.8,
+            "unit": "ns/op\t         0.1276 allowed%\t       0 B/op\t       0 allocs/op",
+            "extra": "10193341 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRateLimiting/10kPPS (github.com/perplext/nsd/pkg/netcap) - ns/op",
+            "value": 117.8,
+            "unit": "ns/op",
+            "extra": "10193341 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRateLimiting/10kPPS (github.com/perplext/nsd/pkg/netcap) - allowed%",
+            "value": 0.1276,
+            "unit": "allowed%",
+            "extra": "10193341 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRateLimiting/10kPPS (github.com/perplext/nsd/pkg/netcap) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "10193341 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRateLimiting/10kPPS (github.com/perplext/nsd/pkg/netcap) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "10193341 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRateLimiting/100kPPS (github.com/perplext/nsd/pkg/netcap)",
+            "value": 117.9,
+            "unit": "ns/op\t         1.277 allowed%\t       0 B/op\t       0 allocs/op",
+            "extra": "10184732 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRateLimiting/100kPPS (github.com/perplext/nsd/pkg/netcap) - ns/op",
+            "value": 117.9,
+            "unit": "ns/op",
+            "extra": "10184732 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRateLimiting/100kPPS (github.com/perplext/nsd/pkg/netcap) - allowed%",
+            "value": 1.277,
+            "unit": "allowed%",
+            "extra": "10184732 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRateLimiting/100kPPS (github.com/perplext/nsd/pkg/netcap) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "10184732 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRateLimiting/100kPPS (github.com/perplext/nsd/pkg/netcap) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "10184732 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRateLimiting/1MPPS (github.com/perplext/nsd/pkg/netcap)",
+            "value": 118.5,
+            "unit": "ns/op\t        12.83 allowed%\t       0 B/op\t       0 allocs/op",
+            "extra": "10186200 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRateLimiting/1MPPS (github.com/perplext/nsd/pkg/netcap) - ns/op",
+            "value": 118.5,
+            "unit": "ns/op",
+            "extra": "10186200 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRateLimiting/1MPPS (github.com/perplext/nsd/pkg/netcap) - allowed%",
+            "value": 12.83,
+            "unit": "allowed%",
+            "extra": "10186200 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRateLimiting/1MPPS (github.com/perplext/nsd/pkg/netcap) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "10186200 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRateLimiting/1MPPS (github.com/perplext/nsd/pkg/netcap) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "10186200 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMemoryPool/WithPool (github.com/perplext/nsd/pkg/netcap)",
+            "value": 294.2,
+            "unit": "ns/op\t      24 B/op\t       1 allocs/op",
+            "extra": "4069687 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMemoryPool/WithPool (github.com/perplext/nsd/pkg/netcap) - ns/op",
+            "value": 294.2,
+            "unit": "ns/op",
+            "extra": "4069687 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMemoryPool/WithPool (github.com/perplext/nsd/pkg/netcap) - B/op",
+            "value": 24,
+            "unit": "B/op",
+            "extra": "4069687 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMemoryPool/WithPool (github.com/perplext/nsd/pkg/netcap) - allocs/op",
+            "value": 1,
+            "unit": "allocs/op",
+            "extra": "4069687 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMemoryPool/WithoutPool (github.com/perplext/nsd/pkg/netcap)",
+            "value": 2607,
+            "unit": "ns/op\t   14559 B/op\t       1 allocs/op",
+            "extra": "446973 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMemoryPool/WithoutPool (github.com/perplext/nsd/pkg/netcap) - ns/op",
+            "value": 2607,
+            "unit": "ns/op",
+            "extra": "446973 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMemoryPool/WithoutPool (github.com/perplext/nsd/pkg/netcap) - B/op",
+            "value": 14559,
+            "unit": "B/op",
+            "extra": "446973 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMemoryPool/WithoutPool (github.com/perplext/nsd/pkg/netcap) - allocs/op",
+            "value": 1,
+            "unit": "allocs/op",
+            "extra": "446973 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkResourceController (github.com/perplext/nsd/pkg/netcap)",
+            "value": 336.6,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "3558978 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkResourceController (github.com/perplext/nsd/pkg/netcap) - ns/op",
+            "value": 336.6,
+            "unit": "ns/op",
+            "extra": "3558978 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkResourceController (github.com/perplext/nsd/pkg/netcap) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "3558978 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkResourceController (github.com/perplext/nsd/pkg/netcap) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "3558978 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPacketSizes/Size-64 (github.com/perplext/nsd/pkg/netcap)",
+            "value": 5.311,
+            "unit": "ns/op\t12050.00 MB/s\t       0 B/op\t       0 allocs/op",
+            "extra": "226554339 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPacketSizes/Size-64 (github.com/perplext/nsd/pkg/netcap) - ns/op",
+            "value": 5.311,
+            "unit": "ns/op",
+            "extra": "226554339 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPacketSizes/Size-64 (github.com/perplext/nsd/pkg/netcap) - MB/s",
+            "value": 12050,
+            "unit": "MB/s",
+            "extra": "226554339 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPacketSizes/Size-64 (github.com/perplext/nsd/pkg/netcap) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "226554339 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPacketSizes/Size-64 (github.com/perplext/nsd/pkg/netcap) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "226554339 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPacketSizes/Size-256 (github.com/perplext/nsd/pkg/netcap)",
+            "value": 5.297,
+            "unit": "ns/op\t48324.86 MB/s\t       0 B/op\t       0 allocs/op",
+            "extra": "226306333 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPacketSizes/Size-256 (github.com/perplext/nsd/pkg/netcap) - ns/op",
+            "value": 5.297,
+            "unit": "ns/op",
+            "extra": "226306333 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPacketSizes/Size-256 (github.com/perplext/nsd/pkg/netcap) - MB/s",
+            "value": 48324.86,
+            "unit": "MB/s",
+            "extra": "226306333 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPacketSizes/Size-256 (github.com/perplext/nsd/pkg/netcap) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "226306333 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPacketSizes/Size-256 (github.com/perplext/nsd/pkg/netcap) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "226306333 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPacketSizes/Size-512 (github.com/perplext/nsd/pkg/netcap)",
+            "value": 5.303,
+            "unit": "ns/op\t96548.44 MB/s\t       0 B/op\t       0 allocs/op",
+            "extra": "226192662 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPacketSizes/Size-512 (github.com/perplext/nsd/pkg/netcap) - ns/op",
+            "value": 5.303,
+            "unit": "ns/op",
+            "extra": "226192662 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPacketSizes/Size-512 (github.com/perplext/nsd/pkg/netcap) - MB/s",
+            "value": 96548.44,
+            "unit": "MB/s",
+            "extra": "226192662 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPacketSizes/Size-512 (github.com/perplext/nsd/pkg/netcap) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "226192662 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPacketSizes/Size-512 (github.com/perplext/nsd/pkg/netcap) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "226192662 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPacketSizes/Size-1024 (github.com/perplext/nsd/pkg/netcap)",
+            "value": 5.306,
+            "unit": "ns/op\t193006.41 MB/s\t       0 B/op\t       0 allocs/op",
+            "extra": "226688078 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPacketSizes/Size-1024 (github.com/perplext/nsd/pkg/netcap) - ns/op",
+            "value": 5.306,
+            "unit": "ns/op",
+            "extra": "226688078 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPacketSizes/Size-1024 (github.com/perplext/nsd/pkg/netcap) - MB/s",
+            "value": 193006.41,
+            "unit": "MB/s",
+            "extra": "226688078 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPacketSizes/Size-1024 (github.com/perplext/nsd/pkg/netcap) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "226688078 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPacketSizes/Size-1024 (github.com/perplext/nsd/pkg/netcap) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "226688078 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPacketSizes/Size-1500 (github.com/perplext/nsd/pkg/netcap)",
+            "value": 5.308,
+            "unit": "ns/op\t282610.97 MB/s\t       0 B/op\t       0 allocs/op",
+            "extra": "225612298 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPacketSizes/Size-1500 (github.com/perplext/nsd/pkg/netcap) - ns/op",
+            "value": 5.308,
+            "unit": "ns/op",
+            "extra": "225612298 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPacketSizes/Size-1500 (github.com/perplext/nsd/pkg/netcap) - MB/s",
+            "value": 282610.97,
+            "unit": "MB/s",
+            "extra": "225612298 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPacketSizes/Size-1500 (github.com/perplext/nsd/pkg/netcap) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "225612298 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPacketSizes/Size-1500 (github.com/perplext/nsd/pkg/netcap) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "225612298 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPacketSizes/Size-9000 (github.com/perplext/nsd/pkg/netcap)",
+            "value": 5.349,
+            "unit": "ns/op\t1682540.46 MB/s\t       0 B/op\t       0 allocs/op",
+            "extra": "225943856 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPacketSizes/Size-9000 (github.com/perplext/nsd/pkg/netcap) - ns/op",
+            "value": 5.349,
+            "unit": "ns/op",
+            "extra": "225943856 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPacketSizes/Size-9000 (github.com/perplext/nsd/pkg/netcap) - MB/s",
+            "value": 1682540.46,
+            "unit": "MB/s",
+            "extra": "225943856 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPacketSizes/Size-9000 (github.com/perplext/nsd/pkg/netcap) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "225943856 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPacketSizes/Size-9000 (github.com/perplext/nsd/pkg/netcap) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "225943856 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMemoryUsage/Baseline (github.com/perplext/nsd/pkg/netcap)",
+            "value": 54881,
+            "unit": "ns/op\t         0 MB/op\t       0 B/op\t       0 allocs/op",
+            "extra": "21864 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMemoryUsage/Baseline (github.com/perplext/nsd/pkg/netcap) - ns/op",
+            "value": 54881,
+            "unit": "ns/op",
+            "extra": "21864 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMemoryUsage/Baseline (github.com/perplext/nsd/pkg/netcap) - MB/op",
+            "value": 0,
+            "unit": "MB/op",
+            "extra": "21864 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMemoryUsage/Baseline (github.com/perplext/nsd/pkg/netcap) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "21864 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkMemoryUsage/Baseline (github.com/perplext/nsd/pkg/netcap) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "21864 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkIsProtocolTrafficSimple (github.com/perplext/nsd/pkg/protocols)",
+            "value": 100.5,
+            "unit": "ns/op\t      24 B/op\t       1 allocs/op",
+            "extra": "11960701 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkIsProtocolTrafficSimple (github.com/perplext/nsd/pkg/protocols) - ns/op",
+            "value": 100.5,
+            "unit": "ns/op",
+            "extra": "11960701 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkIsProtocolTrafficSimple (github.com/perplext/nsd/pkg/protocols) - B/op",
+            "value": 24,
+            "unit": "B/op",
+            "extra": "11960701 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkIsProtocolTrafficSimple (github.com/perplext/nsd/pkg/protocols) - allocs/op",
+            "value": 1,
+            "unit": "allocs/op",
+            "extra": "11960701 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGenerateEventID (github.com/perplext/nsd/pkg/protocols)",
+            "value": 274.7,
+            "unit": "ns/op\t      61 B/op\t       3 allocs/op",
+            "extra": "4334982 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGenerateEventID (github.com/perplext/nsd/pkg/protocols) - ns/op",
+            "value": 274.7,
+            "unit": "ns/op",
+            "extra": "4334982 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGenerateEventID (github.com/perplext/nsd/pkg/protocols) - B/op",
+            "value": 61,
+            "unit": "B/op",
+            "extra": "4334982 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGenerateEventID (github.com/perplext/nsd/pkg/protocols) - allocs/op",
+            "value": 3,
+            "unit": "allocs/op",
+            "extra": "4334982 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkProcessPacket (github.com/perplext/nsd/pkg/reassembly)",
+            "value": 273.2,
+            "unit": "ns/op\t    3574 B/op\t       0 allocs/op",
+            "extra": "4740984 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkProcessPacket (github.com/perplext/nsd/pkg/reassembly) - ns/op",
+            "value": 273.2,
+            "unit": "ns/op",
+            "extra": "4740984 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkProcessPacket (github.com/perplext/nsd/pkg/reassembly) - B/op",
+            "value": 3574,
+            "unit": "B/op",
+            "extra": "4740984 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkProcessPacket (github.com/perplext/nsd/pkg/reassembly) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "4740984 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/Braille-Small (github.com/perplext/nsd/pkg/ui)",
+            "value": 22197,
+            "unit": "ns/op\t     723 B/op\t      59 allocs/op",
+            "extra": "53221 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/Braille-Small (github.com/perplext/nsd/pkg/ui) - ns/op",
+            "value": 22197,
+            "unit": "ns/op",
+            "extra": "53221 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/Braille-Small (github.com/perplext/nsd/pkg/ui) - B/op",
+            "value": 723,
+            "unit": "B/op",
+            "extra": "53221 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/Braille-Small (github.com/perplext/nsd/pkg/ui) - allocs/op",
+            "value": 59,
+            "unit": "allocs/op",
+            "extra": "53221 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/Braille-Medium (github.com/perplext/nsd/pkg/ui)",
+            "value": 22127,
+            "unit": "ns/op\t     725 B/op\t      59 allocs/op",
+            "extra": "53376 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/Braille-Medium (github.com/perplext/nsd/pkg/ui) - ns/op",
+            "value": 22127,
+            "unit": "ns/op",
+            "extra": "53376 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/Braille-Medium (github.com/perplext/nsd/pkg/ui) - B/op",
+            "value": 725,
+            "unit": "B/op",
+            "extra": "53376 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/Braille-Medium (github.com/perplext/nsd/pkg/ui) - allocs/op",
+            "value": 59,
+            "unit": "allocs/op",
+            "extra": "53376 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/Braille-Large (github.com/perplext/nsd/pkg/ui)",
+            "value": 22490,
+            "unit": "ns/op\t     724 B/op\t      59 allocs/op",
+            "extra": "53656 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/Braille-Large (github.com/perplext/nsd/pkg/ui) - ns/op",
+            "value": 22490,
+            "unit": "ns/op",
+            "extra": "53656 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/Braille-Large (github.com/perplext/nsd/pkg/ui) - B/op",
+            "value": 724,
+            "unit": "B/op",
+            "extra": "53656 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/Braille-Large (github.com/perplext/nsd/pkg/ui) - allocs/op",
+            "value": 59,
+            "unit": "allocs/op",
+            "extra": "53656 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/Block-Small (github.com/perplext/nsd/pkg/ui)",
+            "value": 20117,
+            "unit": "ns/op\t     531 B/op\t      57 allocs/op",
+            "extra": "59524 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/Block-Small (github.com/perplext/nsd/pkg/ui) - ns/op",
+            "value": 20117,
+            "unit": "ns/op",
+            "extra": "59524 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/Block-Small (github.com/perplext/nsd/pkg/ui) - B/op",
+            "value": 531,
+            "unit": "B/op",
+            "extra": "59524 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/Block-Small (github.com/perplext/nsd/pkg/ui) - allocs/op",
+            "value": 57,
+            "unit": "allocs/op",
+            "extra": "59524 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/Block-Medium (github.com/perplext/nsd/pkg/ui)",
+            "value": 20225,
+            "unit": "ns/op\t     531 B/op\t      57 allocs/op",
+            "extra": "59528 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/Block-Medium (github.com/perplext/nsd/pkg/ui) - ns/op",
+            "value": 20225,
+            "unit": "ns/op",
+            "extra": "59528 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/Block-Medium (github.com/perplext/nsd/pkg/ui) - B/op",
+            "value": 531,
+            "unit": "B/op",
+            "extra": "59528 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/Block-Medium (github.com/perplext/nsd/pkg/ui) - allocs/op",
+            "value": 57,
+            "unit": "allocs/op",
+            "extra": "59528 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/Block-Large (github.com/perplext/nsd/pkg/ui)",
+            "value": 20322,
+            "unit": "ns/op\t     533 B/op\t      57 allocs/op",
+            "extra": "58942 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/Block-Large (github.com/perplext/nsd/pkg/ui) - ns/op",
+            "value": 20322,
+            "unit": "ns/op",
+            "extra": "58942 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/Block-Large (github.com/perplext/nsd/pkg/ui) - B/op",
+            "value": 533,
+            "unit": "B/op",
+            "extra": "58942 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/Block-Large (github.com/perplext/nsd/pkg/ui) - allocs/op",
+            "value": 57,
+            "unit": "allocs/op",
+            "extra": "58942 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/TTY-Small (github.com/perplext/nsd/pkg/ui)",
+            "value": 20186,
+            "unit": "ns/op\t     532 B/op\t      57 allocs/op",
+            "extra": "59073 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/TTY-Small (github.com/perplext/nsd/pkg/ui) - ns/op",
+            "value": 20186,
+            "unit": "ns/op",
+            "extra": "59073 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/TTY-Small (github.com/perplext/nsd/pkg/ui) - B/op",
+            "value": 532,
+            "unit": "B/op",
+            "extra": "59073 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/TTY-Small (github.com/perplext/nsd/pkg/ui) - allocs/op",
+            "value": 57,
+            "unit": "allocs/op",
+            "extra": "59073 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/TTY-Medium (github.com/perplext/nsd/pkg/ui)",
+            "value": 20144,
+            "unit": "ns/op\t     532 B/op\t      57 allocs/op",
+            "extra": "56214 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/TTY-Medium (github.com/perplext/nsd/pkg/ui) - ns/op",
+            "value": 20144,
+            "unit": "ns/op",
+            "extra": "56214 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/TTY-Medium (github.com/perplext/nsd/pkg/ui) - B/op",
+            "value": 532,
+            "unit": "B/op",
+            "extra": "56214 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/TTY-Medium (github.com/perplext/nsd/pkg/ui) - allocs/op",
+            "value": 57,
+            "unit": "allocs/op",
+            "extra": "56214 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/TTY-Large (github.com/perplext/nsd/pkg/ui)",
+            "value": 20089,
+            "unit": "ns/op\t     531 B/op\t      57 allocs/op",
+            "extra": "59170 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/TTY-Large (github.com/perplext/nsd/pkg/ui) - ns/op",
+            "value": 20089,
+            "unit": "ns/op",
+            "extra": "59170 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/TTY-Large (github.com/perplext/nsd/pkg/ui) - B/op",
+            "value": 531,
+            "unit": "B/op",
+            "extra": "59170 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGraphRendering/TTY-Large (github.com/perplext/nsd/pkg/ui) - allocs/op",
+            "value": 57,
+            "unit": "allocs/op",
+            "extra": "59170 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkVisualizationUpdate/Matrix (github.com/perplext/nsd/pkg/ui)",
+            "value": 40487,
+            "unit": "ns/op\t   28379 B/op\t     326 allocs/op",
+            "extra": "29636 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkVisualizationUpdate/Matrix (github.com/perplext/nsd/pkg/ui) - ns/op",
+            "value": 40487,
+            "unit": "ns/op",
+            "extra": "29636 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkVisualizationUpdate/Matrix (github.com/perplext/nsd/pkg/ui) - B/op",
+            "value": 28379,
+            "unit": "B/op",
+            "extra": "29636 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkVisualizationUpdate/Matrix (github.com/perplext/nsd/pkg/ui) - allocs/op",
+            "value": 326,
+            "unit": "allocs/op",
+            "extra": "29636 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkVisualizationUpdate/Heatmap (github.com/perplext/nsd/pkg/ui)",
+            "value": 6526,
+            "unit": "ns/op\t    3696 B/op\t      52 allocs/op",
+            "extra": "178198 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkVisualizationUpdate/Heatmap (github.com/perplext/nsd/pkg/ui) - ns/op",
+            "value": 6526,
+            "unit": "ns/op",
+            "extra": "178198 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkVisualizationUpdate/Heatmap (github.com/perplext/nsd/pkg/ui) - B/op",
+            "value": 3696,
+            "unit": "B/op",
+            "extra": "178198 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkVisualizationUpdate/Heatmap (github.com/perplext/nsd/pkg/ui) - allocs/op",
+            "value": 52,
+            "unit": "allocs/op",
+            "extra": "178198 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkVisualizationUpdate/Speedometer (github.com/perplext/nsd/pkg/ui)",
+            "value": 10178,
+            "unit": "ns/op\t    7257 B/op\t      34 allocs/op",
+            "extra": "115158 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkVisualizationUpdate/Speedometer (github.com/perplext/nsd/pkg/ui) - ns/op",
+            "value": 10178,
+            "unit": "ns/op",
+            "extra": "115158 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkVisualizationUpdate/Speedometer (github.com/perplext/nsd/pkg/ui) - B/op",
+            "value": 7257,
+            "unit": "B/op",
+            "extra": "115158 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkVisualizationUpdate/Speedometer (github.com/perplext/nsd/pkg/ui) - allocs/op",
+            "value": 34,
+            "unit": "allocs/op",
+            "extra": "115158 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkVisualizationUpdate/Sankey (github.com/perplext/nsd/pkg/ui)",
+            "value": 2440,
+            "unit": "ns/op\t    1400 B/op\t      27 allocs/op",
+            "extra": "463195 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkVisualizationUpdate/Sankey (github.com/perplext/nsd/pkg/ui) - ns/op",
+            "value": 2440,
+            "unit": "ns/op",
+            "extra": "463195 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkVisualizationUpdate/Sankey (github.com/perplext/nsd/pkg/ui) - B/op",
+            "value": 1400,
+            "unit": "B/op",
+            "extra": "463195 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkVisualizationUpdate/Sankey (github.com/perplext/nsd/pkg/ui) - allocs/op",
+            "value": 27,
+            "unit": "allocs/op",
+            "extra": "463195 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkVisualizationUpdate/Radial (github.com/perplext/nsd/pkg/ui)",
+            "value": 15947,
+            "unit": "ns/op\t   15826 B/op\t      97 allocs/op",
+            "extra": "76399 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkVisualizationUpdate/Radial (github.com/perplext/nsd/pkg/ui) - ns/op",
+            "value": 15947,
+            "unit": "ns/op",
+            "extra": "76399 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkVisualizationUpdate/Radial (github.com/perplext/nsd/pkg/ui) - B/op",
+            "value": 15826,
+            "unit": "B/op",
+            "extra": "76399 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkVisualizationUpdate/Radial (github.com/perplext/nsd/pkg/ui) - allocs/op",
+            "value": 97,
+            "unit": "allocs/op",
+            "extra": "76399 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkThemeOperations/GetUsageColor (github.com/perplext/nsd/pkg/ui)",
+            "value": 8.428,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "142330732 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkThemeOperations/GetUsageColor (github.com/perplext/nsd/pkg/ui) - ns/op",
+            "value": 8.428,
+            "unit": "ns/op",
+            "extra": "142330732 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkThemeOperations/GetUsageColor (github.com/perplext/nsd/pkg/ui) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "142330732 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkThemeOperations/GetUsageColor (github.com/perplext/nsd/pkg/ui) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "142330732 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkThemeOperations/InterpolateColor (github.com/perplext/nsd/pkg/ui)",
+            "value": 24.3,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "47997805 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkThemeOperations/InterpolateColor (github.com/perplext/nsd/pkg/ui) - ns/op",
+            "value": 24.3,
+            "unit": "ns/op",
+            "extra": "47997805 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkThemeOperations/InterpolateColor (github.com/perplext/nsd/pkg/ui) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "47997805 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkThemeOperations/InterpolateColor (github.com/perplext/nsd/pkg/ui) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "47997805 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkThemeOperations/ParseHex (github.com/perplext/nsd/pkg/ui)",
+            "value": 36.43,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "32863455 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkThemeOperations/ParseHex (github.com/perplext/nsd/pkg/ui) - ns/op",
+            "value": 36.43,
+            "unit": "ns/op",
+            "extra": "32863455 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkThemeOperations/ParseHex (github.com/perplext/nsd/pkg/ui) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "32863455 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkThemeOperations/ParseHex (github.com/perplext/nsd/pkg/ui) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "32863455 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAnimations/Rainbow (github.com/perplext/nsd/pkg/ui)",
+            "value": 6.541,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "183283995 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAnimations/Rainbow (github.com/perplext/nsd/pkg/ui) - ns/op",
+            "value": 6.541,
+            "unit": "ns/op",
+            "extra": "183283995 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAnimations/Rainbow (github.com/perplext/nsd/pkg/ui) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "183283995 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAnimations/Rainbow (github.com/perplext/nsd/pkg/ui) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "183283995 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAnimations/Pulse (github.com/perplext/nsd/pkg/ui)",
+            "value": 21.55,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "46568479 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAnimations/Pulse (github.com/perplext/nsd/pkg/ui) - ns/op",
+            "value": 21.55,
+            "unit": "ns/op",
+            "extra": "46568479 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAnimations/Pulse (github.com/perplext/nsd/pkg/ui) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "46568479 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAnimations/Pulse (github.com/perplext/nsd/pkg/ui) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "46568479 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAnimations/Fire (github.com/perplext/nsd/pkg/ui)",
+            "value": 5.917,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "202375495 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAnimations/Fire (github.com/perplext/nsd/pkg/ui) - ns/op",
+            "value": 5.917,
+            "unit": "ns/op",
+            "extra": "202375495 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAnimations/Fire (github.com/perplext/nsd/pkg/ui) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "202375495 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAnimations/Fire (github.com/perplext/nsd/pkg/ui) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "202375495 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAnimations/Matrix (github.com/perplext/nsd/pkg/ui)",
+            "value": 3.748,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "320606384 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAnimations/Matrix (github.com/perplext/nsd/pkg/ui) - ns/op",
+            "value": 3.748,
+            "unit": "ns/op",
+            "extra": "320606384 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAnimations/Matrix (github.com/perplext/nsd/pkg/ui) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "320606384 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAnimations/Matrix (github.com/perplext/nsd/pkg/ui) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "320606384 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAnimations/Wave (github.com/perplext/nsd/pkg/ui)",
+            "value": 32.3,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "37249098 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAnimations/Wave (github.com/perplext/nsd/pkg/ui) - ns/op",
+            "value": 32.3,
+            "unit": "ns/op",
+            "extra": "37249098 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAnimations/Wave (github.com/perplext/nsd/pkg/ui) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "37249098 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAnimations/Wave (github.com/perplext/nsd/pkg/ui) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "37249098 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAnimations/Sparkle (github.com/perplext/nsd/pkg/ui)",
+            "value": 3.746,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "318957601 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAnimations/Sparkle (github.com/perplext/nsd/pkg/ui) - ns/op",
+            "value": 3.746,
+            "unit": "ns/op",
+            "extra": "318957601 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAnimations/Sparkle (github.com/perplext/nsd/pkg/ui) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "318957601 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAnimations/Sparkle (github.com/perplext/nsd/pkg/ui) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "318957601 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConnectionTable/Connections-10 (github.com/perplext/nsd/pkg/ui)",
+            "value": 101855,
+            "unit": "ns/op\t    5176 B/op\t     196 allocs/op",
+            "extra": "10000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConnectionTable/Connections-10 (github.com/perplext/nsd/pkg/ui) - ns/op",
+            "value": 101855,
+            "unit": "ns/op",
+            "extra": "10000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConnectionTable/Connections-10 (github.com/perplext/nsd/pkg/ui) - B/op",
+            "value": 5176,
+            "unit": "B/op",
+            "extra": "10000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConnectionTable/Connections-10 (github.com/perplext/nsd/pkg/ui) - allocs/op",
+            "value": 196,
+            "unit": "allocs/op",
+            "extra": "10000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConnectionTable/Connections-100 (github.com/perplext/nsd/pkg/ui)",
+            "value": 101311,
+            "unit": "ns/op\t    5176 B/op\t     196 allocs/op",
+            "extra": "10000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConnectionTable/Connections-100 (github.com/perplext/nsd/pkg/ui) - ns/op",
+            "value": 101311,
+            "unit": "ns/op",
+            "extra": "10000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConnectionTable/Connections-100 (github.com/perplext/nsd/pkg/ui) - B/op",
+            "value": 5176,
+            "unit": "B/op",
+            "extra": "10000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConnectionTable/Connections-100 (github.com/perplext/nsd/pkg/ui) - allocs/op",
+            "value": 196,
+            "unit": "allocs/op",
+            "extra": "10000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConnectionTable/Connections-1000 (github.com/perplext/nsd/pkg/ui)",
+            "value": 101319,
+            "unit": "ns/op\t    5176 B/op\t     196 allocs/op",
+            "extra": "10000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConnectionTable/Connections-1000 (github.com/perplext/nsd/pkg/ui) - ns/op",
+            "value": 101319,
+            "unit": "ns/op",
+            "extra": "10000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConnectionTable/Connections-1000 (github.com/perplext/nsd/pkg/ui) - B/op",
+            "value": 5176,
+            "unit": "B/op",
+            "extra": "10000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConnectionTable/Connections-1000 (github.com/perplext/nsd/pkg/ui) - allocs/op",
+            "value": 196,
+            "unit": "allocs/op",
+            "extra": "10000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStatusBarUpdate (github.com/perplext/nsd/pkg/ui)",
+            "value": 472.7,
+            "unit": "ns/op\t     229 B/op\t       3 allocs/op",
+            "extra": "2529160 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStatusBarUpdate (github.com/perplext/nsd/pkg/ui) - ns/op",
+            "value": 472.7,
+            "unit": "ns/op",
+            "extra": "2529160 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStatusBarUpdate (github.com/perplext/nsd/pkg/ui) - B/op",
+            "value": 229,
+            "unit": "B/op",
+            "extra": "2529160 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStatusBarUpdate (github.com/perplext/nsd/pkg/ui) - allocs/op",
+            "value": 3,
+            "unit": "allocs/op",
+            "extra": "2529160 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkDashboardLayout/2x2 (github.com/perplext/nsd/pkg/ui)",
+            "value": 9398,
+            "unit": "ns/op\t   17464 B/op\t      77 allocs/op",
+            "extra": "123034 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkDashboardLayout/2x2 (github.com/perplext/nsd/pkg/ui) - ns/op",
+            "value": 9398,
+            "unit": "ns/op",
+            "extra": "123034 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkDashboardLayout/2x2 (github.com/perplext/nsd/pkg/ui) - B/op",
+            "value": 17464,
+            "unit": "B/op",
+            "extra": "123034 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkDashboardLayout/2x2 (github.com/perplext/nsd/pkg/ui) - allocs/op",
+            "value": 77,
+            "unit": "allocs/op",
+            "extra": "123034 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkDashboardLayout/3x3 (github.com/perplext/nsd/pkg/ui)",
+            "value": 25863,
+            "unit": "ns/op\t   47576 B/op\t     200 allocs/op",
+            "extra": "45600 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkDashboardLayout/3x3 (github.com/perplext/nsd/pkg/ui) - ns/op",
+            "value": 25863,
+            "unit": "ns/op",
+            "extra": "45600 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkDashboardLayout/3x3 (github.com/perplext/nsd/pkg/ui) - B/op",
+            "value": 47576,
+            "unit": "B/op",
+            "extra": "45600 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkDashboardLayout/3x3 (github.com/perplext/nsd/pkg/ui) - allocs/op",
+            "value": 200,
+            "unit": "allocs/op",
+            "extra": "45600 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkDashboardLayout/4x4 (github.com/perplext/nsd/pkg/ui)",
+            "value": 37217,
+            "unit": "ns/op\t   69816 B/op\t     295 allocs/op",
+            "extra": "32208 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkDashboardLayout/4x4 (github.com/perplext/nsd/pkg/ui) - ns/op",
+            "value": 37217,
+            "unit": "ns/op",
+            "extra": "32208 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkDashboardLayout/4x4 (github.com/perplext/nsd/pkg/ui) - B/op",
+            "value": 69816,
+            "unit": "B/op",
+            "extra": "32208 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkDashboardLayout/4x4 (github.com/perplext/nsd/pkg/ui) - allocs/op",
+            "value": 295,
+            "unit": "allocs/op",
+            "extra": "32208 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentUIUpdates/Workers-1 (github.com/perplext/nsd/pkg/ui)",
+            "value": 354.4,
+            "unit": "ns/op\t     140 B/op\t       3 allocs/op",
+            "extra": "3339648 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentUIUpdates/Workers-1 (github.com/perplext/nsd/pkg/ui) - ns/op",
+            "value": 354.4,
+            "unit": "ns/op",
+            "extra": "3339648 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentUIUpdates/Workers-1 (github.com/perplext/nsd/pkg/ui) - B/op",
+            "value": 140,
+            "unit": "B/op",
+            "extra": "3339648 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentUIUpdates/Workers-1 (github.com/perplext/nsd/pkg/ui) - allocs/op",
+            "value": 3,
+            "unit": "allocs/op",
+            "extra": "3339648 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentUIUpdates/Workers-2 (github.com/perplext/nsd/pkg/ui)",
+            "value": 358,
+            "unit": "ns/op\t     140 B/op\t       3 allocs/op",
+            "extra": "3288631 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentUIUpdates/Workers-2 (github.com/perplext/nsd/pkg/ui) - ns/op",
+            "value": 358,
+            "unit": "ns/op",
+            "extra": "3288631 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentUIUpdates/Workers-2 (github.com/perplext/nsd/pkg/ui) - B/op",
+            "value": 140,
+            "unit": "B/op",
+            "extra": "3288631 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentUIUpdates/Workers-2 (github.com/perplext/nsd/pkg/ui) - allocs/op",
+            "value": 3,
+            "unit": "allocs/op",
+            "extra": "3288631 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentUIUpdates/Workers-4 (github.com/perplext/nsd/pkg/ui)",
+            "value": 350.3,
+            "unit": "ns/op\t     140 B/op\t       3 allocs/op",
+            "extra": "3387876 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentUIUpdates/Workers-4 (github.com/perplext/nsd/pkg/ui) - ns/op",
+            "value": 350.3,
+            "unit": "ns/op",
+            "extra": "3387876 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentUIUpdates/Workers-4 (github.com/perplext/nsd/pkg/ui) - B/op",
+            "value": 140,
+            "unit": "B/op",
+            "extra": "3387876 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentUIUpdates/Workers-4 (github.com/perplext/nsd/pkg/ui) - allocs/op",
+            "value": 3,
+            "unit": "allocs/op",
+            "extra": "3387876 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentUIUpdates/Workers-8 (github.com/perplext/nsd/pkg/ui)",
+            "value": 352.8,
+            "unit": "ns/op\t     140 B/op\t       3 allocs/op",
+            "extra": "3400107 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentUIUpdates/Workers-8 (github.com/perplext/nsd/pkg/ui) - ns/op",
+            "value": 352.8,
+            "unit": "ns/op",
+            "extra": "3400107 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentUIUpdates/Workers-8 (github.com/perplext/nsd/pkg/ui) - B/op",
+            "value": 140,
+            "unit": "B/op",
+            "extra": "3400107 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentUIUpdates/Workers-8 (github.com/perplext/nsd/pkg/ui) - allocs/op",
+            "value": 3,
+            "unit": "allocs/op",
+            "extra": "3400107 times\n4 procs"
           }
         ]
       }
