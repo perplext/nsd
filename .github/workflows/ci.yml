@@ -121,7 +121,10 @@ jobs:
 
       - name: Run integration tests
         run: |
-          sudo -E go test -v -timeout=2m -tags=integration ./test/integration/...
+          # sudo resets PATH to secure_path, which resolves the runner's
+          # pre-installed Go instead of the setup-go toolchain. Force the
+          # user's PATH so `go` matches GO_VERSION (go.mod requires >= 1.25).
+          sudo -E env "PATH=$PATH" go test -v -timeout=2m -tags=integration ./test/integration/...
         env:
           CGO_ENABLED: 1
 
