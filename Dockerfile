@@ -27,7 +27,7 @@ RUN CGO_ENABLED=1 go build \
     -o nsd ./cmd/nsd
 
 # Runtime stage
-FROM alpine:3.23
+FROM alpine:3.24
 
 # Install runtime dependencies
 RUN apk add --no-cache libpcap ca-certificates tzdata && \
