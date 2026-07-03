@@ -3,6 +3,7 @@ package ui
 import (
 	"fmt"
 	"net"
+	"sync/atomic"
 	"testing"
 	"time"
 	
@@ -375,10 +376,17 @@ func BenchmarkConcurrentUIUpdates(b *testing.B) {
 		b.Run(fmt.Sprintf("Workers-%d", numWorkers), func(b *testing.B) {
 			monitor := netcap.NewNetworkMonitor()
 			ui := NewUI(monitor)
-			
+
+			// Pre-create the interface entry once so the parallel workers
+			// never write the shared map concurrently (Go maps are not safe
+			// for concurrent writes). Concurrent reads of the populated map
+			// and atomic updates to the counters below are race-free.
+			stats := &netcap.InterfaceStats{}
+			monitor.Interfaces["test0"] = stats
+
 			b.ResetTimer()
 			b.ReportAllocs()
-			
+
 			b.RunParallel(func(pb *testing.PB) {
 				i := 0
 				for pb.Next() {
@@ -392,10 +400,8 @@ func BenchmarkConcurrentUIUpdates(b *testing.B) {
 						ui.SetGradientEnabled(i%2 == 0)
 					case 3:
 						// Simulate traffic update
-						monitor.Interfaces["test0"] = &netcap.InterfaceStats{
-							BytesIn:  uint64(i * 1000),
-							BytesOut: uint64(i * 500),
-						}
+						atomic.StoreUint64(&stats.BytesIn, uint64(i*1000))
+						atomic.StoreUint64(&stats.BytesOut, uint64(i*500))
 					}
 					i++
 				}
