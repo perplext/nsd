@@ -16,7 +16,7 @@ jobs:
     name: Build Linux Package
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       
       - name: Set up Go
         uses: actions/setup-go@v6
@@ -70,7 +70,7 @@ jobs:
       matrix:
         arch: [amd64, arm64]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       
       - name: Set up Go
         uses: actions/setup-go@v6
@@ -122,7 +122,7 @@ jobs:
     name: Build DEB Package
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       
       - name: Set up Go
         uses: actions/setup-go@v6
@@ -193,7 +193,7 @@ jobs:
     needs: [build-linux, build-macos, build-deb]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       
       - name: Download and create checksums
         env:
